@@ -35,7 +35,7 @@ scanner.scan = function () {
             }).then((newMovie) => {
                 console.log(newMovie, 'newMovie');
                 if (!newMovie.duplicate) {
-                    delete newMovie[duplicate];
+                    delete newMovie.duplicate;
                     movie.create(newMovie);
                     acc.push(newMovie);
                 }

@@ -1,4 +1,4 @@
-var config = {
+const config = {
     database: {
         host: "127.0.0.1",
         port: 5432,
@@ -9,7 +9,7 @@ var config = {
     server:{
         port:3000
     },
-    paths:['c:/movies']
+    paths:['Y:\\']
 };
 
 module.exports = config;
