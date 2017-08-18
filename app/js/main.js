@@ -1,4 +1,4 @@
-var myApp = angular.module('myApp', ['ngRoute', 'ngSanitize']);
+let myApp = angular.module('myApp', ['ngRoute', 'ngSanitize']);
 
 myApp.config(function ($routeProvider) {
     $routeProvider.when('/', {
@@ -10,9 +10,6 @@ myApp.config(function ($routeProvider) {
         }).when('/moviePlay/play/:movieId', {
             templateUrl: "movies/moviePlay.html",
             controller: "playCtrl"
-        }).when('/moviePlayDivx/play/:movieId', {
-            templateUrl: "movies/moviePlayDivx.html",
-            controller: "playCtrl"
         }).when('/books', {
             templateUrl: "books/books.html",
             controller: "bookCtrl"
@@ -23,5 +20,4 @@ myApp.config(function ($routeProvider) {
         template: "This doesn't exist!"
     })
 });
-
 

@@ -4,27 +4,31 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LongJohn</title>
-    <script src="../bower_components/jquery/dist/jquery.js"></script>
-    <script src="../bower_components/angularjs/angular.js"></script>
-    <script src="../bower_components/angular-route/angular-route.js"></script>
-    <script src="../bower_components/lodash/lodash.js"></script>
-    <script src="../node_modules/angular-sanitize/angular-sanitize.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.1/angular.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.1/angular-route.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.1/angular-sanitize.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"></script>
 
     <script src="js/main.js"></script>
-    <script src="audioBooks/factory.js"></script>
-    <script src="books/factory.js"></script>
-    <script src="audioBooks/ctrl.js"></script>
-    <script src="books/ctrl.js"></script>
-    <script src="movies/ctrl.js"></script>
-    <script src="admin/ctrl.js"></script>
-    <script src="movies/playCtrl.js"></script>
-    <script src="movies/factory.js"></script>
-    <script src="admin/factory.js"></script>
-    <script src="directives/audioPlayer.js"></script>
-    <script src="directives/moviePlayer.js"></script>
+    <script src="audioBooks/audioBooksFactory.js"></script>
+    <script src="audioBooks/audioBooksCtrl.js"></script>
+
+    <!--<script src="books/booksFactory.js"></script>-->
+    <!--<script src="books/booksCtrl.js"></script>-->
+
+    <!--<script src="admin/adminCtrl.js"></script>-->
+    <!--<script src="admin/adminFactory.js"></script>-->
+
+    <!--<script src="movies/movieCtrl.js"></script>-->
+    <!--<script src="movies/playCtrl.js"></script>-->
+    <!--<script src="movies/movieFactory.js"></script>-->
+
+    <!--<script src="directives/audioPlayer.js"></script>-->
+    <!--<script src="directives/moviePlayer.js"></script>-->
 
     <link href='http://fonts.googleapis.com/css?family=Roboto:300' rel='stylesheet' type='text/css'>
-    <link href="../gray.css" rel="stylesheet" type="text/css">
+    <link href="gray.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
@@ -32,11 +36,11 @@
     <header id="header">
         <nav class="center">
             <ul id="main-nav">
-                <li><a href="#movies/"><img src="../images/movie.png"/></a></li>
-                <li><a href="http://www.pandora.com"><img src="../images/Music.png"/></a></li>
-                <li><a href="#/"><img src="../images/audio.png"/></a></li>
-                <li><a href="#books"><img src="../images/book.png"/></a></li>
-                <li><a href="#admin/"><img src="../images/gears.png"/></a></li>
+                <li><a href="#movies/">movies</a></li>
+                <li><a href="">music</a></li>
+                <li><a href="#/">audio</a></li>
+                <li><a href="#books">book</a></li>
+                <li><a href="#admin/">admin</a></li>
             </ul>
         </nav>
     </header>

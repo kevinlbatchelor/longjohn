@@ -1,9 +1,13 @@
-<ng-view class="ng-scope"><aside id="sidebar" class="ng-scope">
+<aside id="sidebar" class="ng-scope">
     <section class="widget">
         <h2><strong>search</strong> movies</h2>
         <form ng-submit="getMovies()" class="ng-pristine ng-valid">
-            <select class="thirty wide ng-pristine ng-untouched ng-valid" ng-model="searchCategory" ng-options="cat.name as cat.name for cat in movieCategories"><option value="" class="">-- choose genre --</option></select>
-            <input class="thirty wide ng-pristine ng-untouched ng-valid" ng-model="searchName" type="text" placeholder="search name">
+            <select class="thirty wide ng-pristine ng-untouched ng-valid" ng-model="searchCategory"
+                    ng-options="cat.name as cat.name for cat in movieCategories">
+                <option value="" class="">-- choose genre --</option>
+            </select>
+            <input class="thirty wide ng-pristine ng-untouched ng-valid" ng-model="searchName" type="text"
+                   placeholder="search name">
             <input class="thirty wide" type="submit" value="go">
         </form>
         <br><br>
@@ -21,7 +25,8 @@
     <article class="post">
         <table border="0">
             <tbody><!-- ngRepeat: movies in movieList -->
-        </tbody></table>
+            </tbody>
+        </table>
         <div>Welcome to the new LongJohn, report bugs to Dad. Enjoy</div>
     </article>
-</div></ng-view>
+</div>
