@@ -1,9 +1,7 @@
-let _ = require('lodash');
 let router = require('../util/router');
 let error = require('../util/error');
 let Movie = require('./movie');
 let route = router.v1Path('movie');
-let Promise = require('bluebird');
 let scanner = require('../scanner/scanner');
 
 router.get(route(), function (req, res) {

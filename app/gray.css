@@ -68,7 +68,12 @@ h2 {
 }
 
 #pagewrap a {
-    color: #666666
+    color: #c0c0c0;
+    text-decoration: none;
+}
+#pagewrap a:hover {
+    color: #fff;
+    text-decoration: none;
 }
 
 #header {

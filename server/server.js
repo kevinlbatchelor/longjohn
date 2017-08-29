@@ -17,6 +17,7 @@ app.use(bodyParser.json());
 app.use('/', require('./util/status'));
 
 app.use('/', require('./movie/movieRoutes'));
+app.use('/', require('./movie/movieCategoryRoutes'));
 app.use('/', require('./scanner/scannerRoutes'));
 // TODO add other routes
 
@@ -45,7 +46,7 @@ app.use(function (err, req, res, next) {
         res.json({error: err});
     }
 });
-// require('./util/database/dbSetup')();
+require('./util/database/dbSetup')();
 // Start the server
 
 app.set('port', config.server.port);

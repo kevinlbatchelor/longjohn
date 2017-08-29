@@ -1,47 +1,48 @@
 myApp.factory('movieFactory', function ($http) {
-    var movieFactory = {};
+    let movieFactory = {};
 
     movieFactory.getList = function (category, name) {
         category ? category = category : category = '%';
         name ? name = name : name = '%';
         return $http({
             method: 'GET',
-            url: '../../longjohn/backEnd/movies/movieList.php?category=' + category + '&name=' + name
+            url: 'http://localhost:3000/api/v1/movie?category=' + category + '&name=' + name
         });
     };
 
     movieFactory.getCategoryList = function () {
         return $http({
             method: 'GET',
-            url: '../../longjohn/backEnd/movies/movieCategories.php'
+            url: 'http://localhost:3000/api/v1/movieCategory'
         });
     };
 
     movieFactory.getOne = function (movieId) {
         return $http({
             method: 'GET',
-            url: '../../longjohn/backEnd/movies/movieOne.php?movieId=' + movieId
+            url: 'http://localhost:3000/api/v1/movie/' + movieId
         });
     };
 
-    movieFactory.deleteMovie = function (id, name) {
+    movieFactory.deleteMovie = function (id) {
         return $http({
             method: 'DELETE',
-            url: '../../longjohn/backEnd/movies/movieDelete.php?id=' + id + '&name=' + name
+            url: 'http://localhost:3000/api/v1/movie/' + id
         });
     };
 
-    movieFactory.updateMovie = function (id, cat) {
+    movieFactory.updateMovie = function (id, body) {
         return $http({
-            method: 'GET',
-            url: '../../longjohn/backEnd/movies/movieEdit.php?cato=' + cat + '&id=' + id
+            method: 'PUT',
+            url: 'http://localhost:3000/api/v1/movie/' + id,
+            body: body
         });
     };
 
     movieFactory.getInfo = function (title) {
         return $http({
                 method: 'GET',
-                url: 'http://www.omdbapi.com/?t='+title
+                url: 'http://www.omdbapi.com/?t=' + title
             }
         )
     };

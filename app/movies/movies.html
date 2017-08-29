@@ -25,6 +25,9 @@
     <article class="post">
         <table border="0">
             <tbody><!-- ngRepeat: movies in movieList -->
+            <tr ng-repeat="movies in movieList">
+                <td ng-repeat="movie in movies">{{movie.name}}</td>
+            </tr>
             </tbody>
         </table>
         <div>Welcome to the new LongJohn, report bugs to Dad. Enjoy</div>

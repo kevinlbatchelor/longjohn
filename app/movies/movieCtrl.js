@@ -8,15 +8,7 @@ myApp.controller('movieCtrl', function ($scope, movieFactory) {
             }
 
             movieFactory.getList($scope.searchCategory, $scope.searchName).success(function (data) {
-                $scope.movieList = data;
-                $scope.movieList.map(function (d) {
-                    d.imagePath = '../pics/' + d.name + '.jpg';
-                    let isAvi = d.realpath.substr(d.realpath.length - 3);
-                    if(isAvi === 'avi' || isAvi === 'mkv'){
-                        d.isAvi = true;
-                    }
-                    return d;
-                });
+                $scope.movieList = data.rows;
 
                 let chunk = function (arr, size) {
                     let newArr = [];
