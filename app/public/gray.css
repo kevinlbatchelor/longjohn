@@ -9,11 +9,11 @@ article, aside, details, figcaption, figure, footer, header, menu, nav, section 
 
 a {
     cursor: pointer;
-    color: rgb(0, 128, 0);
+    color: var(--text-color);
 }
 
 a:visited {
-    color: rgb(0, 128, 0);
+    color: var(--text-color);
 }
 
 a:hover {
@@ -43,14 +43,14 @@ input.wide {
     height: 30px;
     margin: 5px 0 5px 0;
     background-color: #000;
-    border: .5px solid rgb(0, 128, 0);
-    color: rgb(0, 128, 0);
+    border: .5px solid var(--text-color);
+    color: var(--text-color);
 }
 
 select {
     background-color: #000;
-    border: .5px solid rgb(0, 128, 0);
-    color: rgb(0, 128, 0);
+    border: .5px solid var(--text-color);
+    color: var(--text-color);
 }
 
 input:hover {
@@ -105,11 +105,11 @@ select {
     width: 100%;
     overflow: hidden;
     text-align: center;
-    border: .5px solid rgb(0, 128, 0);
+    border: .5px solid var(--text-color);
 }
 
 #content {
-    border: .5px solid rgb(0, 128, 0);
+    border: .5px solid var(--text-color);
     padding: 5px;
     margin: 10px 0 10px 10px;
     flex-grow: 1;
@@ -129,7 +129,7 @@ select {
 }
 
 #sidebar {
-    border: .5px solid rgb(0, 128, 0);
+    border: .5px solid var(--text-color);
     padding: 5px;
     margin: 10px 0 10px;
 }
@@ -153,8 +153,8 @@ select {
 #footer {
     height: 30px;
     background-color: #000;
-    border: .5px solid rgb(0, 128, 0);
-    color: rgb(0, 128, 0);
+    border: .5px solid var(--text-color);
+    color: var(--text-color);
 }
 
 ul#main-nav {
