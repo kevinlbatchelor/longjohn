@@ -6,6 +6,7 @@ let connection = new db(config.database.name, config.database.username, config.d
     host: config.database.host,
     port: config.database.port,
     dialect: 'postgres',
+    logging: false,
 
     pool: {
         max: 5,

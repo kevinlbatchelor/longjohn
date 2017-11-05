@@ -21,7 +21,7 @@ myApp.directive('videoPlayer', function ($compile, $http, $sce) {
                     $http({method: 'GET', url: $scope.edl}).then(function (edlFile) {
                         cutList = edlFile.data;
 
-                        if(cutList.length > 0){
+                        if (cutList.length > 0) {
                             let media = document.getElementById('video');
 
                             media.addEventListener('timeupdate', function (e) {
@@ -40,14 +40,15 @@ myApp.directive('videoPlayer', function ($compile, $http, $sce) {
                 $scope.editCtrls = $scope.editing;
             });
 
-            $scope.trustSrc = function(src) {
+            $scope.trustSrc = function (src) {
                 return $sce.trustAsResourceUrl(src);
             };
 
             let video = angular.element('<div class="video-player"></div>');
-            video.append(`<video id="video" width="100%" preload="none" ng-src="{{trustSrc(path)}}" autoplay controls>
+            video.append(`<video id="video" width="100%" preload="none" ng-src="{{trustSrc(path)}}" autoplay controls type="video/mp4">
+                            <!--<source ng-src="{{trustSrc(path)}}" autoplay controls type="video/mp4">-->
                             <!--angular screws source tags, moving src to video tag fixes it-->
-                            <track label="English" kind="subtitles" srclang="en" src="{{trustSrc(subs)}}" default>
+                            <!--<track label="English" kind="subtitles" srclang="en" src="{{trustSrc(subs)}}" default>-->
                         </video>`);
             $compile(video)($scope);
             $element.append(video);

@@ -9,7 +9,7 @@ const config = {
     server:{
         port:3000
     },
-    paths:['C:\\movies']
+    paths:['C:\\Movies', 'F:\\Movies']
 };
 
 module.exports = config;
