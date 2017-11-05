@@ -1,4 +1,7 @@
-@import url(http://fonts.googleapis.com/css?family=Roboto:300);
+
+:root {
+    --text-color: rgb(0, 128, 0);
+}
 
 article, aside, details, figcaption, figure, footer, header, menu, nav, section {
     /*display: block;*/
@@ -19,7 +22,7 @@ a:hover {
 
 html {
     background-color: #000;
-    color: rgb(0, 128, 0);
+    color: var(--text-color);
     font-family: Consolas monospace;
 }
 

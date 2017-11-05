@@ -1,4 +1,4 @@
-myApp.factory('movieFactory', function ($http) {
+myApp.factory('movieFactory', function ($http, config) {
     let movieFactory = {};
 
     movieFactory.getList = function (category, name) {
@@ -6,36 +6,35 @@ myApp.factory('movieFactory', function ($http) {
         name ? name = name : name = '%';
         return $http({
             method: 'GET',
-            url: 'http://localhost:3000/api/v1/movie?category=' + category + '&name=' + name
+            url: config.baseUrl+'/movie?category=' + category + '&name=' + name
         });
     };
 
     movieFactory.getCategoryList = function () {
         return $http({
             method: 'GET',
-            url: 'http://localhost:3000/api/v1/movieCategory'
+            url: config.baseUrl+'/movieCategory'
         });
     };
 
-    // this end point dosn't return json, rather a actual streamable link
-    // movieFactory.getOne = function (movieId) {
-    //     return $http({
-    //         method: 'GET',
-    //         url: 'http://localhost:3000/api/v1/movie/' + movieId
-    //     });
-    // };
+    movieFactory.getInfo = function (movieId) {
+        return $http({
+            method: 'GET',
+            url: config.baseUrl+'/info/' + movieId
+        });
+    };
 
     movieFactory.deleteMovie = function (id) {
         return $http({
             method: 'DELETE',
-            url: 'http://localhost:3000/api/v1/movie/' + id
+            url: config.baseUrl+'/movie/' + id
         });
     };
 
     movieFactory.updateMovie = function (id, body) {
         return $http({
             method: 'PUT',
-            url: 'http://localhost:3000/api/v1/movie/' + id,
+            url: config.baseUrl+'/movie/' + id,
             body: body
         });
     };

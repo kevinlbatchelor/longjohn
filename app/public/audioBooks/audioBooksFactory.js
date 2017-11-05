@@ -1,19 +1,19 @@
-myApp.factory('audioBookFactory', function ($http) {
+myApp.factory('audioBookFactory', function ($http, config) {
     const audioBookFactory = {};
 
     audioBookFactory.getPlayList = function (book) {
         return $http({
             method: 'GET',
-            url: '../../longjohn/backEnd/audioBooks/audioBookPlayList.php?folder=' + book
+            url: config.baseUrl + '/audioBooks?folder=' + book
         });
     };
 
     audioBookFactory.getList = function () {
         return $http({
             method: 'GET',
-            url: '../../longjohn/backEnd/audioBooks/audioBookList.php'
+            url: config.baseUrl + '/audioBooks'
         });
     };
 
-    return audioBookFactory
+    return audioBookFactory;
 });

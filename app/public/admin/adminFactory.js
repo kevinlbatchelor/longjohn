@@ -1,26 +1,26 @@
-myApp.factory('adminFactory', function ($http) {
-    var adminFactory = {};
+myApp.factory('adminFactory', function ($http, config) {
+    let adminFactory = {};
 
     adminFactory.findMovies = function () {
         return $http({
             method: 'GET',
-            url: 'http://localhost:3000/api/v1/scan'
+            url: config.baseUrl + '/scan'
         });
     };
 
     adminFactory.findAudio = function () {
         return $http({
             method: 'GET',
-            url: '../../longjohn/backEnd/scanners/mp3Finder.php'
+            url: config.baseUrl + '/mp3Scanner'
         });
     };
 
     adminFactory.findEBooks = function () {
         return $http({
             method: 'GET',
-            url: '../../longjohn/backEnd/scanners/ebookFinder.php'
+            url: config.baseUrl + '/bookScanner'
         });
     };
 
-    return adminFactory
+    return adminFactory;
 });

@@ -1,5 +1,5 @@
-myApp.factory('bookFactory', function ($http) {
-    var bookFactory = {};
+myApp.factory('bookFactory', function ($http, config) {
+    let bookFactory = {};
 
     bookFactory.getDetails = function (book, author) {
         return $http({
@@ -11,7 +11,7 @@ myApp.factory('bookFactory', function ($http) {
     bookFactory.getList = function (search, alpha) {
         return $http({
             method: 'GET',
-            url: '../../longjohn/backEnd/books/bookList.php?search='+search+'&alpha='+alpha
+            url: config.baseUrl+'/books?search='+search+'&alpha='+alpha
         });
     };
 
