@@ -4,7 +4,7 @@ myApp.factory('adminFactory', function ($http) {
     adminFactory.findMovies = function () {
         return $http({
             method: 'GET',
-            url: '../../longjohn/backEnd/scanners/movieFinder.php'
+            url: 'http://localhost:3000/api/v1/scan'
         });
     };
 

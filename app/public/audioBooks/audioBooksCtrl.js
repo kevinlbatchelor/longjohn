@@ -1,6 +1,6 @@
 myApp.controller('audioBookCtrl', function ($scope, audioBookFactory) {
-console.log('loaded')
-    $scope.getBook = function(book){
+    console.log('loaded')
+    $scope.getBook = function (book) {
         audioBookFactory.getPlayList(book).success(function (data) {
             $scope.tracks = data;
         });

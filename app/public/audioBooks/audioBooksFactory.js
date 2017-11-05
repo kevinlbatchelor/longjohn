@@ -1,5 +1,5 @@
 myApp.factory('audioBookFactory', function ($http) {
-    var audioBookFactory = {};
+    const audioBookFactory = {};
 
     audioBookFactory.getPlayList = function (book) {
         return $http({

@@ -34,12 +34,12 @@ myApp.controller('movieCtrl', function ($scope, movieFactory) {
                 $scope.runOnce = true;
                 $scope.getMovies();
 
-            })
+            });
         };
         $scope.searchCategory = 'new';
         $scope.defaultCategory = 'test';
         $scope.handleChange = function (id, cat) {
-            $scope.updateMovie(id, cat)
+            $scope.updateMovie(id, cat);
         };
 
         $scope.selectAll = function () {
@@ -50,7 +50,7 @@ myApp.controller('movieCtrl', function ($scope, movieFactory) {
         $scope.getMovies();
 
         $scope.movieInfo = {};
-        let x,y;
+        let x, y;
         $scope.getInfo = function (event, title) {
             let fixCase = _.startCase(title);
             movieFactory.getInfo(fixCase).success(function (res) {
@@ -61,7 +61,7 @@ myApp.controller('movieCtrl', function ($scope, movieFactory) {
                 x = event.screenX;
                 y = event.screenY - 75;
                 $scope.show = 'left:' + x + 'px;top:' + y + 'px;opacity:1; z-index:100';
-            })
+            });
         };
 
         $scope.closeInfo = function () {

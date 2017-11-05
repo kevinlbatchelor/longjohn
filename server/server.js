@@ -14,6 +14,8 @@ app.use(cors());
 app.use(logger('dev'));
 app.use(bodyParser.json());
 
+app.use(express.static('public'));
+
 app.use('/', require('./util/status'));
 
 app.use('/', require('./movie/movieRoutes'));

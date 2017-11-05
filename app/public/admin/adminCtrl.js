@@ -1,8 +1,8 @@
 myApp.controller('adminCtrl', function ($scope, adminFactory) {
-
+console.log('loaded')
     $scope.result = [];
     $scope.scanning = false;
-    var showScanning = function () {
+    let showScanning = function () {
       return new Promise(
           function (resolve) {
               $scope.result = [];
@@ -12,7 +12,8 @@ myApp.controller('adminCtrl', function ($scope, adminFactory) {
       );
     };
 
-    $scope.findMoves = function () {
+    $scope.findMovies = function () {
+        console.log('scanning clicked')
         showScanning().then(function () {
             adminFactory.findMovies().success(function (data) {
                 $scope.result = data;

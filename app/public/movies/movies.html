@@ -1,0 +1,34 @@
+<aside id="sidebar">
+    <section class="widget">
+        <h2><strong>search</strong> movies</h2>
+        <form ng-submit="getMovies()">
+            <select class="thirty wide" ng-model="searchCategory"
+                    ng-options="cat.name as cat.name for cat in movieCategories">
+                <option value="" class="">-- choose genre --</option>
+            </select>
+            <input class="thirty wide" ng-model="searchName" type="text"
+                   placeholder="search name">
+            <input class="thirty wide" type="submit" value="go">
+        </form>
+        <br><br>
+        <label>Edit Mode<input class="ck" type="checkbox" ng-model="editMode"></label>
+    </section>
+    <div class="info-box" style="">
+        <div class="name"></div>
+        <div class="desc"></div>
+        <div class="rating"></div>
+        <div class="rating-imdb"></div>
+        <div class="close" ng-click="closeInfo()">x</div>
+    </div>
+</aside>
+<div id="content">
+    <article class="post">
+        <table border="0">
+            <tbody>
+            <tr ng-repeat="movies in movieList">
+                <td ng-repeat="movie in movies"><a href="#moviePlay/play/{{movie.id}}">{{movie.name}}</a></td>
+            </tr>
+            </tbody>
+        </table>
+    </article>
+</div>

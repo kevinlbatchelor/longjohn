@@ -3,6 +3,7 @@ let error = require('../util/error');
 let Movie = require('./movie');
 let route = router.v1Path('movie');
 let scanner = require('../scanner/scanner');
+let fs = require('fs');
 
 router.get(route(), function (req, res) {
     Movie.findAndCountAll(
@@ -23,7 +24,9 @@ router.get(route(':id'), function (req, res) {
     let id = req.params.id;
     Movie.findById(id)
         .then(function (part) {
-            res.json(part);
+            res.writeHead(200, {'Content-Type': 'video/mp4'});
+            let rs = fs.createReadStream(part.path);
+            rs.pipe(res);
         })
     ;
 });

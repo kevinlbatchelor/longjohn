@@ -17,12 +17,13 @@ myApp.factory('movieFactory', function ($http) {
         });
     };
 
-    movieFactory.getOne = function (movieId) {
-        return $http({
-            method: 'GET',
-            url: 'http://localhost:3000/api/v1/movie/' + movieId
-        });
-    };
+    // this end point dosn't return json, rather a actual streamable link
+    // movieFactory.getOne = function (movieId) {
+    //     return $http({
+    //         method: 'GET',
+    //         url: 'http://localhost:3000/api/v1/movie/' + movieId
+    //     });
+    // };
 
     movieFactory.deleteMovie = function (id) {
         return $http({
