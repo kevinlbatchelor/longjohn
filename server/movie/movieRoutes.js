@@ -4,11 +4,22 @@ let Movie = require('./movie');
 let route = router.v1Path('movie');
 let scanner = require('../scanner/scanner');
 let fs = require('fs');
+let _ = require('lodash');
 
 router.get(route(), function (req, res) {
+    console.log(req.query);
+    let category = _.get(req, 'query.category', null);
+    let name = _.get(req, 'query.name', null);
     Movie.findAndCountAll(
         {
-            where: {},
+            where: {
+                genre: {
+                    $like: `%${category}%`
+                },
+                name: {
+                    $ilike: `%${name}%`
+                }
+            },
             order: [],
             offset: 0,
             limit: 2000
@@ -24,7 +35,7 @@ router.get(route(':id'), function (req, res) {
     let id = req.params.id;
     Movie.findById(id)
         .then(function (part) {
-            fs.stat(part.path, function(err, stats) {
+            fs.stat(part.path, function (err, stats) {
                 if (err) {
                     if (err.code === 'ENOENT') {
                         // 404 Error if file not found
@@ -37,23 +48,23 @@ router.get(route(':id'), function (req, res) {
                     // 416 Wrong range
                     return res.sendStatus(416);
                 }
-                let positions = range.replace(/bytes=/, "").split("-");
+                let positions = range.replace(/bytes=/, '').split('-');
                 let start = parseInt(positions[0], 10);
                 let total = stats.size;
                 let end = positions[1] ? parseInt(positions[1], 10) : total - 1;
                 let chunksize = (end - start) + 1;
 
                 res.writeHead(206, {
-                    "Content-Range": "bytes " + start + "-" + end + "/" + total,
-                    "Accept-Ranges": "bytes",
-                    "Content-Length": chunksize,
-                    "Content-Type": "video/mp4"
+                    'Content-Range': 'bytes ' + start + '-' + end + '/' + total,
+                    'Accept-Ranges': 'bytes',
+                    'Content-Length': chunksize,
+                    'Content-Type': 'video/mp4'
                 });
 
-                let stream = fs.createReadStream(part.path, { start: start, end: end })
-                    .on("open", function() {
+                let stream = fs.createReadStream(part.path, {start: start, end: end})
+                    .on('open', function () {
                         stream.pipe(res);
-                    }).on("error", function(err) {
+                    }).on('error', function (err) {
                         res.end(err);
                     });
             });

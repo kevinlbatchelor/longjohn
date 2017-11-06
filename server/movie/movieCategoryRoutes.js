@@ -2,7 +2,7 @@ let Category = require('./movieCategory');
 
 let router = require('../util/router');
 
-let route = router.v1Path('movieCategory');
+let route = router.v1Path('categories');
 
 router.get(route(), function (req, res) {
     Category.findAll()

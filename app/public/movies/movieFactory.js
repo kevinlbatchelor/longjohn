@@ -13,7 +13,7 @@ myApp.factory('movieFactory', function ($http, config) {
     movieFactory.getCategoryList = function () {
         return $http({
             method: 'GET',
-            url: config.baseUrl+'/movieCategory'
+            url: config.baseUrl+'/categories'
         });
     };
 
