@@ -20,7 +20,7 @@ scanner.scan = function () {
                 newMovie.name = pathDetails[pathDetails.length - 1].slice(0, -4);
                 newMovie.path = path;
                 newMovie.description = '';
-                newMovie.genra = 'new';
+                newMovie.genre = 'new';
                 newMovie.duplicate = false;
 
                 return movie.findAll({
