@@ -31,11 +31,11 @@ myApp.factory('movieFactory', function ($http, config) {
         });
     };
 
-    movieFactory.updateMovie = function (id, body) {
+    movieFactory.updateMovie = function (movie) {
         return $http({
             method: 'PUT',
-            url: config.baseUrl+'/movie/' + id,
-            body: body
+            url: config.baseUrl+'/movie/' + movie.id,
+            data: JSON.stringify(movie)
         });
     };
 

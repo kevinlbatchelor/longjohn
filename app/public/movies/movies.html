@@ -26,7 +26,15 @@
         <table border="0">
             <tbody>
             <tr ng-repeat="movies in movieList">
-                <td ng-repeat="movie in movies"><a href="#moviePlay/play/{{movie.id}}">{{movie.name}}</a></td>
+                <td ng-repeat="movie in movies"><a href="#moviePlay/play/{{movie.id}}">{{movie.name}}</a>
+                    <div ng-hide="editMode">
+                        <select class="thirty wide" ng-model="movie.genre"
+                                ng-options="cat.name as cat.name for cat in movieCategories">
+                            <option value="" class="">-- choose genre --</option>
+                        </select><br>
+                        <button ng-click=updateMovie(movie)>update</button>
+                    </div>
+                </td>
             </tr>
             </tbody>
         </table>

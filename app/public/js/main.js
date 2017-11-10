@@ -17,7 +17,8 @@ myApp.config(function ($routeProvider) {
             templateUrl: "admin/admin.html",
             controller: "adminCtrl"
         }).otherwise({
-        template: "This doesn't exist!"
+        templateUrl: "movies/movies.html",
+        controller: "movieCtrl"
     })
 });
 

@@ -1,13 +1,13 @@
 const config = {
     database: {
-        host: "127.0.0.1",
+        host: '127.0.0.1',
         port: 5432,
-        name: "movies",
-        username: "postgres",
-        password: "a"
+        name: 'movies',
+        username: 'postgres',
+        password: 'a'
     },
-    server:{
-        port:3000
+    server: {
+        port: 3000
     },
     paths:['C:\\Movies', 'F:\\Movies']
 };

@@ -29,8 +29,8 @@ myApp.controller('movieCtrl', function ($scope, movieFactory) {
             }
         };
 
-        $scope.updateMovie = function (item, cat) {
-            movieFactory.updateMovie(item.id, cat).success(function () {
+        $scope.updateMovie = function (movie) {
+            movieFactory.updateMovie(movie).success(function () {
                 $scope.runOnce = true;
                 $scope.getMovies();
 

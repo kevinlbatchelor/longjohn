@@ -10,9 +10,8 @@ scanner.scan = function () {
         return stats.isDirectory();
     }
 
-
-    return Promise.map(config.paths, (path) => {
-        let data = readDirectory(path, [ignoreFunc]).then((paths) => {
+    return Promise.map(config.movies, (path) => {
+        return readDirectory(path, [ignoreFunc]).then((paths) => {
             return Promise.reduce(paths, (acc, path, index, length) => {
                 let pathDetails = path.split('\\');
 
@@ -42,13 +41,9 @@ scanner.scan = function () {
                 });
             }, []);
         });
-        return data;
-
     }).catch((error) => {
         console.log(error);
     });
-
-
 };
 
 module.exports = scanner;
