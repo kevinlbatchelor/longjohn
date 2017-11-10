@@ -20,6 +20,7 @@
     "pg": "^7.1.0",
     "recursive-readdir": "^2.2.1",
     "sequelize": "^4.4.2",
-    "serve-static": "^1.13.1"
+    "serve-static": "^1.13.1",
+    "imdb-api": "^3.1.2"
   }
 }

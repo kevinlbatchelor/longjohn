@@ -26,7 +26,8 @@
         <table border="0">
             <tbody>
             <tr ng-repeat="movies in movieList">
-                <td ng-repeat="movie in movies"><a href="#moviePlay/play/{{movie.id}}">{{movie.name}}</a>
+                <td ng-repeat="movie in movies"><a href="#moviePlay/play/{{movie.id}}">{{movie.name}}</a><br>
+                    <img ng-src={{movie.imdb.poster}} height="100" width="100">
                     <div ng-show="editMode">
                         <select class="thirty wide" ng-model="movie.genre"
                                 ng-options="cat.name as cat.name for cat in movieCategories">

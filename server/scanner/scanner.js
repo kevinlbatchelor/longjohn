@@ -2,6 +2,8 @@ let readDirectory = require('recursive-readdir');
 let config = require('../util/config');
 let movie = require('../movie/movie');
 let Promise = require('bluebird');
+const imdb = require('imdb-api');
+const _ = require('lodash');
 
 let scanner = {};
 
@@ -32,11 +34,29 @@ scanner.scan = function () {
                     }
                     return newMovie;
                 }).then((newMovie) => {
+                    let modMovie = newMovie;
+
+                    return imdb.get(_.startCase(newMovie.name), {
+                        apiKey: config.omdbApiKey,
+                        timeout: 30000
+                    }).then((imdb) => {
+                        newMovie.imdb = imdb;
+                        modMovie = newMovie;
+                        return newMovie
+                    }).catch((err) => {
+                        console.log(err, 'error')
+                    }).then(() => {
+                        return newMovie;
+                    })
+                }).then((newMovie) => {
                     if (!newMovie.duplicate) {
                         delete newMovie.duplicate;
                         movie.create(newMovie);
-                        acc.push(newMovie);
+                        return newMovie
                     }
+                }).then((movie) => {
+                    acc.push(movie);
+
                     return acc;
                 });
             }, []);

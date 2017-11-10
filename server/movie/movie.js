@@ -5,7 +5,9 @@ let movieSchema = {
     description: {type: db.STRING},
     path: {type: db.STRING},
     rating: {type: db.STRING},
-    genre: {type: db.STRING, default: 'ALL'}
+    genre: {type: db.STRING, default: 'ALL'},
+    imdb: {type: db.JSONB}
+
 };
 
 let Movie = db.connection.define('movie', movieSchema, {

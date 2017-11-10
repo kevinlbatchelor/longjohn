@@ -25,6 +25,11 @@ router.get(route(), function (req, res) {
             limit: 2000
         })
         .then(function (list) {
+            list.rows.map((movie) => {
+                movie.name = _.startCase(movie.name)
+                return movie;
+            });
+
             res.json(list);
         }).catch(function (err) {
         console.log(err);
@@ -40,13 +45,11 @@ router.get(route(':id'), function (req, res) {
 });
 
 router.post(route(), function (request, response) {
-    Movie.create(request.body, {})
-        .then(function (movie) {
-            response.json(movie);
-        }, function (err) {
-            console.log(err);
-        })
-    ;
+    Movie.create(request.body, {}).then(function (movie) {
+        response.json(movie);
+    }, function (err) {
+        console.log(err);
+    });
 });
 
 router.put(route(':id'), function (req, res) {
