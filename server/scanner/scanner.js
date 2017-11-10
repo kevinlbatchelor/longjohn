@@ -38,7 +38,7 @@ scanner.scan = function () {
 
                     return imdb.get(_.startCase(newMovie.name), {
                         apiKey: config.omdbApiKey,
-                        timeout: 30000
+                        timeout: 500
                     }).then((imdb) => {
                         newMovie.imdb = imdb;
                         modMovie = newMovie;
