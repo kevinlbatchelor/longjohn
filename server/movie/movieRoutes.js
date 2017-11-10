@@ -22,7 +22,7 @@ router.get(route(), function (req, res) {
             },
             order: [],
             offset: 0,
-            limit: 2000
+            limit: 8
         })
         .then(function (list) {
             list.rows.map((movie) => {
@@ -39,8 +39,8 @@ router.get(route(), function (req, res) {
 router.get(route(':id'), function (req, res) {
     let id = req.params.id;
     Movie.findById(id)
-        .then((path) => {
-            streamers.videoStreamer(path, req, res);
+        .then((file) => {
+            streamers.videoStreamer(file.path, req, res);
         });
 });
 
