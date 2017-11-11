@@ -22,7 +22,7 @@ router.get(route(), function (req, res) {
             },
             order: [],
             offset: 0,
-            limit: 8
+            limit: 1000
         })
         .then(function (list) {
             list.rows.map((movie) => {
