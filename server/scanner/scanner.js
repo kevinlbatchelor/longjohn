@@ -24,12 +24,14 @@ scanner.scan = function () {
                 newMovie.genre = 'new';
                 newMovie.duplicate = false;
 
-                return movie.findAll({
+                return movie.findOne({
                     where: {
                         path: newMovie.path
                     }
                 }).then((foundMovie) => {
-                    if (foundMovie.length > 0) {
+                    if (foundMovie) {
+                        newMovie.name = foundMovie.dataValues.name;
+                        newMovie.id = foundMovie.id;
                         newMovie.duplicate = true;
                     }
                     return newMovie;
@@ -42,20 +44,25 @@ scanner.scan = function () {
                     }).then((imdb) => {
                         newMovie.imdb = imdb;
                         modMovie = newMovie;
-                        return newMovie
+                        return newMovie;
                     }).catch((err) => {
-                        console.log(err, 'error')
+                        // console.log(err, 'error');
                     }).then(() => {
                         return newMovie;
-                    })
+                    });
                 }).then((newMovie) => {
                     if (!newMovie.duplicate) {
                         delete newMovie.duplicate;
                         movie.create(newMovie);
-                        return newMovie
+                        return newMovie;
                     } else {
-                        delete newMovie.duplicate;
-                        newMovie.upsert(newMovie)
+                        return movie.update({
+                            imdb: newMovie.imdb
+                        }, {
+                            where: {
+                                id: newMovie.id
+                            }
+                        });
                     }
                 }).then((movie) => {
                     acc.push(movie);
