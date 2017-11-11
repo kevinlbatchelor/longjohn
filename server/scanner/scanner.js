@@ -46,7 +46,7 @@ scanner.scan = function () {
                         modMovie = newMovie;
                         return newMovie;
                     }).catch((err) => {
-                        // console.log(err, 'error');
+                        console.log(err, 'error');
                     }).then(() => {
                         return newMovie;
                     });
