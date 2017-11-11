@@ -53,6 +53,9 @@ scanner.scan = function () {
                         delete newMovie.duplicate;
                         movie.create(newMovie);
                         return newMovie
+                    } else {
+                        delete newMovie.duplicate;
+                        newMovie.upsert(newMovie)
                     }
                 }).then((movie) => {
                     acc.push(movie);
