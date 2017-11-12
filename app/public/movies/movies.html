@@ -33,6 +33,7 @@
                                 ng-options="cat.name as cat.name for cat in movieCategories">
                             <option value="" class="">-- choose genre --</option>
                         </select><br>
+                        <input type="text" placeholder="rename"  ng-model="movie.name">
                         <button ng-click=updateMovie(movie)>update</button>
                     </div>
                 </td>
