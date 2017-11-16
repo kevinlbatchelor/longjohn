@@ -11,7 +11,7 @@ myApp.factory('adminFactory', function ($http, config) {
     adminFactory.findAudio = function () {
         return $http({
             method: 'GET',
-            url: config.baseUrl + '/mp3Scanner'
+            url: config.baseUrl + '/scan/audio'
         });
     };
 

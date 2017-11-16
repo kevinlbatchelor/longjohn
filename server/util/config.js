@@ -10,7 +10,8 @@ const config = {
     server: {
         port: 3000
     },
-    movies:['C:\\Movies', 'F:\\Movies']
+    movies:['C:\\Movies', 'F:\\Movies'],
+    audioBooks:['F:\\AudioBooks']
 };
 
 module.exports = config;

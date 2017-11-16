@@ -1,18 +1,19 @@
 let readDirectory = require('recursive-readdir');
 let config = require('../util/config');
 let movie = require('../movie/movie');
+let audioBook = require('../audioBooks/audioBook');
 let Promise = require('bluebird');
 const imdb = require('imdb-api');
 const _ = require('lodash');
 
 let scanner = {};
 
-scanner.scan = function () {
+scanner.scanForMovies = function (scanPaths) {
     function ignoreFunc(file, stats) {
         return stats.isDirectory();
     }
 
-    return Promise.map(config.movies, (path) => {
+    return Promise.map(scanPaths, (path) => {
         return readDirectory(path, [ignoreFunc]).then((paths) => {
             return Promise.reduce(paths, (acc, path, index, length) => {
                 let pathDetails = path.split('\\');
@@ -69,6 +70,39 @@ scanner.scan = function () {
 
                     return acc;
                 });
+            }, []);
+        });
+    }).catch((error) => {
+        console.log(error);
+    });
+};
+
+scanner.scanForAudio = function (scanPaths) {
+    return Promise.map(scanPaths, (path) => {
+        return readDirectory(path, ['!*.mp3']).then((paths) => {
+            return Promise.reduce(paths, (acc, path, index, length) => {
+                let pathDetails = path.split('\\');
+
+                let newAudio = {};
+                newAudio.name = pathDetails[pathDetails.length - 2];
+                newAudio.track = pathDetails[pathDetails.length - 1].slice(0, -4);
+                newAudio.path = path;
+                let duplicateAudio;
+
+                return audioBook.findOne({
+                    where: {
+                        path: newAudio.path
+                    },
+                    raw: true
+                }).then((foundAudioBook) => {
+                    if (foundAudioBook) {
+                        duplicateAudio = foundAudioBook
+                    } else {
+                        audioBook.create(newAudio)
+                        acc.push(newAudio.name);
+                    }
+                    return acc;
+                })
             }, []);
         });
     }).catch((error) => {

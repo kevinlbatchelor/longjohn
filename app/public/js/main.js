@@ -1,6 +1,6 @@
 let myApp = angular.module('myApp', ['ngRoute', 'ngSanitize']);
 
-myApp.config(function ($routeProvider) {
+myApp.config(function ($routeProvider, $sceProvider, $sceDelegateProvider) {
     $routeProvider.when('/', {
             templateUrl: "audioBooks/audioBooks.html",
             controller: "audioBookCtrl"
@@ -19,7 +19,15 @@ myApp.config(function ($routeProvider) {
         }).otherwise({
         templateUrl: "movies/movies.html",
         controller: "movieCtrl"
-    })
+    });
+    // $sceProvider.enabled(false);
+    $sceDelegateProvider.resourceUrlWhitelist([
+        // Allow same origin resource loads.
+        'self',
+        // Allow loading from our assets domain.  Notice the difference between * and **.
+        'http://localhost:3000*/**',
+        'http://192.168.1.4:3000*/**'
+    ])
 });
 
 myApp.constant('config', {

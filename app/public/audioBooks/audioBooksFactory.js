@@ -4,7 +4,7 @@ myApp.factory('audioBookFactory', function ($http, config) {
     audioBookFactory.getPlayList = function (book) {
         return $http({
             method: 'GET',
-            url: config.baseUrl + '/audioBooks?folder=' + book
+            url: config.baseUrl + '/audioBooks/playlist?book=' + book
         });
     };
 

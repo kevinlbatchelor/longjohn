@@ -21,7 +21,6 @@ let Category = db.connection.define('category', categorySchema, {
 
 Category.updateFunction = function () {
     Promise.each(categories, (cat) => {
-        console.log(cat);
         return Category.upsert(cat).catch((err) => {
             console.log(err);
         });

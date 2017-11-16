@@ -1,4 +1,4 @@
-myApp.directive('audioPlayer', function ($q, $window) {
+myApp.directive('audioPlayer', function ($q, $window, config, $sce) {
 
     return {
         restrict: 'E',
@@ -14,7 +14,7 @@ myApp.directive('audioPlayer', function ($q, $window) {
             });
 
             $scope.track = 0;
-            var media = document.getElementById('audio');
+            let media = document.getElementById('audio');
             $scope.check = {};
 
             $scope.clearBookMarks = function () {
@@ -26,36 +26,38 @@ myApp.directive('audioPlayer', function ($q, $window) {
                 }
             };
 
-            var saveMediaData = function (data) {
+            let saveMediaData = function (data) {
                 if (typeof(Storage) !== "undefined") {
-                    var mediaAbout = {'book': $scope.book, 'time': data, 'path': $scope.path, track: $scope.track};
+                    let mediaAbout = {'book': $scope.book, 'time': data, 'path': $scope.path, track: $scope.track};
                     localStorage.setItem($scope.book.name, JSON.stringify(mediaAbout));
                 } else {
                     alert("Your browser does not support web storage.");
                 }
             };
 
-            var checkForBookmark = function () {
+            let checkForBookmark = function () {
                 //media.removeEventListener('canplay', checkForBookmark);
-                var lastHeard = JSON.parse(localStorage.getItem($scope.book.name));
+                let lastHeard = JSON.parse(localStorage.getItem($scope.book.name));
                 if (lastHeard != null && angular.isDefined(lastHeard.track)) {
                     $scope.track = lastHeard.track;
                     media.currentTime = lastHeard.time;
                 }
             };
 
-            var listenForPause = function () {
+            let listenForPause = function () {
                 media.addEventListener('pause', function () {
                     saveMediaData(media.currentTime);
                 });
             };
 
-            var nextTrack = function () {
+            let nextTrack = function () {
                 $scope.track++;
-                $scope.path = "../../" + $scope.tracks[$scope.track].path;
+                // $scope.path = "../../" + $scope.tracks[$scope.track].path;
+                $scope.path = config.baseUrl + '/audioBooks/' + $scope.tracks[$scope.track].id;
+                console.log($scope.path)
             };
 
-            var ii = 0;
+            let ii = 0;
 
             function getMedia() {
                 listenForPause();
@@ -80,8 +82,10 @@ myApp.directive('audioPlayer', function ($q, $window) {
                 if (ii === 0) {
                     $scope.$watch('tracks', function () {
                         if (_.isArray($scope.tracks)) {
+                            console.log($scope.tracks)
+                            console.log($scope.track)
                             checkForBookmark();
-                            $scope.path = "../../" + $scope.tracks[$scope.track].path;
+                            $scope.path = config.baseUrl + '/audioBooks/' + $scope.tracks[$scope.track].id;
                             getMedia().then(function () {
                                 nextTrack();
                                 media.load();

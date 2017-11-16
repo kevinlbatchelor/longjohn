@@ -20,7 +20,7 @@ router.get(route(), function (req, res) {
                     $ilike: `%${name}%`
                 }
             },
-            order: [],
+            order: ['name'],
             offset: 0,
             limit: 1000
         })

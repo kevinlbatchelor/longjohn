@@ -1,5 +1,6 @@
 myApp.controller('playCtrl', function ($scope, $routeParams, movieFactory, config) {
     $scope.path = config.baseUrl + '/movie/' + $routeParams.movieId;
+    console.log($scope.path)
 
     //getting one movie ie movie/234 returns the streamable link there needs to be a new end point for getting
     // the vtt file and the .edl file

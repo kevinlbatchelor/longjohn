@@ -19,6 +19,7 @@ app.use(express.static('public'));
 app.use('/', require('./util/status'));
 
 app.use('/', require('./movie/movieRoutes'));
+app.use('/', require('./audioBooks/audioBookRoutes'));
 app.use('/', require('./movie/movieCategoryRoutes'));
 app.use('/', require('./scanner/scannerRoutes'));
 // TODO add other routes
