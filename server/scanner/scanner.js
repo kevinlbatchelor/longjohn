@@ -78,13 +78,18 @@ scanner.scanForMovies = function (scanPaths) {
 };
 
 scanner.scanForAudio = function (scanPaths) {
+    function ignoreFunc(file, stats) {
+        return stats.isDirectory();
+    }
+
     return Promise.map(scanPaths, (path) => {
-        return readDirectory(path, ['!*.mp3']).then((paths) => {
+        return readDirectory(path, []).then((paths) => {
+            const nameIndex = path.split('\\').length;
             return Promise.reduce(paths, (acc, path, index, length) => {
                 let pathDetails = path.split('\\');
 
                 let newAudio = {};
-                newAudio.name = pathDetails[pathDetails.length - 2];
+                newAudio.name = pathDetails[nameIndex];
                 newAudio.track = pathDetails[pathDetails.length - 1].slice(0, -4);
                 newAudio.path = path;
                 let duplicateAudio;
