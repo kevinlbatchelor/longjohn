@@ -15,7 +15,7 @@ router.get(route(), function (req, res) {
         })
         .then(function (list) {
             list.rows.map((audioBook) => {
-                audioBook.name = _.startCase(audioBook.name);
+                audioBook.name = audioBook.name;
                 return audioBook;
             });
 
@@ -27,11 +27,13 @@ router.get(route(), function (req, res) {
 
 router.get(route('playlist'), function (req, res) {
     let book = req.query.book;
+    console.log(book)
     AudioBook.findAll({
         where: {
             name: book
         }
     }).then((list) => {
+        console.log(list, 'list')
         res.json(list);
     });
 });
