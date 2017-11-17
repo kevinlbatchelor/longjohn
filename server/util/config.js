@@ -11,7 +11,7 @@ const config = {
         port: 3000
     },
     movies:['C:\\Movies', 'F:\\Movies'],
-    audioBooks:['F:\\AudioBooks']
+    audioBooks:['F:\\mp3s\\Audio Books']
 };
 
 module.exports = config;
