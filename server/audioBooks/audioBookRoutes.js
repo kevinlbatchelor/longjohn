@@ -21,28 +21,25 @@ router.get(route(), function (req, res) {
 
             res.json(list);
         }).catch(function (err) {
-        console.log(err);
+        console.error(err);
     });
 });
 
 router.get(route('playlist'), function (req, res) {
     let book = req.query.book;
-    console.log(book)
     AudioBook.findAll({
         where: {
             name: book
-        }
+        },
+        order: ['id']
     }).then((list) => {
-        console.log(list, 'list')
         res.json(list);
     });
 });
 
 router.get(route(':id'), function (req, res) {
     let id = req.params.id;
-    console.log(id)
     AudioBook.findById(id).then((file) => {
-        console.log(file.path)
         streamers.audioStreamer(file.path, req, res);
     });
 });
@@ -51,7 +48,7 @@ router.post(route(), function (request, response) {
     AudioBook.create(request.body, {}).then(function (audioBook) {
         response.json(audioBook);
     }, function (err) {
-        console.log(err);
+        console.error(err);
     });
 });
 

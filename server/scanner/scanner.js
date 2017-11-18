@@ -83,7 +83,7 @@ scanner.scanForAudio = function (scanPaths) {
     }
 
     return Promise.map(scanPaths, (path) => {
-        return readDirectory(path, []).then((paths) => {
+        return readDirectory(path, ['!*.mp3']).then((paths) => {
             const nameIndex = path.split('\\').length;
             return Promise.reduce(paths, (acc, path, index, length) => {
                 let pathDetails = path.split('\\');
