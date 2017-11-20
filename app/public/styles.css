@@ -45,7 +45,6 @@ input.wide {
     background-color: #000;
     border: .5px solid var(--text-color);
     color: var(--text-color);
-    width: 100%;
 }
 
 select {
@@ -187,6 +186,10 @@ ul#main-nav {
 
 .delete-link:hover {
     text-decoration: underline;
+}
+
+.wide {
+    width: 100%;
 }
 
 .info-icon {
