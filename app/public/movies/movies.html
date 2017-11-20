@@ -1,16 +1,16 @@
-<aside id="sidebar">
+<div class="sidebar">
     <section class="widget">
         <h2><strong>search</strong> movies</h2>
         <form ng-submit="getMovies()">
-            <select class="thirty wide" ng-model="searchCategory"
+            <select class="wide" ng-model="searchCategory"
                     ng-options="cat.name as cat.name for cat in movieCategories">
                 <option value="" class="">-- choose genre --</option>
             </select>
-            <input class="thirty wide" ng-model="searchName" type="text"
+            <input class="wide" ng-model="searchName" type="text"
                    placeholder="search name">
-            <input class="thirty wide" type="submit" value="go">
+            <input class="wide" type="submit" value="go">
         </form>
-        <br><br>
+        <br>
         <label>Edit Mode<input class="ck" type="checkbox" ng-model="editMode"></label>
     </section>
     <div class="info-box" style="">
@@ -20,25 +20,19 @@
         <div class="rating-imdb"></div>
         <div class="close" ng-click="closeInfo()">x</div>
     </div>
-</aside>
-<div id="content">
-    <article class="post">
-        <table border="0">
-            <tbody>
-            <tr ng-repeat="movies in movieList">
-                <td ng-repeat="movie in movies"><a href="#moviePlay/play/{{movie.id}}">{{movie.name}}</a><br>
-                    <img ng-src={{movie.imdb.poster}} height="100" width="100">
-                    <div ng-show="editMode">
-                        <select class="thirty wide" ng-model="movie.genre"
-                                ng-options="cat.name as cat.name for cat in movieCategories">
-                            <option value="" class="">-- choose genre --</option>
-                        </select><br>
-                        <input type="text" placeholder="rename"  ng-model="movie.name">
-                        <button ng-click=updateMovie(movie)>update</button>
-                    </div>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </article>
+</div>
+<div class="content">
+    <div class="row" ng-repeat="movies in movieList">
+        <div class="tile col-xs-12 col-sm-6 col-md-3" ng-repeat="movie in movies"><a href="#moviePlay/play/{{movie.id}}">{{movie.name}}</a><br>
+            <img ng-src={{movie.imdb.poster}} height="100" width="100">
+            <div ng-show="editMode">
+                <select ng-model="movie.genre"
+                        ng-options="cat.name as cat.name for cat in movieCategories">
+                    <option>-- choose genre --</option>
+                </select><br>
+                <input type="text" placeholder="rename" ng-model="movie.name">
+                <button ng-click=updateMovie(movie)>update</button>
+            </div>
+        </div>
+    </div>
 </div>

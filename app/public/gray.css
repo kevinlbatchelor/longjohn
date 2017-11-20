@@ -45,6 +45,7 @@ input.wide {
     background-color: #000;
     border: .5px solid var(--text-color);
     color: var(--text-color);
+    width: 100%;
 }
 
 select {
@@ -86,71 +87,71 @@ select {
     transition: color .5s ease;
 }
 
-#pagewrap {
+.page-wrap {
     min-width: 100%;
     margin: 0 auto;
     background-color: #000000;
     border-radius: 5px;
 }
 
-#pagewrap a {
+.page-wrap a {
     text-decoration: none;
 }
 
-#pagewrap a:hover {
+.page-wrap a:hover {
     text-decoration: none;
 }
 
-#header {
+.header {
     width: 100%;
     overflow: hidden;
     text-align: center;
     border: .5px solid var(--text-color);
 }
 
-#content {
+.content {
     border: .5px solid var(--text-color);
     padding: 5px;
     margin: 10px 0 10px 10px;
     flex-grow: 1;
 }
 
-#content img {
+.content img {
     width: 200px;
     height: auto;
 }
 
-#content select {
+.content select {
     width: 50% !important;
 }
 
-#content input {
+.content input {
     width: auto;
 }
 
-#sidebar {
+.sidebar {
     border: .5px solid var(--text-color);
     padding: 5px;
     margin: 10px 0 10px;
 }
 
-#sidebar li {
+.sidebar li {
     list-style-type: none;
 
 }
 
-.movieWrapper {
-    position: relative;
-}
-
-.movieName {
+.title {
     width: 200px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-#footer {
+.tile {
+    text-align: center;
+}
+
+.footer {
     height: 30px;
     background-color: #000;
     border: .5px solid var(--text-color);
@@ -255,6 +256,17 @@ ul#main-nav {
     cursor: pointer;
 }
 
-.thirty, .fortyfive {
-    width: 100%;
+@media screen and (max-width: 640px) {
+    .body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .content{
+        margin: 0;
+    }
+
+    h2{
+        display: none;
+    }
 }

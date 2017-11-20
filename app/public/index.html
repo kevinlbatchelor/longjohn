@@ -9,6 +9,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.1/angular-route.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.1/angular-sanitize.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"></script>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/flexboxgrid/6.3.1/flexboxgrid.min.css" type="text/css" >
+
 
     <script src="js/main.js"></script>
     <script src="audioBooks/audioBooksFactory.js"></script>
@@ -32,8 +34,8 @@
 </head>
 
 <body>
-<div id="pagewrap">
-    <header id="header">
+<div class="page-wrap">
+    <header class="header">
         <nav class="center">
             <ul id="main-nav">
                 <li><a href="#movies/">movies</a></li>
@@ -47,7 +49,7 @@
     <div ng-app="myApp">
         <ng-view class="body"></ng-view>
     </div>
-    <footer id="footer">
+    <footer class="footer">
     </footer>
 </div>
 </body>
