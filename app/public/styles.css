@@ -33,13 +33,6 @@ ul {
 
 select {
     width: 100%;
-    border: 0;
-    height: 30px;
-    margin: 5px 0 5px 0;
-}
-
-input.wide {
-    padding: 0;
     height: 30px;
     margin: 5px 0 5px 0;
     background-color: #000;
@@ -47,7 +40,9 @@ input.wide {
     color: var(--text-color);
 }
 
-select {
+input {
+    height: 30px;
+    margin: 5px 0 5px 0;
     background-color: #000;
     border: .5px solid var(--text-color);
     color: var(--text-color);
@@ -118,10 +113,6 @@ select {
 .content img {
     width: 200px;
     height: auto;
-}
-
-.content select {
-    width: 50% !important;
 }
 
 .content input {

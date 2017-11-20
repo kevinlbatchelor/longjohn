@@ -26,12 +26,12 @@
         <div class="tile col-xs-12 col-sm-6 col-md-3" ng-repeat="movie in movies"><a href="#moviePlay/play/{{movie.id}}">{{movie.name}}</a><br>
             <img ng-src={{movie.imdb.poster}} height="100" width="100">
             <div ng-show="editMode">
-                <select ng-model="movie.genre"
+                <select ng-model="movie.genre" class="wide"
                         ng-options="cat.name as cat.name for cat in movieCategories">
-                    <option>-- choose genre --</option>
+                    <option value="">-- choose genre --</option>
                 </select><br>
                 <input type="text" placeholder="rename" ng-model="movie.name">
-                <button ng-click=updateMovie(movie)>update</button>
+                <input class="wide" type="submit" ng-click=updateMovie(movie) value="update">
             </div>
         </div>
     </div>
