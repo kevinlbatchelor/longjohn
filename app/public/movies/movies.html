@@ -8,6 +8,7 @@
             </select>
             <input class="wide" ng-model="searchName" type="text"
                    placeholder="search name">
+            <input class="wide" ng-model="pin" type="password" placeholder="pin">
             <input class="wide" type="submit" value="go">
         </form>
         <br>
@@ -23,7 +24,7 @@
 </div>
 <div class="content">
     <div class="row" ng-repeat="movies in movieList">
-        <div class="tile col-xs-12 col-sm-6 col-md-3" ng-repeat="movie in movies"><a href="#moviePlay/play/{{movie.id}}">{{movie.name}}</a><br>
+        <div class="tile col-xs-12 col-sm-6 col-md-3" ng-repeat="movie in movies"><a ng-hide="{{movie.imdb.rated === 'R' && pin!=1823}}" href="#moviePlay/play/{{movie.id}}">{{movie.name}}</a><br>
             <img ng-src={{movie.imdb.poster}} height="100" width="100">
             <div ng-show="editMode">
                 <select ng-model="movie.genre" class="wide"

@@ -39,7 +39,7 @@ scanner.scanForMovies = function (scanPaths) {
                 }).then((newMovie) => {
                     let modMovie = newMovie;
 
-                    return imdb.get(_.startCase(newMovie.name), {
+                    return imdb.get(newMovie.name, {
                         apiKey: config.omdbApiKey,
                         timeout: 500
                     }).then((imdb) => {

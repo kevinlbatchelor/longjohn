@@ -1,5 +1,6 @@
 myApp.controller('movieCtrl', function ($scope, movieFactory) {
         $scope.runOnce = true;
+
         $scope.getMovies = function () {
             if ($scope.runOnce) {
                 $scope.runOnce = false;
