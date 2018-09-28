@@ -26,7 +26,8 @@ myApp.config(function ($routeProvider, $sceProvider, $sceDelegateProvider) {
         'self',
         // Allow loading from our assets domain.  Notice the difference between * and **.
         'http://localhost:3000*/**',
-        'http://192.168.1.4:3000*/**'
+        'http://192.168.1.4:3000*/**',
+        'http://24.10.227.31:3000*/**',
     ])
 });
 

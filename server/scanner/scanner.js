@@ -20,6 +20,7 @@ scanner.scanForMovies = function (scanPaths) {
 
                 let newMovie = {};
                 newMovie.name = pathDetails[pathDetails.length - 1].slice(0, -4);
+                newMovie.ext = pathDetails[pathDetails.length - 1].split('.').pop();
                 newMovie.path = path;
                 newMovie.description = '';
                 newMovie.genre = 'new';
@@ -52,7 +53,7 @@ scanner.scanForMovies = function (scanPaths) {
                         return newMovie;
                     });
                 }).then((newMovie) => {
-                    if (!newMovie.duplicate) {
+                    if (!newMovie.duplicate && newMovie.ext === 'mp4') {
                         delete newMovie.duplicate;
                         movie.create(newMovie);
                         return newMovie;
