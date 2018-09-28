@@ -31,7 +31,7 @@ router.get(route('playlist'), function (req, res) {
         where: {
             name: book
         },
-        order: ['id']
+        order: ['track']
     }).then((list) => {
         res.json(list);
     });
