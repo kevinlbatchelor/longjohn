@@ -1,5 +1,5 @@
 const config = {
-    omdbApiKey:'75cb371b',
+    omdbApiKey: '75cb371b',
     database: {
         host: '127.0.0.1',
         port: 5432,
@@ -10,8 +10,8 @@ const config = {
     server: {
         port: 3000
     },
-    movies:['C:\\Movies', 'F:\\Movies'],
-    audioBooks:['F:\\mp3s\\Audio Books']
+    movies: ['C:\\Movies', 'F:\\Movies', 'Q:\\Movies'],
+    audioBooks: ['F:\\mp3s\\Audio Books']
 };
 
 module.exports = config;

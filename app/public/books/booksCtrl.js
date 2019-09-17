@@ -7,9 +7,9 @@ myApp.controller('bookCtrl', function ($scope, bookFactory, $routeParams) {
                 return d;
             });
 
-            var chunk = function (arr, size) {
-                var newArr = [];
-                for (var i = 0; i < arr.length; i += size) {
+            let chunk = function (arr, size) {
+                let newArr = [];
+                for (let i = 0; i < arr.length; i += size) {
                     newArr.push(arr.slice(i, i + size));
                 }
                 return newArr;
@@ -54,7 +54,7 @@ myApp.controller('bookCtrl', function ($scope, bookFactory, $routeParams) {
     $scope.alpha = $scope.alphabet[0];
 
     $scope.bookInfo = {};
-    var x, y;
+    let x, y;
     $scope.getInfo = function (event, book) {
 
         $scope.author = $routeParams.author;
