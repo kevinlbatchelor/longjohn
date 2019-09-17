@@ -1,9 +1,6 @@
 let router = require('../util/router');
-let error = require('../util/error');
 let Movie = require('./movie');
 let route = router.v1Path('movie');
-let scanner = require('../scanner/scanner');
-let fs = require('fs');
 let _ = require('lodash');
 const streamers = require('../streaming/streamers');
 
@@ -26,7 +23,7 @@ router.get(route(), function (req, res) {
         })
         .then(function (list) {
             list.rows.map((movie) => {
-                movie.name = _.startCase(movie.name)
+                movie.name = _.startCase(movie.name);
                 return movie;
             });
 
@@ -55,7 +52,7 @@ router.post(route(), function (request, response) {
 router.put(route(':id'), function (req, res) {
     let id = req.params.id;
 
-    Movie.findOne({where: {id: id}}).then(function (movie) {
+    Movie.findOne({ where: { id: id } }).then(function (movie) {
         let partData = req.body;
         movie.set(partData);
         movie.save().then(function (part) {
@@ -66,7 +63,7 @@ router.put(route(':id'), function (req, res) {
 
 router.delete(route(':id'), function (req, res) {
     let id = req.params.id;
-    Movie.destroy({where: {id: id}}).then(function () {
+    Movie.destroy({ where: { id: id } }).then(function () {
         res.json('Movie has been deleted.');
     });
 });
