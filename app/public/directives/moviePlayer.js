@@ -45,10 +45,10 @@ myApp.directive('videoPlayer', function ($compile, $http, $sce) {
             };
 
             let video = angular.element('<div class="video-player"></div>');
-            video.append(`<video id="video" width="100%" preload="none" ng-src="{{trustSrc(path)}}" autoplay controls type="video/mp4">
+            video.append(`<video id="video" width="100%" preload="none" ng-src="{{trustSrc(path)}}" autoplay controls type="video/mp4" crossorigin="anonymous">
                             <!--<source ng-src="{{trustSrc(path)}}" autoplay controls type="video/mp4">-->
                             <!--angular screws source tags, moving src to video tag fixes it-->
-                            <!--<track label="English" kind="subtitles" srclang="en" src="{{trustSrc(subs)}}" default>-->
+                            <track label="English" kind="subtitles" srclang="en" ng-src="{{trustSrc(subs)}}" crossorigin="anonymous" default>
                         </video>`);
             $compile(video)($scope);
             $element.append(video);
