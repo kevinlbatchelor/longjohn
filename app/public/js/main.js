@@ -25,11 +25,12 @@ myApp.config(function ($routeProvider, $sceProvider, $sceDelegateProvider) {
         // Allow same origin resource loads.
         'self',
         // Allow loading from our assets domain.  Notice the difference between * and **.
+        'http://localhost*/**',
         'http://localhost:3000*/**',
-        'http://192.168.1.34:3000*/**'
+        'http://192.168.1.38:3000*/**'
     ]);
 });
 
 myApp.constant('config', {
-    baseUrl: 'http://192.168.1.34:3000/api/v1'
+    baseUrl: 'http://192.168.1.38:3000/api/v1'
 });

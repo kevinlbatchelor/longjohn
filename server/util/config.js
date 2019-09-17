@@ -10,7 +10,7 @@ const config = {
     server: {
         port: 3000
     },
-    movies:['C:\\movies'],
+    movies:['C:\\Movies', 'F:\\Movies'],
     audioBooks:['F:\\mp3s\\Audio Books']
 };
 
