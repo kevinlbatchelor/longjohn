@@ -13,7 +13,7 @@ scanner.scanForMovies = function (scanPaths) {
         return stats.isDirectory();
     }
 
-    return Promise.map(scanPaths, (path) => {
+    return Promise.map(scanPaths, function indexMovie(path) {
         return readDirectory(path, [ignoreFunc]).then((paths) => {
             return Promise.reduce(paths, (acc, path, index, length) => {
                 let pathDetails = path.split('\\');
@@ -35,23 +35,30 @@ scanner.scanForMovies = function (scanPaths) {
                         newMovie.name = foundMovie.dataValues.name;
                         newMovie.id = foundMovie.id;
                         newMovie.duplicate = true;
+                        newMovie.imdb = foundMovie.imdb;
                     }
                     return newMovie;
                 }).then((newMovie) => {
                     let modMovie = newMovie;
+                    if (newMovie.imdb === null) {
 
-                    return imdb.get(newMovie.name, {
-                        apiKey: config.omdbApiKey,
-                        timeout: 500
-                    }).then((imdb) => {
-                        newMovie.imdb = imdb;
-                        modMovie = newMovie;
-                        return newMovie;
-                    }).catch((err) => {
-                        console.log(err, 'error');
-                    }).then(() => {
-                        return newMovie;
-                    });
+                        return imdb.get(newMovie.name, {
+                            apiKey: config.omdbApiKey,
+                            timeout: 500
+                        }).then((imdb) => {
+                            newMovie.imdb = imdb;
+                            modMovie = newMovie;
+                            return newMovie;
+                        }).catch((err) => {
+                            console.log(err);
+                        }).then(() => {
+                            return newMovie;
+                        });
+                    } else {
+                        return Promise.resolve(newMovie);
+                    }
+
+
                 }).then((newMovie) => {
                     if (!newMovie.duplicate && newMovie.ext === 'mp4') {
                         delete newMovie.duplicate;
@@ -102,13 +109,13 @@ scanner.scanForAudio = function (scanPaths) {
                     raw: true
                 }).then((foundAudioBook) => {
                     if (foundAudioBook) {
-                        duplicateAudio = foundAudioBook
+                        duplicateAudio = foundAudioBook;
                     } else {
-                        audioBook.create(newAudio)
+                        audioBook.create(newAudio);
                         acc.push(newAudio.name);
                     }
                     return acc;
-                })
+                });
             }, []);
         });
     }).catch((error) => {
