@@ -35,14 +35,14 @@ scanner.scanForMovies = function (scanPaths) {
                         newMovie.name = foundMovie.dataValues.name;
                         newMovie.id = foundMovie.id;
                         newMovie.duplicate = true;
+                        newMovie.genre = foundMovie.genre;
                         newMovie.imdb = foundMovie.imdb;
                     }
                     return newMovie;
                 }).then((newMovie) => {
                     let modMovie = newMovie;
-                    if (newMovie.imdb === null) {
-
-                        return imdb.get(newMovie.name, {
+                    if (newMovie.imdb === null && newMovie.genre !=='TV') {
+                        return imdb.get({name:_.startCase(newMovie.name)}, {
                             apiKey: config.omdbApiKey,
                             timeout: 500
                         }).then((imdb) => {
@@ -50,6 +50,7 @@ scanner.scanForMovies = function (scanPaths) {
                             modMovie = newMovie;
                             return newMovie;
                         }).catch((err) => {
+                            console.log(newMovie.genre)
                             console.log(err);
                         }).then(() => {
                             return newMovie;

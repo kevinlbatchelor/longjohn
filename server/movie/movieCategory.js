@@ -6,7 +6,8 @@ let categories = [
     {id: 2, name: 'Drama'},
     {id: 3, name: 'Comedy'},
     {id: 4, name: 'Action'},
-    {id: 5, name: 'Kids'}
+    {id: 5, name: 'TV'},
+    {id: 6, name: 'Kids'}
 ];
 
 let categorySchema = {
@@ -20,9 +21,7 @@ let Category = db.connection.define('category', categorySchema, {
 });
 
 Category.updateFunction = function () {
-    console.log('inupdate fun')
     return Promise.each(categories, (cat) => {
-        console.log(cat, 'cat')
         return Category.upsert(cat).catch((err) => {
             console.log(err);
         });

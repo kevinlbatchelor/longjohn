@@ -3,6 +3,7 @@ let Movie = require('./movie');
 let route = router.v1Path('movie');
 let _ = require('lodash');
 const streamers = require('../streaming/streamers');
+const { Op } = require("sequelize")
 
 router.get(route(), function (req, res) {
     let category = _.get(req, 'query.category', null);
@@ -11,10 +12,10 @@ router.get(route(), function (req, res) {
         {
             where: {
                 genre: {
-                    $like: `%${category}%`
+                    [Op.like]: `%${category}%`
                 },
                 name: {
-                    $ilike: `%${name}%`
+                    [Op.iLike]: `%${name}%`
                 }
             },
             order: ['name'],
