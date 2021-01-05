@@ -36,7 +36,7 @@ router.get(route(), function (req, res) {
 
 router.get(route(':id'), function (req, res) {
     let id = req.params.id;
-    Movie.findById(id)
+    Movie.findByPk(id)
         .then((file) => {
             streamers.videoStreamer(file.path, req, res);
         });

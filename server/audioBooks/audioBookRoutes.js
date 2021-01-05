@@ -39,7 +39,7 @@ router.get(route('playlist'), function (req, res) {
 
 router.get(route(':id'), function (req, res) {
     let id = req.params.id;
-    AudioBook.findById(id).then((file) => {
+    AudioBook.findByPk(id).then((file) => {
         streamers.audioStreamer(file.path, req, res);
     });
 });

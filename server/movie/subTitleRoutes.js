@@ -5,7 +5,7 @@ const streamers = require('../streaming/streamers');
 
 router.get(route(':id'), function (req, res) {
     let id = req.params.id;
-    Movie.findById(id)
+    Movie.findByPk(id)
         .then((file) => {
             let newStr = file.path.slice(0, -3);
             newStr = newStr + 'vtt';
