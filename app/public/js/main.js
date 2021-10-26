@@ -25,12 +25,15 @@ myApp.config(function ($routeProvider, $sceProvider, $sceDelegateProvider) {
         // Allow same origin resource loads.
         'self',
         // Allow loading from our assets domain.  Notice the difference between * and **.
+        // this is need for loading audio and video files
+        // You needed to add a port forwarding rule for 80 for front end requests and for port 3000 for request from the server to the back end
         'http://localhost:3000*/**',
-        'http://192.168.1.4:3000*/**',
-        'http://24.10.227.31:3000*/**',
+        'http://nodeServerIp:3000*/**',
+        'http://myhomeip:6543*/**',
+        '*'
     ])
 });
 
 myApp.constant('config', {
-    baseUrl: 'http://192.168.1.4:3000/api/v1'
+    baseUrl: 'http://myhomeip:3000/api/v1'
 });

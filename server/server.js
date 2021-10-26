@@ -1,4 +1,3 @@
-let fs = require('fs');
 let express = require('express');
 let logger = require('morgan');
 let bodyParser = require('body-parser');
@@ -9,7 +8,9 @@ let router = require('./util/router');
 let app = express();
 let cors = require('cors');
 
-app.use(cors());
+app.use(cors({
+    origin: '*'
+}));
 
 app.use(logger('dev'));
 app.use(bodyParser.json());
@@ -50,10 +51,10 @@ app.use(function (err, req, res, next) {
         res.json({error: err});
     }
 });
-// require('./util/database/dbSetup')();
+//require('./util/database/dbSetup')();
 // Start the server
 
 app.set('port', config.server.port);
 
 require('http').createServer(app).listen(app.get('port'));
-
+console.log('starting server...')

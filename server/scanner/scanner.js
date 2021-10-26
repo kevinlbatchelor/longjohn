@@ -1,12 +1,13 @@
-let readDirectory = require('recursive-readdir');
-let config = require('../util/config');
-let movie = require('../movie/movie');
-let audioBook = require('../audioBooks/audioBook');
-let Promise = require('bluebird');
+const readDirectory = require('recursive-readdir');
+const config = require('../util/config');
+const movie = require('../movie/movie');
+const audioBook = require('../audioBooks/audioBook');
+const Promise = require('bluebird');
 const imdb = require('imdb-api');
 const _ = require('lodash');
-
-let scanner = {};
+const scanner = {};
+const os = require('os');
+const osPathCharacter = os.platform() === 'win32' ? '\\' : '/';
 
 scanner.scanForMovies = function (scanPaths) {
     function ignoreFunc(file, stats) {
@@ -14,9 +15,9 @@ scanner.scanForMovies = function (scanPaths) {
     }
 
     return Promise.map(scanPaths, function indexMovie(path) {
-        return readDirectory(path, [ignoreFunc]).then((paths) => {
+        return readDirectory(path, ['!*.mp4']).then((paths) => {
             return Promise.reduce(paths, (acc, path, index, length) => {
-                let pathDetails = path.split('\\');
+                let pathDetails = path.split(osPathCharacter);
 
                 let newMovie = {};
                 newMovie.name = pathDetails[pathDetails.length - 1].slice(0, -4);
@@ -41,16 +42,21 @@ scanner.scanForMovies = function (scanPaths) {
                     return newMovie;
                 }).then((newMovie) => {
                     let modMovie = newMovie;
-                    if (newMovie.imdb === null && newMovie.genre !=='TV') {
-                        return imdb.get({name:_.startCase(newMovie.name)}, {
+
+                    if (_.isEmpty(newMovie.imdb)) {
+
+                        return imdb.get({ name: newMovie.name }, {
                             apiKey: config.omdbApiKey,
                             timeout: 500
                         }).then((imdb) => {
                             newMovie.imdb = imdb;
+                            newMovie.genre = imdb.genres;
+                            newMovie.rating = imdb.rated;
+
                             modMovie = newMovie;
                             return newMovie;
                         }).catch((err) => {
-                            console.log(newMovie.genre)
+                            console.log(newMovie.genre);
                             console.log(err);
                         }).then(() => {
                             return newMovie;
@@ -59,7 +65,6 @@ scanner.scanForMovies = function (scanPaths) {
                         return Promise.resolve(newMovie);
                     }
 
-
                 }).then((newMovie) => {
                     if (!newMovie.duplicate && newMovie.ext === 'mp4') {
                         delete newMovie.duplicate;
@@ -67,6 +72,7 @@ scanner.scanForMovies = function (scanPaths) {
                         return newMovie;
                     } else {
                         return movie.update({
+                            genre: newMovie.genre,
                             imdb: newMovie.imdb
                         }, {
                             where: {
@@ -91,11 +97,13 @@ scanner.scanForAudio = function (scanPaths) {
         return stats.isDirectory();
     }
 
-    return Promise.map(scanPaths, (path) => {
-        return readDirectory(path, ['!*.mp3']).then((paths) => {
-            const nameIndex = path.split('\\').length;
+    return Promise.map(scanPaths, (outerPath) => {
+        return readDirectory(outerPath, ['!*.mp3']).then((paths) => {
+
+            const nameIndex = outerPath.split(osPathCharacter).length;
             return Promise.reduce(paths, (acc, path, index, length) => {
-                let pathDetails = path.split('\\');
+
+                let pathDetails = path.split(osPathCharacter);
 
                 let newAudio = {};
                 newAudio.name = pathDetails[nameIndex];
