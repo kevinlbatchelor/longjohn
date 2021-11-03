@@ -1,7 +1,6 @@
 let router = require('../util/router');
 let AudioBook = require('./audioBook');
 let route = router.v1Path('audioBooks');
-let _ = require('lodash');
 const streamers = require('../streaming/streamers');
 
 router.get(route(), function (req, res) {
@@ -55,7 +54,7 @@ router.post(route(), function (request, response) {
 router.put(route(':id'), function (req, res) {
     let id = req.params.id;
 
-    AudioBook.findOne({where: {id: id}}).then(function (audioBook) {
+    AudioBook.findOne({ where: { id: id } }).then(function (audioBook) {
         let partData = req.body;
         audioBook.set(partData);
         audioBook.save().then(function (part) {
@@ -66,7 +65,7 @@ router.put(route(':id'), function (req, res) {
 
 router.delete(route(':id'), function (req, res) {
     let id = req.params.id;
-    AudioBook.destroy({where: {id: id}}).then(function () {
+    AudioBook.destroy({ where: { id: id } }).then(function () {
         res.json('audioBook has been deleted.');
     });
 });

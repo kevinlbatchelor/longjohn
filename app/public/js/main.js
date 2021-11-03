@@ -35,5 +35,5 @@ myApp.config(function ($routeProvider, $sceProvider, $sceDelegateProvider) {
 });
 
 myApp.constant('config', {
-    baseUrl: 'http://myhomeip:3000/api/v1'
+    baseUrl: 'http://localhost:3000/api/v1'
 });

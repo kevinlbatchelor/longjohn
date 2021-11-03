@@ -51,7 +51,7 @@ app.use(function (err, req, res, next) {
         res.json({error: err});
     }
 });
-//require('./util/database/dbSetup')();
+// require('./util/database/dbSetup')();
 // Start the server
 
 app.set('port', config.server.port);

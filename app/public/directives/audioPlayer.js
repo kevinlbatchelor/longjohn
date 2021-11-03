@@ -18,7 +18,7 @@ myApp.directive('audioPlayer', function ($q, $window, config, $sce) {
             $scope.check = {};
 
             $scope.clearBookMarks = function () {
-                if (typeof(Storage) !== 'undefined') {
+                if (typeof (Storage) !== 'undefined') {
                     localStorage.removeItem($scope.book.name);
                     $window.location.reload();
                 } else {
@@ -27,8 +27,8 @@ myApp.directive('audioPlayer', function ($q, $window, config, $sce) {
             };
 
             let saveMediaData = function (data) {
-                if (typeof(Storage) !== 'undefined') {
-                    let mediaAbout = {'book': $scope.book, 'time': data, 'path': $scope.path, track: $scope.track};
+                if (typeof (Storage) !== 'undefined') {
+                    let mediaAbout = { 'book': $scope.book, 'time': data, 'path': $scope.path, track: $scope.track };
                     localStorage.setItem($scope.book.name, JSON.stringify(mediaAbout));
                 } else {
                     alert('Your browser does not support web storage.');
@@ -78,16 +78,15 @@ myApp.directive('audioPlayer', function ($q, $window, config, $sce) {
             $scope.playIt = function () {
                 if (ii === 0) {
                     $scope.$watch('tracks', function () {
-                        if (_.isArray($scope.tracks)) {
+                        if (Array.isArray($scope.tracks)) {
                             checkForBookmark();
                             $scope.path = config.baseUrl + '/audioBooks/' + $scope.tracks[$scope.track].id;
                             addEndTrackListner().then(function () {
-                                console.log($scope.track);
+
                                 nextTrack();
-                                console.log($scope.track);
 
                             }, function (error) {
-                                console.log(error);
+                                console.log('track error:', error);
                             });
                         }
                     }, true);

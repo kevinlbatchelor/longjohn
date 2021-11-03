@@ -13,28 +13,34 @@ myApp.controller('adminCtrl', function ($scope, adminFactory) {
 
     $scope.findMovies = function () {
         showScanning().then(function () {
-            adminFactory.findMovies().success(function (data) {
-                $scope.result = data;
+            adminFactory.findMovies().then(function (data) {
+                $scope.result = data.data;
                 $scope.scanning = false;
-            })
-        })
+            });
+        }).catch((error) => {
+            console.log('scanning', error);
+        });
     };
 
     $scope.findEBooks = function () {
         showScanning().then(function () {
-            adminFactory.findEBooks().success(function (data) {
-                $scope.result = data;
+            adminFactory.findEBooks().then(function (data) {
+                $scope.result = data.data;
                 $scope.scanning = false;
-            })
-        })
+            });
+        }).catch((error) => {
+            console.log('scanning', error);
+        });
     };
 
     $scope.findAudio = function () {
         showScanning().then(function () {
-            adminFactory.findAudio().success(function (data) {
-                $scope.result = data;
+            adminFactory.findAudio().then(function (data) {
+                $scope.result = data.data;
                 $scope.scanning = false;
-            })
+            });
+        }).catch((error) => {
+            console.log('scanning', error);
         });
-    }
+    };
 });

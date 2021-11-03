@@ -8,8 +8,8 @@ myApp.controller('movieCtrl', function ($scope, movieFactory) {
                 $scope.selectAll();
             }
 
-            movieFactory.getList($scope.searchCategory, $scope.searchName).success(function (data) {
-                $scope.movieList = data.rows;
+            movieFactory.getList($scope.searchCategory, $scope.searchName).then(function (data) {
+                $scope.movieList = data.data.rows;
 
                 let chunk = function (arr, size) {
                     let newArr = [];
@@ -20,6 +20,8 @@ myApp.controller('movieCtrl', function ($scope, movieFactory) {
                 };
 
                 $scope.movieList = chunk($scope.movieList, 4);
+            }).catch((error) => {
+                console.log('movie list', error);
             });
         };
 
@@ -31,10 +33,12 @@ myApp.controller('movieCtrl', function ($scope, movieFactory) {
         };
 
         $scope.updateMovie = function (movie) {
-            movieFactory.updateMovie(movie).success(function () {
+            movieFactory.updateMovie(movie).then(function () {
                 $scope.runOnce = true;
                 $scope.getMovies();
 
+            }).catch((error) => {
+                console.log('movie update', error);
             });
         };
         $scope.searchCategory = 'new';
@@ -54,7 +58,7 @@ myApp.controller('movieCtrl', function ($scope, movieFactory) {
         let x, y;
         $scope.getInfo = function (event, title) {
             let fixCase = _.startCase(title);
-            movieFactory.getInfo(fixCase).success(function (res) {
+            movieFactory.getInfo(fixCase).then(function (res) {
                 $scope.movieInfo.name = fixCase;
                 $scope.movieInfo.plot = res.Plot;
                 $scope.movieInfo.rated = res.Rated;
@@ -62,6 +66,8 @@ myApp.controller('movieCtrl', function ($scope, movieFactory) {
                 x = event.screenX;
                 y = event.screenY - 75;
                 $scope.show = 'left:' + x + 'px;top:' + y + 'px;opacity:1; z-index:100';
+            }).catch((error) => {
+                console.log('movie info error', error);
             });
         };
 
@@ -70,8 +76,10 @@ myApp.controller('movieCtrl', function ($scope, movieFactory) {
             $scope.bookInfo = {};
         };
 
-        movieFactory.getCategoryList().success(function (data) {
-            $scope.movieCategories = data;
+        movieFactory.getCategoryList().then(function (data) {
+            $scope.movieCategories = data.data;
+        }).catch((error) => {
+            console.log('movie category error', error);
         });
     }
 );

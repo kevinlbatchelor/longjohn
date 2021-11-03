@@ -1,7 +1,7 @@
 myApp.controller('bookCtrl', function ($scope, bookFactory, $routeParams) {
     $scope.getBooks = function () {
-        bookFactory.getList($scope.search, $scope.alpha.val).success(function (data) {
-            $scope.bookList = data;
+        bookFactory.getList($scope.search, $scope.alpha.val).then(function (data) {
+            $scope.bookList = data.data;
             $scope.bookList.map(function (d) {
                 d.imagePath = '../pics/' + d.name + '.jpg';
                 return d;
@@ -16,39 +16,41 @@ myApp.controller('bookCtrl', function ($scope, bookFactory, $routeParams) {
             };
 
             $scope.bookList = chunk($scope.bookList, 4);
+        }).catch((error) => {
+            console.log('get book list error', error);
         });
     };
 
     $scope.search = '';
 
     $scope.alphabet = [
-        {name: 'All', val: '[:alnum:]'},
-        {name: 'A', val: 'a'},
-        {name: 'B', val: 'b'},
-        {name: 'C', val: 'c'},
-        {name: 'D', val: 'd'},
-        {name: 'E', val: 'e'},
-        {name: 'F', val: 'f'},
-        {name: 'G', val: 'g'},
-        {name: 'H', val: 'h'},
-        {name: 'I', val: 'i'},
-        {name: 'J', val: 'j'},
-        {name: 'K', val: 'k'},
-        {name: 'L', val: 'l'},
-        {name: 'M', val: 'm'},
-        {name: 'N', val: 'n'},
-        {name: 'O', val: 'o'},
-        {name: 'P', val: 'p'},
-        {name: 'Q', val: 'q'},
-        {name: 'R', val: 'r'},
-        {name: 'S', val: 's'},
-        {name: 'T', val: 't'},
-        {name: 'U', val: 'u'},
-        {name: 'V', val: 'v'},
-        {name: 'W', val: 'w'},
-        {name: 'X', val: 'x'},
-        {name: 'Y', val: 'y'},
-        {name: 'Z', val: 'z'}
+        { name: 'All', val: '[:alnum:]' },
+        { name: 'A', val: 'a' },
+        { name: 'B', val: 'b' },
+        { name: 'C', val: 'c' },
+        { name: 'D', val: 'd' },
+        { name: 'E', val: 'e' },
+        { name: 'F', val: 'f' },
+        { name: 'G', val: 'g' },
+        { name: 'H', val: 'h' },
+        { name: 'I', val: 'i' },
+        { name: 'J', val: 'j' },
+        { name: 'K', val: 'k' },
+        { name: 'L', val: 'l' },
+        { name: 'M', val: 'm' },
+        { name: 'N', val: 'n' },
+        { name: 'O', val: 'o' },
+        { name: 'P', val: 'p' },
+        { name: 'Q', val: 'q' },
+        { name: 'R', val: 'r' },
+        { name: 'S', val: 's' },
+        { name: 'T', val: 't' },
+        { name: 'U', val: 'u' },
+        { name: 'V', val: 'v' },
+        { name: 'W', val: 'w' },
+        { name: 'X', val: 'x' },
+        { name: 'Y', val: 'y' },
+        { name: 'Z', val: 'z' }
     ];
 
     $scope.alpha = $scope.alphabet[0];
@@ -60,11 +62,13 @@ myApp.controller('bookCtrl', function ($scope, bookFactory, $routeParams) {
         $scope.author = $routeParams.author;
         $scope.title = $routeParams.title;
 
-        bookFactory.getDetails(book.title, book.author).success(function (data) {
-            $scope.details = data.items;
+        bookFactory.getDetails(book.title, book.author).then(function (data) {
+            $scope.details = data.data.items;
             x = event.screenX;
             y = event.screenY - 75;
             $scope.show = 'left:' + x + 'px;top:' + y + 'px;opacity:1; z-index:100';
+        }).catch((error) => {
+            console.log('get book details error', error);
         });
     };
 

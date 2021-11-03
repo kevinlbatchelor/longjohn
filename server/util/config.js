@@ -1,9 +1,11 @@
-const moviesPath = ['/media/pi/LongJohn/Movies'];
-const audioBookPath = ['/media/pi/LongJohn/Audio Books'];
+// const moviesPath = ['/media/pi/LongJohn/Movies'];
+// const audioBookPath = ['/media/pi/LongJohn/Audio Books'];
 
 //windows paths
-// const moviePath = ['C:\\Movies', 'F:\\Movies', 'Q:\\Movies']
-// const audioBookPath = ['F:\\mp3s\\Audio Books']
+const moviesPath = ['C:\\Users\\kbatchelor\\Documents\\Movies'];
+const audioBookPath = ['C:\\Users\\kbatchelor\\Documents\\AudioBooks'];
+const TV = ['C:\\Users\\kbatchelor\\Documents\\TV'];
+//C:\Users\kbatchelor\Documents\AudioBooks
 
 const config = {
     omdbApiKey: '75cb371b',
@@ -18,6 +20,7 @@ const config = {
         port: 3000
     },
     movies: moviesPath,
+    TV: TV,
     audioBooks: audioBookPath
 };
 module.exports = config;

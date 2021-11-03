@@ -8,6 +8,9 @@
     "vid": "node ./server/vid.js"
   },
   "dependencies": {
+    "angular": "^1.8.2",
+    "angular-route": "^1.8.2",
+    "angular-sanitize": "^1.8.2",
     "bluebird": "^3.7.2",
     "body-parser": "^1.19.0",
     "cookie-parser": "^1.4.5",
@@ -16,7 +19,7 @@
     "express": "^4.17.1",
     "finalhandler": "^1.1.2",
     "imdb-api": "^4.4.1",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "morgan": "1.10.0",
     "pg": "^8.5.1",
     "recursive-readdir": "^2.2.2",
