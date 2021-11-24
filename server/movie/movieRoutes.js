@@ -1,9 +1,10 @@
 let router = require('../util/router');
 let Movie = require('./movie');
 let route = router.v1Path('movie');
+let coverRoute = router.v1Path('cover');
 let _ = require('lodash');
 const streamers = require('../streaming/streamers');
-const { Op } = require("sequelize")
+const { Op } = require('sequelize');
 
 router.get(route(), function (req, res) {
     let category = _.get(req, 'query.category', null);
@@ -40,6 +41,11 @@ router.get(route(':id'), function (req, res) {
         .then((file) => {
             streamers.videoStreamer(file.path, req, res);
         });
+});
+
+router.get(coverRoute(':id'), function (req, res) {
+    let fileName = req.params.id;
+    streamers.imageStreamer(fileName, req, res);
 });
 
 router.post(route(), function (request, response) {

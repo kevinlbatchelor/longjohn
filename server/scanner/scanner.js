@@ -7,6 +7,7 @@ const imdb = require('imdb-api');
 const _ = require('lodash');
 const scanner = {};
 const os = require('os');
+const dl = require('../util/downloadCoverArt.js');
 const osPathCharacter = os.platform() === 'win32' ? '\\' : '/';
 
 scanner.scanForMovies = function (scanPaths) {
@@ -55,9 +56,10 @@ scanner.scanForMovies = function (scanPaths) {
 
                             modMovie = newMovie;
                             return newMovie;
+                        }).then((newMovieWithImdb) => {
+                            return dl.downloadCoverArt(newMovieWithImdb.imdb.poster, config.cover, newMovieWithImdb.id);
                         }).catch((err) => {
-                            console.log(newMovie.genre);
-                            console.log(err);
+                            console.error('Error adding IMDB:',err);
                         }).then(() => {
                             return newMovie;
                         });

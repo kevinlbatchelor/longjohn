@@ -5,6 +5,7 @@
 const moviesPath = ['C:\\Users\\kbatchelor\\Documents\\Movies'];
 const audioBookPath = ['C:\\Users\\kbatchelor\\Documents\\AudioBooks'];
 const TV = ['C:\\Users\\kbatchelor\\Documents\\TV'];
+const cover = 'C:\\Users\\kbatchelor\\Documents\\Cover';
 //C:\Users\kbatchelor\Documents\AudioBooks
 
 const config = {
@@ -21,6 +22,7 @@ const config = {
     },
     movies: moviesPath,
     TV: TV,
+    cover: cover,
     audioBooks: audioBookPath
 };
 module.exports = config;
