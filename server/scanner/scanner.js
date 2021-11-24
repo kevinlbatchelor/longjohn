@@ -45,7 +45,6 @@ scanner.scanForMovies = function (scanPaths) {
                     let modMovie = newMovie;
 
                     if (_.isEmpty(newMovie.imdb)) {
-
                         return imdb.get({ name: newMovie.name }, {
                             apiKey: config.omdbApiKey,
                             timeout: 500
@@ -56,10 +55,8 @@ scanner.scanForMovies = function (scanPaths) {
 
                             modMovie = newMovie;
                             return newMovie;
-                        }).then((newMovieWithImdb) => {
-                            return dl.downloadCoverArt(newMovieWithImdb.imdb.poster, config.cover, newMovieWithImdb.id);
                         }).catch((err) => {
-                            console.error('Error adding IMDB:',err);
+                            console.error('Error adding IMDB:', err);
                         }).then(() => {
                             return newMovie;
                         });
@@ -70,8 +67,7 @@ scanner.scanForMovies = function (scanPaths) {
                 }).then((newMovie) => {
                     if (!newMovie.duplicate && newMovie.ext === 'mp4') {
                         delete newMovie.duplicate;
-                        movie.create(newMovie);
-                        return newMovie;
+                        return movie.create(newMovie);
                     } else {
                         return movie.update({
                             genre: newMovie.genre,
@@ -80,8 +76,15 @@ scanner.scanForMovies = function (scanPaths) {
                             where: {
                                 id: newMovie.id
                             }
+                        }).then(() => {
+                            return newMovie;
                         });
                     }
+                }).then((newMovieWithImdb) => {
+                    if (!_.get(newMovieWithImdb, 'imdb')) {
+                        return Promise.resolve();
+                    }
+                    return dl.downloadCoverArt(newMovieWithImdb.imdb.poster, config.cover, newMovieWithImdb.id);
                 }).then((movie) => {
                     acc.push(movie);
 
