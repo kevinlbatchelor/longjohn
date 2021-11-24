@@ -90,6 +90,9 @@ select {
 
 .page-wrap a {
     text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .page-wrap a:hover {
