@@ -22,6 +22,17 @@ myApp.controller('adminCtrl', function ($scope, adminFactory) {
         });
     };
 
+    $scope.findTV = function () {
+        showScanning().then(function () {
+            adminFactory.findTV().then(function (data) {
+                $scope.result = data.data;
+                $scope.scanning = false;
+            });
+        }).catch((error) => {
+            console.log('scanning', error);
+        });
+    };
+
     $scope.findEBooks = function () {
         showScanning().then(function () {
             adminFactory.findEBooks().then(function (data) {

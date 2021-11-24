@@ -1,6 +1,13 @@
 myApp.factory('adminFactory', function ($http, config) {
     let adminFactory = {};
 
+    adminFactory.findTV = function () {
+        return $http({
+            method: 'GET',
+            url: config.baseUrl + '/scan/TV'
+        });
+    };
+
     adminFactory.findMovies = function () {
         return $http({
             method: 'GET',

@@ -12,11 +12,13 @@ downloader.downloadCoverArt = function (url, savePath, name) {
                 response.data.pipe(fs.createWriteStream(filePath)).on('finish', () => {
                     return resolve(filePath);
                 }).on('error', (e) => {
-                    // return reject(e);
+                    return reject(e);
                 });
             });
         }
-    );
+    ).catch((e) => {
+        console.log('------->COVER ART ERROR:');
+    });
 };
 
 module.exports = downloader;

@@ -10,7 +10,7 @@ const os = require('os');
 const dl = require('../util/downloadCoverArt.js');
 const osPathCharacter = os.platform() === 'win32' ? '\\' : '/';
 
-scanner.scanForMovies = function (scanPaths) {
+scanner.scanForMovies = function (scanPaths, isTV = false) {
     function ignoreFunc(file, stats) {
         return stats.isDirectory();
     }
@@ -25,7 +25,12 @@ scanner.scanForMovies = function (scanPaths) {
                 newMovie.ext = pathDetails[pathDetails.length - 1].split('.').pop();
                 newMovie.path = path;
                 newMovie.description = '';
-                newMovie.genre = 'new';
+                if (isTV) {
+                    newMovie.genre = 'TV';
+                } else {
+                    newMovie.genre = 'new';
+                }
+
                 newMovie.duplicate = false;
 
                 return movie.findOne({
@@ -44,7 +49,7 @@ scanner.scanForMovies = function (scanPaths) {
                 }).then((newMovie) => {
                     let modMovie = newMovie;
 
-                    if (_.isEmpty(newMovie.imdb)) {
+                    if (_.isEmpty(newMovie.imdb) && !isTV) {
                         return imdb.get({ name: newMovie.name }, {
                             apiKey: config.omdbApiKey,
                             timeout: 500
@@ -67,6 +72,9 @@ scanner.scanForMovies = function (scanPaths) {
                 }).then((newMovie) => {
                     if (!newMovie.duplicate && newMovie.ext === 'mp4') {
                         delete newMovie.duplicate;
+                        if (isTV) {
+                            newMovie.genre = 'TV';
+                        }
                         return movie.create(newMovie);
                     } else {
                         return movie.update({
