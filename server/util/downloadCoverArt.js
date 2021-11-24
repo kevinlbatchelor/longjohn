@@ -12,7 +12,7 @@ downloader.downloadCoverArt = function (url, savePath, name) {
                 response.data.pipe(fs.createWriteStream(filePath)).on('finish', () => {
                     return resolve(filePath);
                 }).on('error', (e) => {
-                    return reject(e);
+                    // return reject(e);
                 });
             });
         }
