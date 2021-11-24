@@ -25,7 +25,7 @@
 <div class="content">
     <div class="row" ng-repeat="movies in movieList">
         <div class="tile col-xs-12 col-sm-6 col-md-3" ng-repeat="movie in movies"><a ng-hide="{{movie.imdb.rated === 'R' && pin!=1823}}" href="#moviePlay/play/{{movie.id}}">{{movie.name}}</a><br>
-            <img ng-src={{movie.imdb.poster}} height="100" width="100">
+            <img ng-src={{movie.poster}} height="100" width="100">
             <div ng-show="editMode">
                 <select ng-model="movie.genre" class="wide"
                         ng-options="cat.name as cat.name for cat in movieCategories">

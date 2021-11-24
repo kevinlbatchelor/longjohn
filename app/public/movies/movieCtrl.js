@@ -1,4 +1,12 @@
-myApp.controller('movieCtrl', function ($scope, movieFactory) {
+let chunk = function (arr, size) {
+    let newArr = [];
+    for (let i = 0; i < arr.length; i += size) {
+        newArr.push(arr.slice(i, i + size));
+    }
+    return newArr;
+};
+
+myApp.controller('movieCtrl', function ($scope, movieFactory, config) {
         $scope.runOnce = true;
 
         $scope.getMovies = function () {
@@ -9,17 +17,13 @@ myApp.controller('movieCtrl', function ($scope, movieFactory) {
             }
 
             movieFactory.getList($scope.searchCategory, $scope.searchName).then(function (data) {
-                $scope.movieList = data.data.rows;
+                const movies = data.data.rows
 
-                let chunk = function (arr, size) {
-                    let newArr = [];
-                    for (let i = 0; i < arr.length; i += size) {
-                        newArr.push(arr.slice(i, i + size));
-                    }
-                    return newArr;
-                };
+                movies.map((movie) => {
+                    movie.poster = config.baseUrl+'/cover/'+movie.id;
+                })
 
-                $scope.movieList = chunk($scope.movieList, 4);
+                $scope.movieList = chunk(movies, 4);
             }).catch((error) => {
                 console.log('movie list', error);
             });
