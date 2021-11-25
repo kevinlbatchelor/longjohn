@@ -39,6 +39,7 @@ scanner.scanForMovies = function (scanPaths, isTV = false) {
                     }
                 }).then((foundMovie) => {
                     if (foundMovie) {
+                        console.log('------->already in db');
                         newMovie.name = foundMovie.dataValues.name;
                         newMovie.id = foundMovie.id;
                         newMovie.duplicate = true;
@@ -50,11 +51,13 @@ scanner.scanForMovies = function (scanPaths, isTV = false) {
                     let modMovie = newMovie;
 
                     if (_.isEmpty(newMovie.imdb) && !isTV) {
+                        console.log('------->looking up imdb');
                         return imdb.get({ name: newMovie.name }, {
                             apiKey: config.omdbApiKey,
                             timeout: 500
                         }).then((imdb) => {
                             newMovie.imdb = imdb;
+                            newMovie.newImdb = true;
                             newMovie.genre = imdb.genres;
                             newMovie.rating = imdb.rated;
 
@@ -75,26 +78,39 @@ scanner.scanForMovies = function (scanPaths, isTV = false) {
                         if (isTV) {
                             newMovie.genre = 'TV';
                         }
+                        console.log('------->creating movie');
                         return movie.create(newMovie);
                     } else {
-                        return movie.update({
-                            genre: newMovie.genre,
-                            imdb: newMovie.imdb
-                        }, {
-                            where: {
-                                id: newMovie.id
-                            }
-                        }).then(() => {
-                            return newMovie;
-                        });
+                        if (newMovie.newImdb) {
+                            console.log('------->updating movie', newMovie.imdb);
+                            return movie.update({
+                                genre: newMovie.genre,
+                                imdb: newMovie.imdb
+                            }, {
+                                where: {
+                                    id: newMovie.id
+                                }
+                            }).then(() => {
+                                return newMovie;
+                            });
+                        }
                     }
                 }).then((newMovieWithImdb) => {
-                    if (!_.get(newMovieWithImdb, 'imdb')) {
-                        return Promise.resolve();
+                    if (_.get(newMovieWithImdb, 'newImdb')) {
+                        console.log('-----------new imdb');
+                        return dl.downloadCoverArt(newMovieWithImdb.imdb.poster, config.cover, newMovieWithImdb.id).then(() => {
+                            return newMovieWithImdb;
+                        });
                     }
-                    return dl.downloadCoverArt(newMovieWithImdb.imdb.poster, config.cover, newMovieWithImdb.id);
+                    if (!_.get(newMovieWithImdb, 'duplicate')) {
+                        return newMovieWithImdb;
+                    }
                 }).then((movie) => {
-                    acc.push(movie);
+                    console.log('------->name', movie);
+                    let name = _.get(movie, 'name');
+                    if (name) {
+                        acc.push(name);
+                    }
 
                     return acc;
                 });
