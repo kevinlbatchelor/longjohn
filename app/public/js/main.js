@@ -7,6 +7,9 @@ myApp.config(function ($routeProvider, $sceProvider, $sceDelegateProvider) {
     }).when('/movies', {
         templateUrl: 'movies/movies.html',
         controller: 'movieCtrl'
+    }).when('/tvs', {
+        templateUrl: 'tv/tv.html',
+        controller: 'tvCtrl'
     }).when('/moviePlay/play/:movieId', {
         templateUrl: 'movies/moviePlay.html',
         controller: 'playCtrl'

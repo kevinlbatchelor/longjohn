@@ -1,0 +1,12 @@
+<div class="sidebar">
+    <section class="widget">
+        <h2><strong>search</strong> TV</h2>
+    </section>
+</div>
+<div class="content">
+    <div class="row" ng-repeat="shows in tvList">
+        <div class="tile col-xs-12 col-sm-6 col-md-3" ng-repeat="show in shows"><a href="#moviePlay/play/{{show.id}}">{{show.name}}</a><br>
+            <img ng-src={{show.poster}} height="100" width="100">
+        </div>
+    </div>
+</div>
