@@ -89,6 +89,7 @@ select {
 }
 
 .page-wrap a {
+    display: block;
     text-decoration: none;
     overflow: hidden;
     text-overflow: ellipsis;
