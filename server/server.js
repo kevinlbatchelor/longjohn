@@ -20,6 +20,7 @@ app.use(express.static('public'));
 app.use('/', require('./util/status'));
 
 app.use('/', require('./movie/movieRoutes'));
+app.use('/', require('./tv/tvRoutes.js'));
 app.use('/', require('./movie/subTitleRoutes'));
 app.use('/', require('./audioBooks/audioBookRoutes'));
 app.use('/', require('./movie/movieCategoryRoutes'));

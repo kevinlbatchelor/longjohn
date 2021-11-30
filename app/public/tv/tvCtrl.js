@@ -12,7 +12,7 @@ myApp.controller('tvCtrl', function ($scope, tvFactory, config) {
                 const shows = data.data.rows
 
                 shows.map((movie) => {
-                    movie.poster = config.baseUrl+'/cover/'+movie.id;
+                    movie.poster = config.baseUrl+'/cover/'+movie.name;
                 })
 
                 $scope.tvList = chunk(shows, 4);

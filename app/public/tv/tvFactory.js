@@ -4,14 +4,14 @@ myApp.factory('tvFactory', function ($http, config) {
     tvFactory.getList = function (category = 'TV', name = '%') {
         return $http({
             method: 'GET',
-            url: config.baseUrl+'/movie?category=' + category + '&name=' + name
+            url: config.baseUrl+'/tv?category=' + category + '&name=' + name
         });
     };
 
     tvFactory.deleteMovie = function (id) {
         return $http({
             method: 'DELETE',
-            url: config.baseUrl+'/movie/' + id
+            url: config.baseUrl+'/tv/' + id
         });
     };
 

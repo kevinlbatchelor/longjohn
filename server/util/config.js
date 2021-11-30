@@ -2,13 +2,15 @@
 // const audioBookPath = ['/media/pi/LongJohn/Audio Books'];
 
 //windows paths
+const tvFolderName = 'TV';
 const moviesPath = ['C:\\Users\\kbatchelor\\Documents\\Movies'];
 const audioBookPath = ['C:\\Users\\kbatchelor\\Documents\\AudioBooks'];
-const TV = ['C:\\Users\\kbatchelor\\Documents\\TV'];
+const TV = ['C:\\Users\\kbatchelor\\Documents\\' + tvFolderName];
 const cover = 'C:\\Users\\kbatchelor\\Documents\\Cover';
 //C:\Users\kbatchelor\Documents\AudioBooks
 
 const config = {
+    tvFolderName,
     omdbApiKey: '75cb371b',
     database: {
         host: '127.0.0.1',
