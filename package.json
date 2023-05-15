@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./server/server.js",
-    "client": "node ./app/client.js",
+    "client": "node ./app/client.js"
   },
   "dependencies": {
     "angular": "^1.8.2",
