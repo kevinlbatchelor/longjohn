@@ -14,7 +14,6 @@ Movie.findAndCountAll({}).then(function (list) {
         if (movie.imdb) {
             return dl.downloadCoverArt(movie.imdb.poster, config.cover, movie.id).then((filePath) => {
                 movie.cover = filePath;
-                console.log('------->filePath', movie.name);
                 return movie.update({ cover: filePath });
             }).catch((e) => {
                 console.log('skipping error');

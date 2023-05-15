@@ -4,6 +4,7 @@ myApp.directive('videoPlayer', function ($compile, $http, $sce) {
         restrict: 'E',
         scope: {
             path: '=',
+            movieId: '=',
             subs: '=',
             edl: '=',
             editing: '='
@@ -61,6 +62,13 @@ myApp.directive('videoPlayer', function ($compile, $http, $sce) {
                 </div>`);
             $compile(startCut)($scope);
             $element.append(startCut);
+
+            let nextButton = angular.element(`
+                <div>
+                    <a ng-href="#moviePlay/play/{{movieId}}"> play next: {{movieId}} </a>
+                </div>`);
+            $compile(nextButton)($scope);
+            $element.append(nextButton);
 
             $scope.startRecording = function () {
                 let cutPoint = {};

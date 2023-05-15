@@ -49,7 +49,6 @@ scanner.scanForMovies = function (scanPaths, isTV = false) {
                     return newMovie;
                 }).then((newMovie) => {
                     let modMovie = newMovie;
-
                     if (_.isEmpty(newMovie.imdb) && !isTV) {
                         console.log('------->looking up imdb');
                         return imdb.get({ name: newMovie.name }, {

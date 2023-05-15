@@ -24,7 +24,9 @@
 </div>
 <div class="content">
     <div class="row" ng-repeat="movies in movieList">
-        <div class="tile col-xs-12 col-sm-6 col-md-3" ng-repeat="movie in movies"><a ng-hide="{{movie.imdb.rated === 'R' && pin!=1823}}" href="#moviePlay/play/{{movie.id}}">{{movie.name}}</a><br>
+        <div class="tile col-xs-12 col-sm-6 col-md-3" ng-repeat="movie in movies">
+            <a ng-hide="{{movie.imdb.rated === 'R' && pin!=1823}}" href="#moviePlay/play/{{movie.id}}">{{movie.name}}</a><br>
+            <a ng-hide="{{movie.imdb.rated === 'R' && pin!=1823}}" href="#moviePlay/download/{{movie.id}}">Download {{movie.name}}</a><br>
             <img ng-src={{movie.poster}} height="100" width="100">
             <div ng-show="editMode">
                 <select ng-model="movie.genre" class="wide"

@@ -17,7 +17,7 @@ downloader.downloadCoverArt = function (url, savePath, id) {
             });
         }
     ).catch((e) => {
-        console.log('------->COVER ART ERROR:');
+        console.error('------->COVER ART ERROR:'+e);
     });
 };
 

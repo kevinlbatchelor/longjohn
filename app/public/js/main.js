@@ -1,6 +1,7 @@
 let myApp = angular.module('myApp', ['ngRoute', 'ngSanitize']);
 
-myApp.config(function ($routeProvider, $sceProvider, $sceDelegateProvider) {
+myApp.config(function ($routeProvider, $sceProvider, $sceDelegateProvider, $locationProvider) {
+    $locationProvider.hashPrefix('');
     $routeProvider.when('/', {
         templateUrl: 'audioBooks/audioBooks.html',
         controller: 'audioBookCtrl'
@@ -12,7 +13,9 @@ myApp.config(function ($routeProvider, $sceProvider, $sceDelegateProvider) {
         controller: 'tvCtrl'
     }).when('/moviePlay/play/:movieId', {
         templateUrl: 'movies/moviePlay.html',
-        controller: 'playCtrl'
+    }).when('/moviePlay/download/:movieId', {
+        templateUrl: 'movies/movieDownload.html',
+        controller: 'downloadCtrl'
     }).when('/books', {
         templateUrl: 'books/books.html',
         controller: 'bookCtrl'

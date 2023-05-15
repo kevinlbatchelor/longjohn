@@ -1,6 +1,7 @@
 
 :root {
     --text-color: rgb(0, 128, 0);
+    --text-color-sec: rgb(73, 6, 98)
 }
 
 article, aside, details, figcaption, figure, footer, header, menu, nav, section {
@@ -13,7 +14,7 @@ a {
 }
 
 a:visited {
-    color: var(--text-color);
+    color: var(--text-color-sec);
 }
 
 a:hover {

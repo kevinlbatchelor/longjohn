@@ -9,7 +9,7 @@
             <img ng-src={{show.poster}} height="100" width="100"><br>
             <br>
             <span ng-repeat="episode in show.episodes">
-                <a href="#moviePlay/play/{{episode.id}}">{{episode.episode}} </a>
+                <a id="{{episode.id}}" ng-href="#moviePlay/play/{{episode.id}}" >{{episode.episode}} </a>
             </span>
         </div>
     </div>
