@@ -18,6 +18,7 @@ myApp.controller('movieCtrl', function ($scope, movieFactory, config) {
 
             movieFactory.getList($scope.searchCategory, $scope.searchName).then(function (data) {
                 const movies = data.data.rows
+                console.log('------->data.data', data.data);
 
                 movies.map((movie) => {
                     movie.poster = config.baseUrl+'/cover/'+movie.id;

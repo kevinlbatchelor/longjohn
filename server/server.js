@@ -25,7 +25,6 @@ app.use('/', require('./movie/subTitleRoutes'));
 app.use('/', require('./audioBooks/audioBookRoutes'));
 app.use('/', require('./movie/movieCategoryRoutes'));
 app.use('/', require('./scanner/scannerRoutes'));
-// TODO add other routes
 
 // If no route is matched by now, it must be a 404
 app.use(function (req, res, next) {

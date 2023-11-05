@@ -1,30 +1,39 @@
-let router = require('../util/router');
-let route = router.v1Path('scan');
-let scanner = require('../scanner/scanner');
-let config = require('../util/config');
+const router = require('../util/router');
+const route = router.v1Path('scan');
+const scanner = require('../scanner/scanner');
+const config = require('../util/config');
 
-router.get(route('TV'), function (req, res) {
-    scanner.scanForMovies(config.TV, true).then(function (list) {
+router.get(route('TV'), async function (req, res) {
+    try {
+        const list = await scanner.scanForMovies(config.TV, true);
         res.json(list);
-    }).catch(function (err) {
-        console.log(err);
-    })
+    } catch (e) {
+        console.error('LONG-JOHN ERROR:', e);
+        res.status(500);
+        res.json({ error: e });
+    }
 });
 
-router.get(route(), function (req, res) {
-    scanner.scanForMovies(config.movies).then(function (list) {
+router.get(route(), async function (req, res) {
+    try {
+        const list = await scanner.scanForMovies(config.movies);
         res.json(list);
-    }).catch(function (err) {
-        console.log(err);
-    })
+    } catch (e) {
+        console.error('LONG-JOHN ERROR:', e);
+        res.status(500);
+        res.json({ error: e });
+    }
 });
 
-router.get(route('audio'), function (req, res) {
-    scanner.scanForAudio(config.audioBooks).then(function (list) {
+router.get(route('audio'), async function (req, res) {
+    try {
+        const list = await scanner.scanForAudio(config.audioBooks);
         res.json(list);
-    }).catch(function (err) {
-        console.log(err);
-    })
+    } catch (e) {
+        console.error('LONG-JOHN ERROR:', e);
+        res.status(500);
+        res.json({ error: e });
+    }
 });
 
 module.exports = router;

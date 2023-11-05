@@ -1,7 +1,7 @@
 const db = require('../util/database/db');
 const Promise = require('bluebird');
 
-let categories = [
+const categories = [
     {id: 1, name: 'Scifi'},
     {id: 2, name: 'Drama'},
     {id: 3, name: 'Comedy'},
@@ -10,11 +10,11 @@ let categories = [
     {id: 6, name: 'Kids'}
 ];
 
-let categorySchema = {
+const categorySchema = {
     name: {type: db.STRING, allowNull: false}
 };
 
-let Category = db.connection.define('category', categorySchema, {
+const Category = db.connection.define('category', categorySchema, {
     paranoid: true,
     freezeTableName: true,
     timestamps: false

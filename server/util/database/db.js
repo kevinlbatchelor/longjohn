@@ -1,8 +1,8 @@
-let Promise = require('bluebird');
-let db = require('sequelize');
-let config = require('../../util/config');
+const Promise = require('bluebird');
+const db = require('sequelize');
+const config = require('../../util/config');
 
-let connection = new db(config.database.name, config.database.username, config.database.password, {
+const connection = new db(config.database.name, config.database.username, config.database.password, {
     host: config.database.host,
     port: config.database.port,
     dialect: 'postgres',
@@ -15,7 +15,7 @@ let connection = new db(config.database.name, config.database.username, config.d
 
 db.connection = connection;
 
-let resolveFunction = null;
+const resolveFunction = null;
 db.setupPromise = new Promise(function (resolve) {
     resolveFunction = resolve;
 });

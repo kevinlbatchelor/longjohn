@@ -1,4 +1,4 @@
-var express = require('express');
+const express = require('express');
 
 /** @namespace router.get */
 /** @namespace router.post */
@@ -11,7 +11,7 @@ var express = require('express');
  * @name put
  * @name delete
  */
-var router = express.Router();
+const router = express.Router();
 
 router.v1 = function (path) {
     return '/api/v1/' + path;

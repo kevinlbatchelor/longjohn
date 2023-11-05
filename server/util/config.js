@@ -7,7 +7,6 @@ const moviesPath = ['C:\\Users\\kbatchelor\\Documents\\Movies'];
 const audioBookPath = ['C:\\Users\\kbatchelor\\Documents\\AudioBooks'];
 const TV = ['C:\\Users\\kbatchelor\\Documents\\' + tvFolderName];
 const cover = 'C:\\Users\\kbatchelor\\Documents\\Cover';
-//C:\Users\kbatchelor\Documents\AudioBooks
 
 const config = {
     tvFolderName,

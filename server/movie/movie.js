@@ -1,6 +1,6 @@
 const db = require('../util/database/db');
 
-let movieSchema = {
+const movieSchema = {
     name: { type: db.STRING, allowNull: false },
     description: { type: db.STRING },
     path: { type: db.STRING },
@@ -10,7 +10,7 @@ let movieSchema = {
 
 };
 
-let Movie = db.connection.define('movie', movieSchema, {
+const Movie = db.connection.define('movie', movieSchema, {
     paranoid: true,
     freezeTableName: true
 });

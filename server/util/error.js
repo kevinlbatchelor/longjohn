@@ -1,5 +1,5 @@
-var error = function (next, msg, code) {
-    var err = {
+const error = function (next, msg, code) {
+    const err = {
         msg: msg,
         code: code
     };

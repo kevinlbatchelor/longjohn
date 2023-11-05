@@ -17,106 +17,50 @@ scanner.scanForMovies = function (scanPaths, isTV = false) {
 
     return Promise.map(scanPaths, function indexMovie(path) {
         return readDirectory(path, ['!*.mp4']).then((paths) => {
-            return Promise.reduce(paths, (acc, path, index, length) => {
-                let pathDetails = path.split(osPathCharacter);
+            return Promise.reduce(paths, async (acc, path, index, length) => {
+                try {
+                    const pathDetails = path.split(osPathCharacter);
+                    const newMovie = {};
+                    newMovie.name = pathDetails[pathDetails.length - 1].slice(0, -4);
+                    newMovie.ext = pathDetails[pathDetails.length - 1].split('.').pop();
+                    newMovie.path = path;
+                    newMovie.description = '';
+                    newMovie.genre = isTV === true ? 'TV' : 'new';
 
-                let newMovie = {};
-                newMovie.name = pathDetails[pathDetails.length - 1].slice(0, -4);
-                newMovie.ext = pathDetails[pathDetails.length - 1].split('.').pop();
-                newMovie.path = path;
-                newMovie.description = '';
-                if (isTV) {
-                    newMovie.genre = 'TV';
-                } else {
-                    newMovie.genre = 'new';
-                }
-
-                newMovie.duplicate = false;
-
-                return movie.findOne({
-                    where: {
-                        path: newMovie.path
-                    }
-                }).then((foundMovie) => {
-                    if (foundMovie) {
-                        console.log('------->already in db');
-                        newMovie.name = foundMovie.dataValues.name;
-                        newMovie.id = foundMovie.id;
-                        newMovie.duplicate = true;
-                        newMovie.genre = foundMovie.genre;
-                        newMovie.imdb = foundMovie.imdb;
-                    }
-                    return newMovie;
-                }).then((newMovie) => {
-                    let modMovie = newMovie;
-                    if (_.isEmpty(newMovie.imdb) && !isTV) {
-                        console.log('------->looking up imdb');
-                        return imdb.get({ name: newMovie.name }, {
+                    const movieFromDB = await movie.findOne({
+                        where: {
+                            path: newMovie.path
+                        }
+                    });
+                    if (!movieFromDB && newMovie.ext === 'mp4') {
+                        const imdbData = await imdb.get({ name: newMovie.name }, {
                             apiKey: config.omdbApiKey,
                             timeout: 500
-                        }).then((imdb) => {
-                            newMovie.imdb = imdb;
-                            newMovie.newImdb = true;
-                            newMovie.genre = imdb.genres;
-                            newMovie.rating = imdb.rated;
-
-                            modMovie = newMovie;
-                            return newMovie;
-                        }).catch((err) => {
-                            console.error('Error adding IMDB:', err);
-                        }).then(() => {
-                            return newMovie;
+                        }).catch((e) => {
+                            console.error('LONG-JOHN ERROR:', e);
                         });
-                    } else {
-                        return Promise.resolve(newMovie);
-                    }
-
-                }).then((newMovie) => {
-                    if (!newMovie.duplicate && newMovie.ext === 'mp4') {
-                        delete newMovie.duplicate;
-                        if (isTV) {
-                            newMovie.genre = 'TV';
+                        if (imdbData) {
+                            newMovie.imdb = imdbData;
+                            newMovie.genre = imdbData.genres;
+                            newMovie.rating = imdbData.rated;
                         }
-                        console.log('------->creating movie');
-                        return movie.create(newMovie);
-                    } else {
-                        if (newMovie.newImdb) {
-                            console.log('------->updating movie', newMovie.imdb);
-                            return movie.update({
-                                genre: newMovie.genre,
-                                imdb: newMovie.imdb
-                            }, {
-                                where: {
-                                    id: newMovie.id
-                                }
-                            }).then(() => {
-                                return newMovie;
-                            });
+                        const savedMovie = await movie.create(newMovie, { raw: true });
+                        if (savedMovie?.imdb?.poster) {
+                            await dl.downloadCoverArt(savedMovie.imdb.poster, config.cover, savedMovie.id);
                         }
                     }
-                }).then((newMovieWithImdb) => {
-                    if (_.get(newMovieWithImdb, 'newImdb')) {
-                        console.log('-----------new imdb');
-                        return dl.downloadCoverArt(newMovieWithImdb.imdb.poster, config.cover, newMovieWithImdb.id).then(() => {
-                            return newMovieWithImdb;
-                        });
-                    }
-                    if (!_.get(newMovieWithImdb, 'duplicate')) {
-                        return newMovieWithImdb;
-                    }
-                }).then((movie) => {
-                    console.log('------->name', movie);
-                    let name = _.get(movie, 'name');
-                    if (name) {
-                        acc.push(name);
-                    }
+                    acc.push(newMovie.name);
 
                     return acc;
-                });
+                } catch (e) {
+                    console.error('LONG-JOHN ERROR:', e);
+                    acc.push(e);
+                    return acc;
+                }
             }, []);
         });
-    }).catch((error) => {
-        console.log(error);
+    }).catch((e) => {
+        console.error('LONG-JOHN ERROR:', e);
     });
 };
 
@@ -129,7 +73,7 @@ scanner.scanForAudio = function (scanPaths) {
         return readDirectory(outerPath, ['!*.mp3']).then((paths) => {
 
             const nameIndex = outerPath.split(osPathCharacter).length;
-            return Promise.reduce(paths, (acc, path, index, length) => {
+            return Promise.reduce(paths, async (acc, path, index, length) => {
 
                 let pathDetails = path.split(osPathCharacter);
 
@@ -137,26 +81,22 @@ scanner.scanForAudio = function (scanPaths) {
                 newAudio.name = pathDetails[nameIndex];
                 newAudio.track = pathDetails[pathDetails.length - 1].slice(0, -4);
                 newAudio.path = path;
-                let duplicateAudio;
 
-                return audioBook.findOne({
+                let foundAudioBook = await audioBook.findOne({
                     where: {
                         path: newAudio.path
                     },
                     raw: true
-                }).then((foundAudioBook) => {
-                    if (foundAudioBook) {
-                        duplicateAudio = foundAudioBook;
-                    } else {
-                        audioBook.create(newAudio);
-                        acc.push(newAudio.name);
-                    }
-                    return acc;
                 });
+                if (!foundAudioBook) {
+                    await audioBook.create(newAudio);
+                    acc.push(newAudio.name);
+                }
+                return acc;
             }, []);
         });
-    }).catch((error) => {
-        console.log(error);
+    }).catch((e) => {
+        console.error('LONG-JOHN ERROR:', e);
     });
 };
 

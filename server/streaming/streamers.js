@@ -1,5 +1,5 @@
-let fs = require('fs');
-let _ = require('lodash');
+const fs = require('fs');
+const _ = require('lodash');
 const config = require('../util/config.js');
 const os = require('os');
 const osPathCharacter = os.platform() === 'win32' ? '\\' : '/';
@@ -15,16 +15,16 @@ Streamers.videoStreamer = function (path, req, res) {
             }
             res.end(err);
         }
-        let range = req.headers.range;
+        const range = req.headers.range;
         if (!range) {
             // 416 Wrong range
             return res.sendStatus(416);
         }
-        let positions = range.replace(/bytes=/, '').split('-');
-        let start = parseInt(positions[0], 10);
-        let total = stats.size;
-        let end = positions[1] ? parseInt(positions[1], 10) : total - 1;
-        let chunksize = (end - start) + 1;
+        const positions = range.replace(/bytes=/, '').split('-');
+        const start = parseInt(positions[0], 10);
+        const total = stats.size;
+        const end = positions[1] ? parseInt(positions[1], 10) : total - 1;
+        const chunksize = (end - start) + 1;
 
         res.writeHead(206, {
             'Content-Range': 'bytes ' + start + '-' + end + '/' + total,
@@ -33,7 +33,7 @@ Streamers.videoStreamer = function (path, req, res) {
             'Content-Type': 'video/mp4'
         });
 
-        let stream = fs.createReadStream(path, { start: start, end: end })
+        const stream = fs.createReadStream(path, { start: start, end: end })
             .on('open', function () {
                 stream.pipe(res);
             }).on('error', function (err) {
@@ -57,7 +57,7 @@ Streamers.subTitleStreamer = function (path, req, res) {
             'Content-Type': 'text/vtt'
         });
 
-        let stream = fs.createReadStream(path)
+        const stream = fs.createReadStream(path)
             .on('open', function () {
                 stream.pipe(res);
             }).on('error', function (err) {
@@ -75,16 +75,16 @@ Streamers.audioStreamer = function (path, req, res) {
             }
             res.end(err);
         }
-        let range = req.headers.range;
+        const range = req.headers.range;
         if (!range) {
             // 416 Wrong range
             return res.sendStatus(416);
         }
-        let positions = range.replace(/bytes=/, '').split('-');
-        let start = parseInt(positions[0], 10);
-        let total = stats.size;
-        let end = positions[1] ? parseInt(positions[1], 10) : total - 1;
-        let chunksize = (end - start) + 1;
+        const positions = range.replace(/bytes=/, '').split('-');
+        const start = parseInt(positions[0], 10);
+        const total = stats.size;
+        const end = positions[1] ? parseInt(positions[1], 10) : total - 1;
+        const chunksize = (end - start) + 1;
 
         res.writeHead(206, {
             'Content-Range': 'bytes ' + start + '-' + end + '/' + total,
@@ -93,7 +93,7 @@ Streamers.audioStreamer = function (path, req, res) {
             'Content-Type': 'audio/mpeg'
         });
 
-        let stream = fs.createReadStream(path, { start: start, end: end })
+        const stream = fs.createReadStream(path, { start: start, end: end })
             .on('open', function () {
                 stream.pipe(res);
             }).on('error', function (err) {
