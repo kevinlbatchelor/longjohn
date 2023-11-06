@@ -15,7 +15,7 @@ const connection = new db(config.database.name, config.database.username, config
 
 db.connection = connection;
 
-const resolveFunction = null;
+let resolveFunction = null;
 db.setupPromise = new Promise(function (resolve) {
     resolveFunction = resolve;
 });
