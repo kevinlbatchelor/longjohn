@@ -26,9 +26,9 @@ router.get(tvRoute(), async function (req, res) {
                         [Op.iLike]: `%${name}%`
                     }
                 },
-                order: ['name'],
+                order: [['createdAt', 'DESC']],
                 offset: 0,
-                limit: 1000
+                limit: 100000
             });
 
         const shows = list.rows.reduce((acc, movie) => {
