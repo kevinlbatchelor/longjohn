@@ -1,7 +1,28 @@
+html{
+    font-family: monospace;
+}
 
 :root {
+    font-family: monospace;
     --text-color: rgb(0, 128, 0);
     --text-color-sec: rgb(73, 6, 98)
+}
+
+input[type="checkbox"] {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+::placeholder {
+    color: var(--text-color);;
+    opacity: 1; /* Firefox */
+    text-align: center;
+}
+
+::-ms-input-placeholder { /* Edge 12 -18 */
+    color: var(--text-color);
+    text-align: center;
 }
 
 article, aside, details, figcaption, figure, footer, header, menu, nav, section {
@@ -11,10 +32,6 @@ article, aside, details, figcaption, figure, footer, header, menu, nav, section 
 a {
     cursor: pointer;
     color: var(--text-color);
-}
-
-a:visited {
-    color: var(--text-color-sec);
 }
 
 a:hover {
@@ -37,7 +54,6 @@ select {
     height: 30px;
     margin: 5px 0 5px 0;
     background-color: #000;
-    border: .5px solid var(--text-color);
     color: var(--text-color);
 }
 
@@ -45,7 +61,6 @@ input {
     height: 30px;
     margin: 5px 0 5px 0;
     background-color: #000;
-    border: .5px solid var(--text-color);
     color: var(--text-color);
 }
 
@@ -86,7 +101,6 @@ select {
     min-width: 100%;
     margin: 0 auto;
     background-color: #000000;
-    border-radius: 5px;
 }
 
 .page-wrap a {
@@ -102,14 +116,14 @@ select {
 }
 
 .header {
+    font-size: 24px;
+    color: var(--text-color-sec);
     width: 100%;
     overflow: hidden;
     text-align: center;
-    border: .5px solid var(--text-color);
 }
 
 .content {
-    border: .5px solid var(--text-color);
     padding: 5px;
     margin: 10px 0 10px 10px;
     flex-grow: 1;
@@ -121,12 +135,12 @@ select {
 }
 
 .content input {
+    border:none;
     width: auto;
 }
 
 .sidebar {
     width: 250px;
-    border: .5px solid var(--text-color);
     padding: 5px;
     margin: 10px 0 10px;
 }
@@ -150,7 +164,6 @@ select {
 .footer {
     height: 30px;
     background-color: #000;
-    border: .5px solid var(--text-color);
     color: var(--text-color);
 }
 
@@ -186,6 +199,8 @@ ul#main-nav {
 }
 
 .wide {
+    padding: 0;
+    border: 1px solid var(--text-color-sec);;
     width: 100%;
 }
 
