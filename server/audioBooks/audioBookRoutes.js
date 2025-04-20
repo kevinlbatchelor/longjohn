@@ -43,6 +43,20 @@ router.get(route('playlist'), async function (req, res) {
     }
 });
 
+// Endpoint: GET /v1/audioBooks/:id/zip
+router.get(`${route(':id')}/zip`, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const record = await AudioBook.findByPk(id);
+        if (!record) return res.sendStatus(404);
+
+        streamers.zipFolderStreamer(record.path, res);
+    } catch (e) {
+        console.error('LONG-JOHN ERROR:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 router.get(route(':id'), async function (req, res) {
     try {
         const id = req.params.id;

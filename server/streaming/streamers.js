@@ -3,6 +3,8 @@ const _ = require('lodash');
 const config = require('../util/config.js');
 const os = require('os');
 const osPathCharacter = os.platform() === 'win32' ? '\\' : '/';
+const path     = require('path');
+const archiver = require('archiver');
 
 const Streamers = {};
 
@@ -63,6 +65,36 @@ Streamers.subTitleStreamer = function (path, req, res) {
             }).on('error', function (err) {
                 res.end(err);
             });
+    });
+};
+
+exports.zipFolderStreamer = function (folderPath, res) {
+    // Defensive: make sure the folder exists & is readable
+    fs.access(folderPath, fs.constants.R_OK, (err) => {
+        if (err) return res.sendStatus(404);
+
+        // Tell the browser it’s a download
+        res.set({
+            'Content-Type'       : 'application/zip',
+            'Content-Disposition': `attachment; filename="${path.basename(folderPath)}.zip"`,
+        });
+
+        // Pipe an on‑the‑fly ZIP into the response
+        const archive = archiver('zip', { zlib: { level: 9 } });
+
+        archive.on('error', (e) => {
+            console.error('ARCHIVE ERROR:', e);
+            // Flush whatever has been sent so far, then end the response
+            if (!res.headersSent) res.status(500);
+            res.end();
+        });
+
+        archive.pipe(res);
+
+        // Second arg === false → drop the parent folder, send just its contents
+        archive.directory(folderPath, false);
+
+        archive.finalize();          // << starts streaming immediately
     });
 };
 
