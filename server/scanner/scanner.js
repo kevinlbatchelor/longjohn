@@ -68,7 +68,6 @@ scanner.scanForAudio = function (scanPaths) {
     function ignoreFunc(file, stats) {
         return stats.isDirectory();
     }
-
     const nameCache = [];
 
     return Promise.map(scanPaths, async (outerPath) => {
@@ -78,16 +77,11 @@ scanner.scanForAudio = function (scanPaths) {
             return Promise.reduce(paths, async (acc, stringPath) => {
                 const pathParts = stringPath.split(osPathCharacter);
                 const name = pathParts[nameIndex];
-
-                let bookMeta;
-                if (!nameCache.includes(name)) {
-                    bookMeta = await dl.fetchBookMeta(_.startCase(name));
-                }
                 const newAudio = {
                     name,            // book title
                     track: pathParts[pathParts.length - 1].slice(0, -4),
                     path: stringPath,
-                    info: { ...bookMeta }                            // stores isbn & coverUrl
+                    info: {}                            // stores isbn & coverUrl
                 };
 
                 const found = await audioBook.findOne({
@@ -100,11 +94,13 @@ scanner.scanForAudio = function (scanPaths) {
                     acc.push(newAudio.track);
 
                     if (!nameCache.includes(name)) {
+                        const bookMeta = await dl.fetchBookMeta(_.startCase(name));
+                        console.log('------->bookMeta', bookMeta);
                         if (bookMeta.coverUrl) {
                             await dl.downloadCoverArt(
                                 bookMeta.coverUrl,
                                 config.cover,
-                                name + '-audio',
+                                name+'-audio',
                                 false
                             );
                         }

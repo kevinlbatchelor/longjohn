@@ -1,12 +1,11 @@
 const axios = require('axios');
 const fs = require('fs');
 const os = require('os');
+const config = require('./config');
 const osPathCharacter = os.platform() === 'win32' ? '\\' : '/';
 const downloader = {};
 
 downloader.downloadCoverArt = function (url, savePath, id, handleExt = true) {
-    console.log('------->savePath', savePath);
-    console.log('------->url', url);
     return axios({ url, responseType: 'stream' }).then((response) => {
             return new Promise((resolve, reject) => {
                 const ext = url.substring(url.length - 4);
@@ -16,7 +15,6 @@ downloader.downloadCoverArt = function (url, savePath, id, handleExt = true) {
                 } else {
                     filePath = savePath + osPathCharacter + id + '.jpg';
                 }
-                console.log('------->filePath', filePath);
                 response.data.pipe(fs.createWriteStream(filePath)).on('finish', () => {
                     return resolve(filePath);
                 }).on('error', (e) => {
@@ -32,7 +30,7 @@ downloader.downloadCoverArt = function (url, savePath, id, handleExt = true) {
 
 downloader.fetchBookMeta = async function (title) {
     const q = encodeURIComponent(`intitle:${title}`);
-    const url = `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=1`;
+    const url = `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=1&key=${config.goog}`;
 
     const { data } = await axios.get(url);
 
