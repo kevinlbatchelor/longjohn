@@ -3,7 +3,7 @@ const _ = require('lodash');
 const config = require('../util/config.js');
 const os = require('os');
 const osPathCharacter = os.platform() === 'win32' ? '\\' : '/';
-const path     = require('path');
+const path = require('path');
 const archiver = require('archiver');
 
 const Streamers = {};
@@ -68,15 +68,15 @@ Streamers.subTitleStreamer = function (path, req, res) {
     });
 };
 
-exports.zipFolderStreamer = function (folderPath, res) {
+Streamers.zipFolderStreamer = function (folderPath, res) {
     // Defensive: make sure the folder exists & is readable
     fs.access(folderPath, fs.constants.R_OK, (err) => {
         if (err) return res.sendStatus(404);
-
+        console.log('------->folderPath', folderPath);
         // Tell the browser it’s a download
         res.set({
-            'Content-Type'       : 'application/zip',
-            'Content-Disposition': `attachment; filename="${path.basename(folderPath)}.zip"`,
+            'Content-Type': 'application/zip',
+            'Content-Disposition': `attachment; filename="${path.basename(folderPath)}.zip"`
         });
 
         // Pipe an on‑the‑fly ZIP into the response
@@ -156,7 +156,7 @@ Streamers.imageStreamer = function (movieId, req, res) {
         s.pipe(res);
     });
     s.on('error', function (e) {
-        console.error('error getting cover',e);
+        console.error('error getting cover', e);
         res.set('Content-Type', 'text/plain');
         res.status(404).end('Not found');
     });

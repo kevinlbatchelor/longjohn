@@ -2,10 +2,11 @@ const router = require('../util/router');
 const AudioBook = require('./audioBook');
 const route = router.v1Path('audioBooks');
 const streamers = require('../streaming/streamers');
+const path = require('path');
 
 router.get(route(), async function (req, res) {
     try {
-        const list = await AudioBook.findAndCountAll(
+        const list = await AudioBook.findAll(
             {
                 attributes: ['name'],
                 group: ['name'],
@@ -13,10 +14,6 @@ router.get(route(), async function (req, res) {
                 offset: 0,
                 limit: 1000
             });
-        list.rows.map((audioBook) => {
-            audioBook.name = audioBook.name;
-            return audioBook;
-        });
 
         res.json(list);
     } catch (e) {
@@ -43,14 +40,17 @@ router.get(route('playlist'), async function (req, res) {
     }
 });
 
-// Endpoint: GET /v1/audioBooks/:id/zip
-router.get(`${route(':id')}/zip`, async (req, res) => {
+router.get(`${route(':name')}/zip`, async (req, res) => {
     try {
-        const { id } = req.params;
-        const record = await AudioBook.findByPk(id);
-        if (!record) return res.sendStatus(404);
+        const { name } = req.params;
+        const record = await AudioBook.findOne({ raw: true, attributes: ['path'], where: { name }, group: ['path'] });
 
-        streamers.zipFolderStreamer(record.path, res);
+        const fullPath = record?.path || '';
+        const dirPath = path.dirname(fullPath);
+
+        if (!fullPath) return res.sendStatus(404);
+
+        streamers.zipFolderStreamer(dirPath, res);
     } catch (e) {
         console.error('LONG-JOHN ERROR:', e);
         res.status(500).json({ error: e.message });

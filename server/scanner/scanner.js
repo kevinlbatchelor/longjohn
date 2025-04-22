@@ -69,28 +69,50 @@ scanner.scanForAudio = function (scanPaths) {
         return stats.isDirectory();
     }
 
-    return Promise.map(scanPaths, (outerPath) => {
-        return readDirectory(outerPath, ['!*.mp3']).then((paths) => {
+    const nameCache = [];
 
+    return Promise.map(scanPaths, async (outerPath) => {
+        return readDirectory(outerPath, ['!*.mp3']).then(async (paths) => {
             const nameIndex = outerPath.split(osPathCharacter).length;
-            return Promise.reduce(paths, async (acc, path, index, length) => {
 
-                let pathDetails = path.split(osPathCharacter);
+            return Promise.reduce(paths, async (acc, stringPath) => {
+                const pathParts = stringPath.split(osPathCharacter);
+                const name = pathParts[nameIndex];
 
-                let newAudio = {};
-                newAudio.name = pathDetails[nameIndex];
-                newAudio.track = pathDetails[pathDetails.length - 1].slice(0, -4);
-                newAudio.path = path;
+                let bookMeta;
+                if (!nameCache.includes(name)) {
+                    bookMeta = await dl.fetchBookMeta(_.startCase(name));
+                }
+                const newAudio = {
+                    name,            // book title
+                    track: pathParts[pathParts.length - 1].slice(0, -4),
+                    path: stringPath,
+                    info: { ...bookMeta }                            // stores isbn & coverUrl
+                };
 
-                let foundAudioBook = await audioBook.findOne({
-                    where: {
-                        path: newAudio.path
-                    },
+                const found = await audioBook.findOne({
+                    where: { path: newAudio.path },
                     raw: true
                 });
-                if (!foundAudioBook) {
-                    await audioBook.create(newAudio);
-                    acc.push(newAudio.name);
+
+                if (!found) {
+                    const saved = await audioBook.create(newAudio, { raw: true });
+                    acc.push(newAudio.track);
+
+                    if (!nameCache.includes(name)) {
+                        if (bookMeta.coverUrl) {
+                            await dl.downloadCoverArt(
+                                bookMeta.coverUrl,
+                                config.cover,
+                                name + '-audio',
+                                false
+                            );
+                        }
+                        newAudio.info = bookMeta;            // persist meta if you want
+                        nameCache.push(name);                // mark as done
+                    } else {
+                        console.log('skip already downloaded:', name);
+                    }
                 }
                 return acc;
             }, []);

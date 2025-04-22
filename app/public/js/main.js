@@ -23,9 +23,6 @@ myApp.config(function ($routeProvider, $sceProvider, $sceDelegateProvider, $loca
     }).when('/admin', {
         templateUrl: 'admin/admin.html',
         controller: 'adminCtrl'
-    }).otherwise({
-        templateUrl: 'movies/movies.html',
-        controller: 'movieCtrl'
     });
     // $sceProvider.enabled(false);
     $sceDelegateProvider.resourceUrlWhitelist([
@@ -42,5 +39,5 @@ myApp.config(function ($routeProvider, $sceProvider, $sceDelegateProvider, $loca
 });
 
 myApp.constant('config', {
-    baseUrl: 'http://192.168.1.12:3000/api/v1'
+    baseUrl: 'http://localhost:3000/api/v1'
 });
