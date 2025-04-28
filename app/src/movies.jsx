@@ -5,13 +5,13 @@ import {
 } from '@mui/material';
 import LocalMovies from '@mui/icons-material/LocalMovies';
 
-const API_ROOT      = 'http://192.168.1.12:3000/api/v1/movie';
-const COVER_ROOT    = 'http://192.168.1.12:3000/api/v1/cover';
-const CATEGORY_LIST = 'http://192.168.1.12:3000/api/v1/categories';
+const BASE = process.env.BASE_HOST;
+const API_ROOT = BASE + ':3000/api/v1/movie';
+const COVER_ROOT = BASE + ':3000/api/v1/cover';
+const CATEGORY_LIST = BASE + ':3000/api/v1/categories';
 
 const getQueryParams = () => new URLSearchParams(window.location.search);
 
-/* --------------------------------- cards ---------------------------------- */
 function MovieCard({ id, title }) {
     const [imgError, setImgError] = useState(false);
     const coverUrl = `${COVER_ROOT}/${encodeURIComponent(id)}`;
@@ -20,7 +20,7 @@ function MovieCard({ id, title }) {
         <Card sx={{ height: '100%', width: 200, display: 'flex', flexDirection: 'column' }}>
             {imgError ? (
                 <Box sx={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <LocalMovies />
+                    <LocalMovies/>
                 </Box>
             ) : (
                 <CardMedia
@@ -48,64 +48,80 @@ function MovieCard({ id, title }) {
     );
 }
 
-/* --------------------------------- grid ----------------------------------- */
 export default function Movies() {
     /* movies */
     const [movieList, setMovieList] = useState([]);
-    const [loading,   setLoading]   = useState(true);
-    const [error,     setError]     = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     /* search / filter */
-    const [search,   setSearch]   = useState('');
+    const [search, setSearch] = useState('');
     const [category, setCategory] = useState('');
 
     /* categories for the <Select> */
     const [categories, setCategories] = useState([]);        // ← NEW
-    const [catError,   setCatError]   = useState(null);      // optional: show separate error
+    const [catError, setCatError] = useState(null);      // optional: show separate error
 
-    /* ------------ fetch movies once on mount (URL params honoured) ---------- */
     useEffect(() => {
-        const query     = getQueryParams();
-        const qName     = query.get('name')     || '';
+        const query = getQueryParams();
+        const qName = query.get('name') || '';
         const qCategory = query.get('category') || '';
 
         setSearch(qName);
         setCategory(qCategory);
 
         fetch(`${API_ROOT}?type=Movie&name=${qName}&category=${qCategory}`)
-            .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-            .then(data => { setMovieList(data?.rows); setLoading(false); })
-            .catch(err => { setError(err.message);   setLoading(false); });
+            .then(r => {
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return r.json();
+            })
+            .then(data => {
+                setMovieList(data?.rows);
+                setLoading(false);
+            })
+            .catch(err => {
+                setError(err.message);
+                setLoading(false);
+            });
     }, []);
 
-    /* ------------ fetch category list once on mount ------------------------- */
     useEffect(() => {
         fetch(CATEGORY_LIST)
-            .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-            .then(list => setCategories(list))      // assume API returns ["Action", "Comedy", …]
+            .then(r => {
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return r.json();
+            })
+            .then(list => setCategories(list))
             .catch(err => setCatError(err.message));
     }, []);
 
-    /* handlers --------------------------------------------------------------- */
-    const handleSearchChange   = e => setSearch(e.target.value);
+    const handleSearchChange = e => setSearch(e.target.value);
     const handleCategoryChange = e => setCategory(e.target.value);
 
     const handleSearchSubmit = () => {
         const url = new URL(window.location);
-        url.searchParams.set('name',     search);
+        url.searchParams.set('name', search);
         url.searchParams.set('category', category);
         window.history.pushState({}, '', url);
 
         setLoading(true);
         fetch(`${API_ROOT}?type=Movie&name=${search}&category=${category}`)
-            .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-            .then(data => { setMovieList(data.rows); setLoading(false); })
-            .catch(err => { setError(err.message);   setLoading(false); });
+            .then(r => {
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return r.json();
+            })
+            .then(data => {
+                setMovieList(data.rows);
+                setLoading(false);
+            })
+            .catch(err => {
+                setError(err.message);
+                setLoading(false);
+            });
     };
 
-    /* ------------------------- render -------------------------------------- */
-    if (loading) return <Centered><CircularProgress sx={{ color: '#0f0' }} /></Centered>;
-    if (error)   return <Centered><Alert severity="error">Load error – {error}</Alert></Centered>;
+    if (loading) return <Centered><CircularProgress sx={{ color: '#0f0' }}/></Centered>;
+    if (error) return <Centered><Alert severity="error">Load error – {error}</Alert></Centered>;
 
     return (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
@@ -125,7 +141,6 @@ export default function Movies() {
                         {/* default blank option */}
                         <MenuItem value=""><em>All</em></MenuItem>
 
-                        {/* dynamic list — if it fails to load, fall back to nothing */}
                         {categories.map(cat => (
                             <MenuItem key={cat.name} value={cat.name}>{cat.name}</MenuItem>
                         ))}
@@ -148,7 +163,7 @@ export default function Movies() {
             <Grid container spacing={2}>
                 {movieList.map(({ name, id }) => (
                     <Grid item key={id} xs={12} sm={6} md={3}>
-                        <MovieCard id={id} title={name} />
+                        <MovieCard id={id} title={name}/>
                     </Grid>
                 ))}
             </Grid>
@@ -156,7 +171,6 @@ export default function Movies() {
     );
 }
 
-/* center helper */
 const Centered = ({ children }) => (
     <Grid container justifyContent="center" alignItems="center" sx={{ mt: 8 }}>
         {children}

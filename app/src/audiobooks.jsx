@@ -11,10 +11,10 @@ import {
 } from '@mui/material';
 import MenuBookRounded from '@mui/icons-material/MenuBookRounded';
 
-const API_ROOT = 'http://192.168.1.12:3000/api/v1/audioBooks';
-const COVER_ROOT = 'http://192.168.1.12:3000/api/v1/cover';
+const BASE = process.env.BASE_HOST;
+const API_ROOT = BASE + ':3000/api/v1/audioBooks';
+const COVER_ROOT = BASE + ':3000/api/v1/cover';
 
-/* helper to trigger ZIP download ------------------------------------------------ */
 function downloadZip(name) {
     const a = document.createElement('a');
     a.href = `${API_ROOT}/${encodeURIComponent(name)}/zip`;
@@ -24,7 +24,6 @@ function downloadZip(name) {
     a.remove();
 }
 
-/* single book card -------------------------------------------------------------- */
 function BookCard({ name }) {
     const [imgError, setImgError] = useState(false);
     const coverUrl = `${COVER_ROOT}/${encodeURIComponent(name)}-audio`;
@@ -47,14 +46,14 @@ function BookCard({ name }) {
                         justifyContent: 'center'
                     }}
                 >
-                    <MenuBookRounded />
+                    <MenuBookRounded/>
                 </Box>
             ) : (
                 <CardMedia
                     component="img"
                     image={coverUrl}
                     alt={name}
-                    sx={{ height: 260}}
+                    sx={{ height: 260 }}
                     onError={() => setImgError(true)}
                 />
             )}
@@ -106,7 +105,7 @@ export default function Audiobooks() {
             justifyContent: 'center',
             alignItems: 'center'
         }}>
-            <Grid container spacing={2} >
+            <Grid container spacing={2}>
                 {books.map(({ name }) => (
                     <Grid item key={name} xs={12} sm={6} md={3}>
                         <BookCard name={name}/>
@@ -117,7 +116,6 @@ export default function Audiobooks() {
     );
 }
 
-/* centered wrapper ------------------------------------------------------------- */
 const Centered = ({ children }) => (
     <Grid container justifyContent="center" alignItems="center" sx={{ mt: 8 }}>
         {children}

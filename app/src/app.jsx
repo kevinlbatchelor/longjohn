@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Audiobooks from './audiobooks';
 import Movies from './movies';
 import { GlobalStyles, ThemeProvider } from '@mui/material';
-import { cssVars, hackerTheme } from './hackerStyles.jsx';
+import { cssVars, hackerTheme } from './styles.jsx';
 import MoviePlayer from './moviePlayer.jsx';
 import Admin from './admin';
 import TV from './tv';
@@ -13,8 +13,8 @@ const routes = {
     '/': Movies,
     '/audiobooks': Audiobooks,
     '/movies': Movies,
-    '/admin':Admin,
-    '/tv':TV
+    '/admin': Admin,
+    '/tv': TV
 };
 
 function resolveRoute(path) {
@@ -45,9 +45,9 @@ export default function App() {
             <ThemeProvider theme={hackerTheme}>
                 <GlobalStyles styles={{
                     a: { color: cssVars.green, textDecoration: 'none' },
-                    html: { backgroundColor: '#121212' },
-                    body: { backgroundColor: '#121212' },
-                    '#root': { backgroundColor: '#121212', minHeight: '100vh' }
+                    html: { backgroundColor: cssVars.gray },
+                    body: { backgroundColor: cssVars.gray },
+                    '#root': { backgroundColor: cssVars.gray, minHeight: '100vh' }
                 }}/>
                 <nav style={{ marginBottom: 16, textAlign: 'center' }}>
                     <a href={`#/tv`}>TV</a> | {' '}

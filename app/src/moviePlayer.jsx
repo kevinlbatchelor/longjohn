@@ -1,10 +1,11 @@
 import React from 'react';
 
-const MOVIE_ROOT = 'http://192.168.1.12:3000/api/v1/movie';
-const SUBS_ROOT  = 'http://192.168.1.12:3000/api/v1/subs';
+const BASE = process.env.BASE_HOST;
+const MOVIE_ROOT = BASE + ':3000/api/v1/movie';
+const SUBS_ROOT = BASE + ':3000/api/v1/subs';
 
 export default function MoviePlayer({ id }) {
-    const src  = `${MOVIE_ROOT}/${id}`;
+    const src = `${MOVIE_ROOT}/${id}`;
     const subs = `${SUBS_ROOT}/${id}`;
 
     return (
