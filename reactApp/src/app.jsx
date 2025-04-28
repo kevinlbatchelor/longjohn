@@ -4,14 +4,17 @@ import Movies from './movies';
 import { GlobalStyles, ThemeProvider } from '@mui/material';
 import { cssVars, hackerTheme } from './hackerStyles.jsx';
 import MoviePlayer from './moviePlayer.jsx';
+import Admin from './admin';
+import TV from './tv';
 
-const Home = () => <h2>Home page</h2>;
 const NotFound = () => <h2>404 – Not found</h2>;
 
 const routes = {
-    '/': Home,
+    '/': Movies,
     '/audiobooks': Audiobooks,
-    '/movies': Movies
+    '/movies': Movies,
+    '/admin':Admin,
+    '/tv':TV
 };
 
 function resolveRoute(path) {
@@ -36,7 +39,6 @@ export default function App() {
     }, []);
 
     const Page = resolveRoute(path);
-    const host = BASE_HOST || '';
 
     return (
         <>
@@ -48,10 +50,10 @@ export default function App() {
                     '#root': { backgroundColor: '#121212', minHeight: '100vh' }
                 }}/>
                 <nav style={{ marginBottom: 16, textAlign: 'center' }}>
-                    <a href={`${host}/#/tvs`}>TV</a> | {' '}
+                    <a href={`#/tv`}>TV</a> | {' '}
                     <a href={`#/audiobooks`}>AudioBooks</a> | {' '}
                     <a href={`#/movies`}>Movies</a> | {' '}
-                    <a href={`${host}/#/admin`}>Admin</a>
+                    <a href={`#/admin`}>Admin</a>
                 </nav>
                 <Page/>
             </ThemeProvider>

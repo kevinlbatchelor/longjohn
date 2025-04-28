@@ -10,6 +10,7 @@ export default function MoviePlayer({ id }) {
     return (
         <div style={{ width: '90%', maxWidth: 900, margin: '0 auto' }}>
             <video
+                autoPlay
                 id="video"
                 width="100%"
                 preload="none"

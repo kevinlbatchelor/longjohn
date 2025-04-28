@@ -72,7 +72,6 @@ Streamers.zipFolderStreamer = function (folderPath, res) {
     // Defensive: make sure the folder exists & is readable
     fs.access(folderPath, fs.constants.R_OK, (err) => {
         if (err) return res.sendStatus(404);
-        console.log('------->folderPath', folderPath);
         // Tell the browser it’s a download
         res.set({
             'Content-Type': 'application/zip',
