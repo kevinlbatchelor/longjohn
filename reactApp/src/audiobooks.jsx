@@ -12,10 +12,7 @@ import {
 import MenuBookRounded from '@mui/icons-material/MenuBookRounded';
 
 const API_ROOT = 'http://192.168.1.12:3000/api/v1/audioBooks';
-// const API_ROOT = 'http://localhost:3000/api/v1/audioBooks';
-// const COVER_ROOT = 'http://localhost:3000/api/v1/cover';
 const COVER_ROOT = 'http://192.168.1.12:3000/api/v1/cover';
-// → http://localhost:3000/cover
 
 /* helper to trigger ZIP download ------------------------------------------------ */
 function downloadZip(name) {
