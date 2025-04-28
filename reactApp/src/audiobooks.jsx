@@ -36,7 +36,6 @@ function BookCard({ name }) {
         <Card
             sx={{
                 height: '100%',
-                background: '#111',
                 width: '200px',
                 display: 'flex',
                 flexDirection: 'column'
@@ -48,18 +47,17 @@ function BookCard({ name }) {
                         height: 260,
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        background: '#000'
+                        justifyContent: 'center'
                     }}
                 >
-                    <MenuBookRounded sx={{ fontSize: 80, color: '#0f0' }} />
+                    <MenuBookRounded />
                 </Box>
             ) : (
                 <CardMedia
                     component="img"
                     image={coverUrl}
                     alt={name}
-                    sx={{ height: 260, background: '#000' }}
+                    sx={{ height: 260}}
                     onError={() => setImgError(true)}
                 />
             )}
@@ -67,7 +65,7 @@ function BookCard({ name }) {
             <CardContent sx={{ py: 1 }}>
                 <Typography
                     variant="subtitle1"
-                    sx={{ color: '#0f0', cursor: 'pointer' }}
+                    sx={{ cursor: 'pointer' }}
                     noWrap
                     onClick={() => downloadZip(name)}
                     title={`Download ${name} ZIP`}
@@ -79,11 +77,10 @@ function BookCard({ name }) {
     );
 }
 
-/* main grid --------------------------------------------------------------------- */
 export default function Audiobooks() {
-    const [books,   setBooks]   = useState([]);
+    const [books, setBooks] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error,   setError]   = useState(null);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         fetch(API_ROOT)
@@ -101,17 +98,25 @@ export default function Audiobooks() {
             });
     }, []);
 
-    if (loading) return <Centered><CircularProgress sx={{ color: '#0f0' }} /></Centered>;
-    if (error)   return <Centered><Alert severity="error">Load error – {error}</Alert></Centered>;
+    if (loading) return <Centered><CircularProgress sx={{ color: '#0f0' }}/></Centered>;
+    if (error) return <Centered><Alert severity="error">Load error – {error}</Alert></Centered>;
 
     return (
-        <Grid container spacing={2}>
-            {books.map(({ name }) => (
-                <Grid item key={name} xs={12} sm={6} md={3}>
-                    <BookCard name={name} />
-                </Grid>
-            ))}
-        </Grid>
+        <div style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center'
+        }}>
+            <Grid container spacing={2} >
+                {books.map(({ name }) => (
+                    <Grid item key={name} xs={12} sm={6} md={3}>
+                        <BookCard name={name}/>
+                    </Grid>
+                ))}
+            </Grid>
+        </div>
     );
 }
 

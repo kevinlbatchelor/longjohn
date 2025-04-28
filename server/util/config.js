@@ -12,6 +12,7 @@ const cover = '/media/pi/LongJohn/Covers';
 // const cover = 'C:\\Users\\kbatchelor\\Documents\\Cover';
 
 const config = {
+    goog:'',
     tvFolderName,
     database: {
         host: '127.0.0.1',

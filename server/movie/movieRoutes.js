@@ -6,34 +6,44 @@ const _ = require('lodash');
 const streamers = require('../streaming/streamers');
 const { Op } = require('sequelize');
 
-router.get(route(), async function (req, res) {
-    const category = _.get(req, 'query.category', 'null');
-    const name = _.get(req, 'query.name', null);
-    try {
-        const list = await Movie.findAndCountAll(
-            {
-                where: {
-                    genre: {
-                        [Op.like]: `%${category}%`
-                    },
-                    name: {
-                        [Op.iLike]: `%${name}%`
-                    }
-                },
-                order: [['createdAt', 'DESC']],
-                offset: 0,
-                limit: 1000
-            });
+router.get(route(), async (req, res) => {
+    const category = _.get(req, 'query.category');
+    const name = _.get(req, 'query.name');
+    const type = _.get(req, 'query.type');
 
-        list.rows.map((movie) => {
-            movie.name = _.startCase(movie.name);
-            return movie;
+    const where = {};
+
+    if (category) {
+        where.genre = { [Op.like]: `%${category}%` };
+    }
+
+    if (name) {
+        where.name = { [Op.iLike]: `%${name}%` };
+    }
+
+    if (type === 'Movie') {
+        where.genre = {
+            ...(where.genre || {}),
+            [Op.notILike]: '%TV%'
+        };
+    }
+
+    try {
+        const list = await Movie.findAndCountAll({
+            where,
+            order: [['createdAt', 'DESC']],
+            offset: 0,
+            limit: 1000
         });
+
+        list.rows.forEach(movie => {
+            movie.name = _.startCase(movie.name);
+        });
+
         res.json(list);
     } catch (e) {
         console.error('LONG-JOHN ERROR:', e);
-        res.status(500);
-        res.json({ error: e });
+        res.status(500).json({ error: e });
     }
 });
 
