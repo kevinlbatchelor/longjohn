@@ -1,0 +1,1 @@
+require('./util/database/dbSetup')();

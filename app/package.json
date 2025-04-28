@@ -3,8 +3,8 @@
     "version": "1.0.0",
     "private": true,
     "scripts": {
-        "start": "cross-env BASE_HOST=http://localhost webpack serve --mode development --open",
-        "build": "cross-env BASE_HOST=http://192.168.1.12 webpack --mode production"
+        "start": "../reactApp/node_modules/.bin/cross-env BASE_HOST=http://localhost webpack serve --mode development --open",
+        "build": "../reactApp/node_modules/.bin/cross-env BASE_HOST=http://192.168.1.12 webpack --mode production"
     },
     "dependencies": {
         "@emotion/react": "^11.14.0",

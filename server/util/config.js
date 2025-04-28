@@ -6,12 +6,13 @@ const cover = '/media/pi/LongJohn/Covers';
 
 //windows paths
 // const tvFolderName = 'TV';
-// const moviesPath = ['C:\\Users\\kbatchelor\\Documents\\Movies'];
-// const audioBookPath = ['C:\\Users\\kbatchelor\\Documents\\AudioBooks'];
-// const TV = ['C:\\Users\\kbatchelor\\Documents\\' + tvFolderName];
-// const cover = 'C:\\Users\\kbatchelor\\Documents\\Cover';
+// const moviesPath = ['C:\\Users\\windowsUserName\\Documents\\Movies'];
+// const audioBookPath = ['C:\\Users\\windowsUserName\\Documents\\AudioBooks'];
+// const TV = ['C:\\Users\\windowsUserName\\Documents\\' + tvFolderName];
+// const cover = 'C:\\Users\\windowsUserName\\Documents\\Cover';
 
 const config = {
+    omdbApiKey:'',
     goog:'',
     tvFolderName,
     database: {

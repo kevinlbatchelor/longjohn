@@ -7,7 +7,7 @@ module.exports = {
     entry: './src/index.jsx',
     output: {
         filename: 'bundle.js',
-        path: path.resolve(__dirname, '../app/public'),
+        path: path.resolve(__dirname, './public'),
         clean: true
     },
     resolve: {
@@ -26,7 +26,7 @@ module.exports = {
         new CopyWebpackPlugin({
             patterns: [
                 {
-                    from: path.resolve(__dirname, '../app/public/index.html'),
+                    from: path.resolve(__dirname, './public/index.html'),
                     to: 'index.html'
                 }
             ]
@@ -36,7 +36,7 @@ module.exports = {
         }),
     ],
     devServer: {
-        static: path.resolve(__dirname, '../app/public'),
+        static: path.resolve(__dirname, './public'),
         port: 3033,
         hot: true,
         open: true

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./server/server.js",
+    "updateDB": "node ./server/updateDatabase.js",
     "client": "node ./app/client.js"
   },
   "dependencies": {
