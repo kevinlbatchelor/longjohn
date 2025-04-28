@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import {
-    Grid, Card, CardMedia, CardContent, Typography, CircularProgress, Alert,
-    Box, TextField, Select, MenuItem, InputLabel, FormControl, Button
-} from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, CardMedia, CircularProgress, FormControl, Grid, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
 import LocalMovies from '@mui/icons-material/LocalMovies';
+import { cssVars } from './styles.jsx';
 
 const BASE = process.env.BASE_HOST;
 const API_ROOT = BASE + ':3000/api/v1/movie';
@@ -54,13 +52,11 @@ export default function Movies() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    /* search / filter */
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState('');
 
-    /* categories for the <Select> */
-    const [categories, setCategories] = useState([]);        // ← NEW
-    const [catError, setCatError] = useState(null);      // optional: show separate error
+    const [categories, setCategories] = useState([]);
+    const [catError, setCatError] = useState(null);
 
     useEffect(() => {
         const query = getQueryParams();
@@ -120,7 +116,7 @@ export default function Movies() {
             });
     };
 
-    if (loading) return <Centered><CircularProgress sx={{ color: '#0f0' }}/></Centered>;
+    if (loading) return <Centered><CircularProgress sx={{ color: cssVars.green }}/></Centered>;
     if (error) return <Centered><Alert severity="error">Load error – {error}</Alert></Centered>;
 
     return (
