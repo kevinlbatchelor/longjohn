@@ -61,11 +61,8 @@ Using express-static is an easier alternative to Nginx. The server already insta
 - You can use ```npm start``` instead to develop using webpack dev server
 
 # Setting up LongJohn on a server
-- Create LongJohn directory on server
-- Copy all files from Server to directory
-- Copy "public" folder and everything in it (index.html and bundle.js) to the app directory
-- Copy client.js to app directory
-- You do not need to copy src or node_modules to your server
+- Copy LongJohn to server
+- Configure according to server
 
 - Consider Creating an entry in the cron tab to run client.js and server.js on startup
 
