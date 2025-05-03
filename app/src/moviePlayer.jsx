@@ -1,6 +1,6 @@
 import React from 'react';
 
-const BASE = process.env.BASE_HOST;
+const BASE = 'http://localhost';
 const MOVIE_ROOT = BASE + ':3000/api/v1/movie';
 const SUBS_ROOT = BASE + ':3000/api/v1/subs';
 
