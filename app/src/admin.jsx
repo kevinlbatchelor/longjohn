@@ -12,7 +12,7 @@ const API = {
 };
 
 const BASE = process.env.BASE_HOST;
-const ADMIN = BASE + ':3000/api/v1/movie';
+const ADMIN = BASE + ':3000/api/v1';
 
 export default function Admin() {
     const [result,   setResult]   = useState(null);

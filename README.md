@@ -47,20 +47,10 @@ Start Server
 - run ```npm install```
 - run ```npm start```
 
-# Setting Up the Web App Nginx (Optional)
-
-If you plan to host the app in Nginx you will need to install Nginx
-
-- Open app/package.json
-- Set BASE_HOST to internal IP address of your server
-- run ```npm install```
-- run ```npm run build```
-- Copy "public" folder and everything in it to your Nginx sites-available
-
 # Setting Up the Web App Express Static Server
-
 Using express-static is an easier alternative to Nginx. The server already installed express-static.
 
+- Goto app directory
 - Open app/package.json
 - Set BASE_HOST to internal IP address of your server in package.json script
 - Edit app/client.js and configure express-static
@@ -68,13 +58,22 @@ Using express-static is an easier alternative to Nginx. The server already insta
 - run ```npm run build```
 - run ```"node ./app/client.js"```
 - Open browser goto local host and see if web app runs! Check Console for Errors!
+- You can use ```npm start``` instead to develop using webpack dev server
 
 # Setting up LongJohn on a server
-- Create LongJohn directoryZM?><qa
+- Create LongJohn directory on server
 - Copy all files from Server to directory
-- Copy 
 - Copy "public" folder and everything in it (index.html and bundle.js) to the app directory
 - Copy client.js to app directory
 - You do not need to copy src or node_modules to your server
 
-- Consider Creating an entry in the cron tab to run client.js on startup
+- Consider Creating an entry in the cron tab to run client.js and server.js on startup
+
+# Setting Up the Web App Nginx (Optional)
+If you plan to host the app in Nginx you will need to install Nginx
+
+- Open app/package.json
+- Set BASE_HOST to internal IP address of your server
+- run ```npm install```
+- run ```npm run build```
+- Copy "public" folder and everything in it to your Nginx sites-available
