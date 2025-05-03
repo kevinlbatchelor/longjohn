@@ -32,8 +32,8 @@ module.exports = {
             ]
         }),
         new webpack.DefinePlugin({
-            BASE_HOST: JSON.stringify(BASE_HOST)
-        }),
+            'process.env.BASE_HOST': JSON.stringify(BASE_HOST)
+        })
     ],
     devServer: {
         static: path.resolve(__dirname, './public'),

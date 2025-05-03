@@ -7,3 +7,4 @@ let app = express();
 app.use(serveStatic(`${__dirname}/public`, {'index': ['index.html', 'index.htm', 'favicon.ico']}));
 app.use(serveStatic(path.join(__dirname, '../node_modules')))
 app.listen(80);
+console.log('STATIC WEB SERVER STARTED!')
