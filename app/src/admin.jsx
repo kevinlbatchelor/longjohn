@@ -11,7 +11,8 @@ const API = {
     ebooks : '/bookScanner'
 };
 
-const base = 'http://192.168.1.12:3000/api/v1';
+const BASE = process.env.BASE_HOST;
+const ADMIN = BASE + ':3000/api/v1/movie';
 
 export default function Admin() {
     const [result,   setResult]   = useState(null);
@@ -25,7 +26,7 @@ export default function Admin() {
         setResult(null);
 
         try {
-            const r = await fetch(`${base}${route}`);
+            const r = await fetch(`${ADMIN}${route}`);
             if (!r.ok) throw new Error(`HTTP ${r.status}`);
 
             const data = await r.json();

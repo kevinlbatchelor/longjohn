@@ -62,13 +62,19 @@ If you plan to host the app in Nginx you will need to install Nginx
 Using express-static is an easier alternative to Nginx. The server already installed express-static.
 
 - Open app/package.json
-- Set BASE_HOST to internal IP address of your server
+- Set BASE_HOST to internal IP address of your server in package.json script
 - Edit app/client.js and configure express-static
 - run ```npm install```
 - run ```npm run build```
-- Create an app directory in Documents
+- run ```"node ./app/client.js"```
+- Open browser goto local host and see if web app runs! Check Console for Errors!
+
+# Setting up LongJohn on a server
+- Create LongJohn directoryZM?><qa
+- Copy all files from Server to directory
+- Copy 
 - Copy "public" folder and everything in it (index.html and bundle.js) to the app directory
 - Copy client.js to app directory
 - You do not need to copy src or node_modules to your server
-- run ```"node ./app/client.js"```
+
 - Consider Creating an entry in the cron tab to run client.js on startup
