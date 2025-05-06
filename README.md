@@ -1,76 +1,167 @@
-# longJohn
-Node.JS/React Media Server
+# LongJohn Media Server
 
-Requirements:
-- NPM
-- Postgres
+> **Self‑hosted Node.js / React media server for Raspberry Pi or Windows**
+>
+> **Security notice:** LongJohn has *no built‑in authentication*. Run it **only on a trusted private network**.
 
-Web based media server that can be run on a raspberry pi or windows box. Uses Node.js.
-Movies will stream via the web to app to any browser. No need to install a phone app or tv app.
-Simply go to the ip address of the pi in a browser and watch.
-There is NO SECURITY (Login or API key) so this project should only be used on a 
-Secure Private Network.
+---
 
-Supports
+## Features
 
-- Mp4 movies
-- Vtt subtitles
-- Multi nested folders for Audio Books
-- Metadata is added to all movies via OIMDB API look UP and Google Books
+| Category       | Details                                                                   |
+| -------------- | ------------------------------------------------------------------------- |
+| **Video**      | Streams MP4 (H.264/H.265) with VTT subtitles to any modern browser        |
+| **Audiobooks** | Navigates multi‑level folder structures                                   |
+| **Metadata**   | Auto‑fetches movie data from **OMDb** and book data from **Google Books** |
+| **Indexing**   | Scans your library and stores results in PostgreSQL                       |
 
-Indexes all files and saves them to a postgres database
+---
 
-# Setting up the Server
+## Requirements
 
-- Install Node 18 or greater
-- Install Postgres 
-- Install PG Admin
+* **Node.js 18 +** (includes **npm**)
+* **PostgreSQL 13 +** (tested on 15)
+* (Optional) **pgAdmin** – GUI for PostgreSQL
+* A folder containing your movies / audiobooks (ext4, NTFS, etc.)
 
-Server Config
-- Copy longjohn directory to Documents directory
-- Open server/util/config.js
-- Create a Postgres database Using PG Admin
-- Update the Database connection details in config.js to match
-- Set your Google Books API Key You will NOT use OAuth. ```https://developers.google.com/books/docs/v1/using```
-- Set your omdbApiKey ```https://www.omdbapi.com/```
-- Set the paths to your media. If you are running linux you will need to change file permissions on your media and directories. ```chmod -R 0755 /media```
-- Consider Creating an entry in the cron tab to run server.js on startup
+---
 
-Update Database (You need to run database update once.)
-- Open Documents/longjohn
-- run ```npm install```
-- run ```npm run updateDB```
-- connect to database using PGAdmin make sure tables have been created correctly
+## Quick start
 
-Start Server 
-- Open Documents/longjohn
-- run ```npm install```
-- run ```npm start```
+```bash
+# Clone & install
+mkdir -p ~/Documents && cd ~/Documents
+git clone <repo‑url> longjohn && cd longjohn
+npm install
+```
 
-# Setting Up the Web App Express Static Server
-Using express-static is an easier alternative to Nginx. The server already installed express-static.
+### 1 ▪ Configure PostgreSQL & API keys
 
-- Goto app directory
-- Open app/package.json
-- Set BASE_HOST to internal IP address of your server in package.json script
-- Edit app/client.js and configure express-static
-- run ```npm install```
-- run ```npm run build```
-- run ```"node ./app/client.js"```
-- Open browser goto local host and see if web app runs! Check Console for Errors!
-- You can use ```npm start``` instead to develop using webpack dev server
+1. Create a database (e.g. `longjohn`) in pgAdmin or via `psql`.
+2. Copy **`server/util/config.js.example` → `server/util/config.js`** and fill in:
 
-# Setting up LongJohn on a server
-- Copy LongJohn to server
-- Configure according to server
+```js
+module.exports = {
+  db: {
+    host: 'localhost', port: 5432,
+    user: 'pi', password: 'secret', database: 'longjohn'
+  },
+  omdbApiKey: 'XXXX',              // https://www.omdbapi.com/
+  googleBooksApiKey: 'XXXX',       // https://developers.google.com/books
+  mediaPaths: [
+    '/media/movies',
+    '/media/audiobooks'
+  ]
+};
+```
 
-- Consider Creating an entry in the cron tab to run client.js and server.js on startup
+3. On Linux, grant read permission to the media folders:
 
-# Setting Up the Web App Nginx (Optional)
-If you plan to host the app in Nginx you will need to install Nginx
+```bash
+sudo chmod -R 0755 /media
+```
 
-- Open app/package.json
-- Set BASE_HOST to internal IP address of your server
-- run ```npm install```
-- run ```npm run build```
-- Copy "public" folder and everything in it to your Nginx sites-available
+### 2 ▪ Initialise tables
+
+```bash
+npm run updateDB       # creates tables & seeds metadata
+```
+
+### 3 ▪ Launch the server
+
+```bash
+npm start              # default: http://<host>:3000/api
+```
+
+Add an *@reboot* cron entry so it starts on boot:
+
+```cron
+@reboot /usr/bin/node /home/pi/Documents/longjohn/server.js >> /var/log/longjohn.log 2>&1
+```
+
+---
+
+## Front‑end (React SPA)
+
+LongJohn ships with a pre‑configured React client.
+
+### Option A – Express static (zero‑config)
+
+```bash
+cd app
+npm install
+npm run build      # outputs to app/public
+node client.js     # serves React bundle on http://<host>:8080
+```
+
+During development use `npm start` for Webpack Dev Server.
+
+**Tip:** edit `app/package.json` → `scripts.build` to hard‑code your API host:
+
+```json
+"build": "webpack --mode production --env BASE_HOST=http://<SERVER_IP>:4000"
+```
+
+### Option B – Nginx (production)
+
+1. `sudo apt-get install nginx`
+2. Copy `app/public` → `/var/www/longjohn`
+3. `/etc/nginx/sites-available/longjohn`:
+
+```
+server {
+    listen 80;
+    server_name media.local;
+
+    root /var/www/longjohn;
+    try_files $uri /index.html;
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:4000/;
+        proxy_set_header Host $host;
+    }
+}
+```
+
+4. Enable & reload:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/longjohn /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+---
+
+## Directory layout
+
+```
+longjohn/
+├── app/             # React client
+├── server/          # Express API + utilities
+├── media/           # your movie & audiobook folders
+└── README.md
+```
+
+---
+
+## Troubleshooting
+
+| Symptom                | Fix                                                                        |
+| ---------------------- | -------------------------------------------------------------------------- |
+| **Tables not created** | Check DB credentials in `server/util/config.js`; rerun `npm run updateDB`. |
+| **Media not found**    | Verify `mediaPaths` entries and filesystem permissions (`chmod`).          |
+| **Subtitles missing**  | Ensure `.vtt` file name matches movie file name.                           |
+
+---
+
+## Roadmap
+
+* User authentication & roles
+* HLS/DASH adaptive streaming
+* Docker image & compose file
+
+---
+
+## License
+
+MIT © 2025 Kevin Batchelor
