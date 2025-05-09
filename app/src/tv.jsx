@@ -71,19 +71,23 @@ function ShowCard({ show }) {
                     {show.episodes
                         .slice()                      // shallow-copy so we can sort
                         .sort((a, b) => a.episode.localeCompare(b.episode, undefined, { numeric: true }))
-                        .map((ep) => (
-                            <ListItemButton
-                                key={ep.id}
-                                component="a"
-                                href={`#/play/${ep.id}`}
-                                sx={{ pl: 2 }}
-                            >
-                                <ListItemText
-                                    primary={ep.episode}
-                                    primaryTypographyProps={{ noWrap: true, sx: { color: '#0f0' } }}
-                                />
-                            </ListItemButton>
-                        ))}
+                        .map((ep, idx, arr) => {
+                            const queue   = arr.slice(idx + 1).map(e => e.id).join(',');
+                            return (
+                                <ListItemButton
+                                    key={ep.id}
+                                    component="a"
+                                    href={`#/play/${ep.id}${queue ? `?queue=${queue}` : ''}`}
+                                    sx={{ pl: 2 }}
+                                >
+                                    <ListItemText
+                                        primary={ep.episode}
+                                        primaryTypographyProps={{ noWrap: true, sx: { color: '#0f0' } }}
+                                    />
+                                </ListItemButton>
+                            );
+                        })
+                    }
                 </List>
             </Collapse>
         </Card>

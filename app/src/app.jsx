@@ -18,12 +18,18 @@ const routes = {
 };
 
 function resolveRoute(path) {
+    // exact matches first
     if (routes[path]) return routes[path];
 
-    const match = path.match(/^\/play\/([^/]+)$/);
-    if (match) {
-        const id = match[1];
-        return () => <MoviePlayer id={id}/>;
+    const playMatch = path.match(/^\/play\/([^?]+)(?:\?(.+))?$/);
+    if (playMatch) {
+        const id = playMatch[1];
+        const params = new URLSearchParams(playMatch[2] || '');
+        const queue = params.get('queue') || '';
+        const [nextId, ...rest] = queue.split(',').filter(Boolean);
+        const nextQueue = rest.join(',');
+
+        return () => <MoviePlayer id={id} nextId={nextId} queue={nextQueue} />;
     }
 
     return NotFound;
