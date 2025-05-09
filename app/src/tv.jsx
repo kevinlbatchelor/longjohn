@@ -29,7 +29,7 @@ function ShowCard({ show }) {
     const coverUrl = `${COVER_ROOT}/${encodeURIComponent(firstEpId)}`;
 
     return (
-        <Card sx={{ width: 240, background: '#111', display: 'flex', flexDirection: 'column' }}>
+        <Card sx={{ width: 200, display: 'flex', flexDirection: 'column' }}>
             {imgError ? (
                 <Box sx={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <LiveTvIcon/>

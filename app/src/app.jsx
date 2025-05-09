@@ -29,7 +29,7 @@ function resolveRoute(path) {
         const [nextId, ...rest] = queue.split(',').filter(Boolean);
         const nextQueue = rest.join(',');
 
-        return () => <MoviePlayer id={id} nextId={nextId} queue={nextQueue} />;
+        return () => <MoviePlayer id={id} nextId={nextId} queue={nextQueue}/>;
     }
 
     return NotFound;
@@ -50,7 +50,10 @@ export default function App() {
         <>
             <ThemeProvider theme={hackerTheme}>
                 <GlobalStyles styles={{
-                    a: { color: cssVars.green, textDecoration: 'none' },
+                    a: {
+                        color: cssVars.green, textDecoration: 'none',
+                        fontFamily: '"Source Code Pro", monospace'
+                    },
                     html: { backgroundColor: cssVars.gray },
                     body: { backgroundColor: cssVars.gray },
                     '#root': { backgroundColor: cssVars.gray, minHeight: '100vh' }
