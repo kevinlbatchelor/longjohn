@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Alert, Box, Button, Card, CardContent, CardMedia, CircularProgress, FormControl, Grid, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, Box, Button, Card, CardContent, CardMedia, CircularProgress, FormControl, Grid, InputLabel, MenuItem, NativeSelect, Select, TextField, Typography } from '@mui/material';
 import LocalMovies from '@mui/icons-material/LocalMovies';
 import { cssVars } from './styles.jsx';
 
@@ -91,17 +91,19 @@ export default function Movies() {
             .catch(err => setCatError(err.message));
     }, []);
 
-    const handleSearchChange = e => setSearch(e.target.value);
+    const searchRef = useRef('');
+
     const handleCategoryChange = e => setCategory(e.target.value);
 
     const handleSearchSubmit = () => {
+        const searchValue = searchRef.current.value; // Get value from ref
         const url = new URL(window.location);
-        url.searchParams.set('name', search);
+        url.searchParams.set('name', searchValue);
         url.searchParams.set('category', category);
         window.history.pushState({}, '', url);
 
         setLoading(true);
-        fetch(`${API_ROOT}?type=Movie&name=${search}&category=${category}`)
+        fetch(`${API_ROOT}?type=Movie&name=${searchValue}&category=${category}`)
             .then(r => {
                 if (!r.ok) throw new Error(`HTTP ${r.status}`);
                 return r.json();
@@ -125,22 +127,21 @@ export default function Movies() {
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, width: '100%', maxWidth: 900 }}>
                 <TextField
                     label="Search by Movie Name"
-                    variant="outlined"
-                    value={search}
-                    onChange={handleSearchChange}
+                    variant="standard"
+                    inputRef={searchRef} // Assign ref here
+                    defaultValue={search} // To preserve initial value from query params
                     sx={{ width: '45%', mr: 2 }}
-                />
+                />;
 
-                <FormControl variant="outlined" sx={{ width: '45%', mr: 2 }}>
-                    <InputLabel>Category</InputLabel>
-                    <Select value={category} onChange={handleCategoryChange} label="Category">
+                <FormControl variant="standard" label="Category" sx={{ width: '45%', marginTop:"15px"}}>
+                    <NativeSelect value={category} onChange={handleCategoryChange} label="Category">
                         {/* default blank option */}
                         <MenuItem value=""><em>All</em></MenuItem>
 
                         {categories.map(cat => (
-                            <MenuItem key={cat.name} value={cat.name}>{cat.name}</MenuItem>
+                            <option  key={cat.name} value={cat.name}>{cat.name}</option>
                         ))}
-                    </Select>
+                    </NativeSelect>
                 </FormControl>
 
                 <Button variant="contained" sx={{ alignSelf: 'center' }} onClick={handleSearchSubmit}>
