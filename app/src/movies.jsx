@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Box, Button, Card, CardContent, CardMedia, CircularProgress, FormControl, Grid, InputLabel, MenuItem, NativeSelect, Select, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, CardMedia, CircularProgress, FormControl, Grid, MenuItem, NativeSelect, TextField, Typography } from '@mui/material';
 import LocalMovies from '@mui/icons-material/LocalMovies';
 import { cssVars } from './styles.jsx';
 
@@ -133,13 +133,13 @@ export default function Movies() {
                     sx={{ width: '45%', mr: 2 }}
                 />;
 
-                <FormControl variant="standard" label="Category" sx={{ width: '45%', marginTop:"15px"}}>
+                <FormControl variant="standard" label="Category" sx={{ width: '45%', marginTop: '15px' }}>
                     <NativeSelect value={category} onChange={handleCategoryChange} label="Category">
                         {/* default blank option */}
                         <MenuItem value=""><em>All</em></MenuItem>
 
                         {categories.map(cat => (
-                            <option  key={cat.name} value={cat.name}>{cat.name}</option>
+                            <option key={cat.name} value={cat.name}>{cat.name}</option>
                         ))}
                     </NativeSelect>
                 </FormControl>

@@ -13,7 +13,7 @@ router.get(route(), async (req, res) => {
 
     const where = {};
 
-    if (category) {
+    if (category && category !== 'All') {
         where.genre = { [Op.like]: `%${category}%` };
     }
 
