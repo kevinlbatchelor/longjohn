@@ -157,9 +157,9 @@ export default function Movies() {
             )}
 
             {/* movie grid */}
-            <Grid container spacing={2}>
+            <Grid container spacing={2} style={{ justifyContent: 'center' }}>
                 {movieList.map(({ name, id }) => (
-                    <Grid item key={id} xs={12} sm={6} md={3}>
+                    <Grid item key={id} xs={12} sm={6} md={3} >
                         <MovieCard id={id} title={name}/>
                     </Grid>
                 ))}
