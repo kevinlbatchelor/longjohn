@@ -21,8 +21,8 @@ const ExpandMore = styled(IconButton, {
 
 /* card for ONE show – internally manages its “open/closed” state             */
 function ShowCard({ show }) {
-    const [open, setOpen] = useState(false);
-    const [imgError, setImgError] = useState(false);
+    const [ open, setOpen ] = useState(false);
+    const [ imgError, setImgError ] = useState(false);
 
     /* cover: try first episode’s ID, fall back to icon if it 404s */
     const firstEpId = show.episodes[0]?.name;
@@ -72,9 +72,12 @@ function ShowCard({ show }) {
                         .slice()                      // shallow-copy so we can sort
                         .sort((a, b) => a.episode.localeCompare(b.episode, undefined, { numeric: true }))
                         .map((ep, idx, arr) => {
-                            console.log('>>>>ep: ',ep);
-                            
-                            const queue   = arr.slice(idx + 1).map(e => e.id).join(',');
+
+                            const queue = arr.slice(idx + 1).map(e => {
+                                const queItem = e.id +':'+ e.episode;
+                                return queItem;
+                            }).join(',');
+
                             return (
                                 <ListItemButton
                                     key={ep.id}
@@ -97,9 +100,9 @@ function ShowCard({ show }) {
 }
 
 export default function TV() {
-    const [shows, setShows] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [ shows, setShows ] = useState([]);
+    const [ loading, setLoading ] = useState(true);
+    const [ error, setError ] = useState(null);
 
     useEffect(() => {
         fetch(API_ROOT)

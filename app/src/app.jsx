@@ -30,7 +30,7 @@ function resolveRoute(path) {
         const [nextId, ...rest] = queue.split(',').filter(Boolean);
         const nextQueue = rest.join(',');
 
-        return () => <MoviePlayer id={id} nextId={nextId} queue={nextQueue} name={name}/>;
+        return () => <MoviePlayer id={id} next={nextId} queue={nextQueue} name={name}/>;
     }
 
     return NotFound;
