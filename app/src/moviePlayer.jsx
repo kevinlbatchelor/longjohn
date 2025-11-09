@@ -4,7 +4,7 @@ import { Button } from '@mui/material';
 const BASE = process.env.BASE_HOST;
 const MOVIE_ROOT = BASE + ':3000/api/v1/movie';
 const SUBS_ROOT = BASE + ':3000/api/v1/subs';
-export default function MoviePlayer({ id, nextId, queue }) {
+export default function MoviePlayer({ id, nextId, queue, name }) {
     const src = `${MOVIE_ROOT}/${id}`;
     const subs = `${SUBS_ROOT}/${id}`;
 
@@ -28,11 +28,14 @@ export default function MoviePlayer({ id, nextId, queue }) {
                 <track label="English" kind="subtitles" srcLang="en" src={subs} default/>
             </video>
 
-            {nextId && (
+            {nextId && [
+                <div style={{color:'green', marginTop: 16, textAlign: 'left' }}>
+                    <span>{name}</span>
+                </div>,
                 <div style={{ marginTop: 16, textAlign: 'right' }}>
                     <Button onClick={playNext}>Play Next ▶</Button>
                 </div>
-            )}
+            ]}
         </div>
     );
 }

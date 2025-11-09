@@ -26,10 +26,11 @@ function resolveRoute(path) {
         const id = playMatch[1];
         const params = new URLSearchParams(playMatch[2] || '');
         const queue = params.get('queue') || '';
+        const name = params.get('name') || '';
         const [nextId, ...rest] = queue.split(',').filter(Boolean);
         const nextQueue = rest.join(',');
 
-        return () => <MoviePlayer id={id} nextId={nextId} queue={nextQueue}/>;
+        return () => <MoviePlayer id={id} nextId={nextId} queue={nextQueue} name={name}/>;
     }
 
     return NotFound;

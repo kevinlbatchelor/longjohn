@@ -72,12 +72,14 @@ function ShowCard({ show }) {
                         .slice()                      // shallow-copy so we can sort
                         .sort((a, b) => a.episode.localeCompare(b.episode, undefined, { numeric: true }))
                         .map((ep, idx, arr) => {
+                            console.log('>>>>ep: ',ep);
+                            
                             const queue   = arr.slice(idx + 1).map(e => e.id).join(',');
                             return (
                                 <ListItemButton
                                     key={ep.id}
                                     component="a"
-                                    href={`#/play/${ep.id}${queue ? `?queue=${queue}` : ''}`}
+                                    href={`#/play/${ep.id}${queue ? `?queue=${queue}&name=${ep?.name}` : ''}`}
                                     sx={{ pl: 2 }}
                                 >
                                     <ListItemText
