@@ -72,6 +72,8 @@ function ShowCard({ show }) {
                         .slice()                      // shallow-copy so we can sort
                         .sort((a, b) => a.episode.localeCompare(b.episode, undefined, { numeric: true }))
                         .map((ep, idx, arr) => {
+                            let match = ep.episode.match(/([Ss]\d{2}[Ee]\d{2})/);
+                            let showName = match ? match[1] : ep.episode;
 
                             const queue = arr.slice(idx + 1).map(e => {
                                 const queItem = e.id +':'+ e.episode;
@@ -86,7 +88,7 @@ function ShowCard({ show }) {
                                     sx={{ pl: 2 }}
                                 >
                                     <ListItemText
-                                        primary={ep.episode}
+                                        primary={showName}
                                         primaryTypographyProps={{ noWrap: true, sx: { color: '#0f0' } }}
                                     />
                                 </ListItemButton>
