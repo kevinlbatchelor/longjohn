@@ -1,15 +1,15 @@
-const moviesPath = ['/media/pi/LongJohn/Movies'];
-const audioBookPath = ['/media/pi/LongJohn/Audio Books'];
-const tvFolderName = 'TV';
-const TV = ['/media/pi/LongJohn/'+tvFolderName];
-const cover = '/media/pi/LongJohn/Covers';
+// const moviesPath = ['/media/pi/LongJohn/Movies'];
+// const audioBookPath = ['/media/pi/LongJohn/Audio Books'];
+// const tvFolderName = 'TV';
+// const TV = ['/media/pi/LongJohn/'+tvFolderName];
+// const cover = '/media/pi/LongJohn/Covers';
 
 //windows paths
-// const tvFolderName = 'TV';
-// const moviesPath = ['C:\\Users\\windowsUserName\\Documents\\Movies'];
-// const audioBookPath = ['C:\\Users\\windowsUserName\\Documents\\AudioBooks'];
-// const TV = ['C:\\Users\\windowsUserName\\Documents\\' + tvFolderName];
-// const cover = 'C:\\Users\\windowsUserName\\Documents\\Cover';
+const tvFolderName = 'TV';
+const moviesPath = ['C:\\Users\\kevin\\Documents\\Movies'];
+const audioBookPath = ['C:\\Users\\kevin\\Documents\\AudioBooks'];
+const TV = ['C:\\Users\\kevin\\Documents\\' + tvFolderName];
+const cover = 'C:\\Users\\kevin\\Documents\\Cover';
 
 const config = {
     omdbApiKey:'',

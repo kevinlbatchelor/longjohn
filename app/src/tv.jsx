@@ -124,15 +124,15 @@ export default function TV() {
     if (error) return <Centered><Alert severity="error">Load error – {error}</Alert></Centered>;
 
     return (
-        <Box sx={{ flex: 1, py: 3, px: 1, display: 'flex', justifyContent: 'center' }}>
-            <Grid container spacing={2} sx={{ maxWidth: 1200 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+            <Grid container spacing={2} style={{ justifyContent: 'center' }}>
                 {shows.map((show) => (
                     <Grid item key={show.name} xs={12} sm={6} md={3}>
                         <ShowCard show={show}/>
                     </Grid>
                 ))}
             </Grid>
-        </Box>
+        </div>
     );
 }
 

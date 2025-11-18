@@ -98,14 +98,8 @@ export default function Audiobooks() {
     if (error) return <Centered><Alert severity="error">Load error – {error}</Alert></Centered>;
 
     return (
-        <div style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center'
-        }}>
-            <Grid container spacing={2}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+            <Grid container spacing={2} style={{ justifyContent: 'center' }}>
                 {books.map(({ name }) => (
                     <Grid item key={name} xs={12} sm={6} md={3}>
                         <BookCard name={name}/>
