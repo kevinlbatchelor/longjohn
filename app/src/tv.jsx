@@ -31,85 +31,95 @@ function ShowCard({ show, parentalUnlocked }) {
     const firstEpId = show.episodes[0]?.name;
     const coverUrl = `${COVER_ROOT}/${encodeURIComponent(firstEpId)}`;
 
+
     // Filter episodes based on parental control
-    const filteredEpisodes = parentalUnlocked 
-        ? show.episodes 
-        : show.episodes.filter(ep => ep.rating !== 'R');
+    const filteredEpisodes = parentalUnlocked
+        ? show.episodes
+        : show.episodes.filter(ep => {
+            console.log('>>>>ep: ', ep);
+
+            return ep.rating !== 'R';
+        });
 
     return (
         <Card sx={{ width: 200, display: 'flex', flexDirection: 'column' }}>
-            {imgError ? (
-                <Box sx={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <LiveTvIcon/>
-                </Box>
-            ) : (
-                <CardMedia
-                    component="img"
-                    image={coverUrl}
-                    alt={show.name}
-                    sx={{ height: 260 }}
-                    onError={() => setImgError(true)}
-                />
-            )}
+            {filteredEpisodes.length > 0 && (<>
+                {imgError ? (
+                    <Box sx={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <LiveTvIcon/>
+                    </Box>
+                ) : (
 
-            <CardContent
-                sx={{
-                    py: 1,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    cursor: 'pointer'
-                }}
-                onClick={() => setOpen(!open)}
-            >
-                <Typography variant="subtitle1" noWrap sx={{ mr: 1 }}>
-                    {show.name}
-                </Typography>
-                <ExpandMore
-                    expand={open ? 1 : 0}
-                    onClick={() => setOpen(!open)}
-                    aria-label="show episodes"
-                >
-                    <ExpandMoreIcon/>
-                </ExpandMore>
-            </CardContent>
+                    <CardMedia
+                        component="img"
+                        image={coverUrl}
+                        alt={show.name}
+                        sx={{ height: 260 }}
+                        onError={() => setImgError(true)}
+                    />
 
-            <Collapse in={open} timeout="auto" unmountOnExit>
-                <List dense disablePadding sx={{ background: '#000' }}>
-                    {filteredEpisodes
-                        .slice()                      // shallow-copy so we can sort
-                        .sort((a, b) => a.episode.localeCompare(b.episode, undefined, { numeric: true }))
-                        .map((ep, idx, arr) => {
-                            let match = ep.episode.match(/([Ss]\d{2}[Ee]\d{2})/);
-                            let showName = match ? match[1] : ep.episode;
 
-                            const queue = arr.slice(idx + 1).map(e => {
-                                const queItem = e.id +':'+ e.episode;
-                                return queItem;
-                            }).join(',');
-
-                            return (
-                                <ListItemButton
-                                    key={ep.id}
-                                    component="a"
-                                    href={`#/play/${ep.id}${queue ? `?queue=${queue}&name=${ep?.name}` : ''}`}
-                                    sx={{ pl: 2 }}
-                                >
-                                    <ListItemText
-                                        primary={showName}
-                                        primaryTypographyProps={{ noWrap: true, sx: { color: '#0f0' } }}
-                                    />
-                                </ListItemButton>
-                            );
-                        })
-                    }
-                </List>
-                {!parentalUnlocked && show.episodes.length > filteredEpisodes.length && (
-                    <Typography variant="caption" sx={{ p: 1, color: 'text.secondary', display: 'block', textAlign: 'center' }}>
-                        Some episodes hidden
-                    </Typography>
                 )}
-            </Collapse>
+
+                <CardContent
+                    sx={{
+                        py: 1,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        cursor: 'pointer'
+                    }}
+                    onClick={() => setOpen(!open)}
+                >
+                    <Typography variant="subtitle1" noWrap sx={{ mr: 1 }}>
+                        {show.name}
+                    </Typography>
+                    <ExpandMore
+                        expand={open ? 1 : 0}
+                        onClick={() => setOpen(!open)}
+                        aria-label="show episodes"
+                    >
+                        <ExpandMoreIcon/>
+                    </ExpandMore>
+                </CardContent>
+
+                <Collapse in={open} timeout="auto" unmountOnExit>
+                    <List dense disablePadding sx={{ background: '#000' }}>
+                        {filteredEpisodes
+                            .slice()                      // shallow-copy so we can sort
+                            .sort((a, b) => a.episode.localeCompare(b.episode, undefined, { numeric: true }))
+                            .map((ep, idx, arr) => {
+                                let match = ep.episode.match(/([Ss]\d{2}[Ee]\d{2})/);
+                                let showName = match ? match[1] : ep.episode;
+
+                                const queue = arr.slice(idx + 1).map(e => {
+                                    const queItem = e.id + ':' + e.episode;
+                                    return queItem;
+                                }).join(',');
+
+                                return (
+                                    <ListItemButton
+                                        key={ep.id}
+                                        component="a"
+                                        href={`#/play/${ep.id}${queue ? `?queue=${queue}&name=${ep?.name}` : ''}`}
+                                        sx={{ pl: 2 }}
+                                    >
+                                        <ListItemText
+                                            primary={showName}
+                                            primaryTypographyProps={{ noWrap: true, sx: { color: '#0f0' } }}
+                                        />
+                                    </ListItemButton>
+                                );
+                            })
+                        }
+                    </List>
+                    {!parentalUnlocked && show.episodes.length > filteredEpisodes.length && (
+                        <Typography variant="caption" sx={{ p: 1, color: 'text.secondary', display: 'block', textAlign: 'center' }}>
+                            Some episodes hidden
+                        </Typography>
+                    )}
+                </Collapse>
+            </>)}
         </Card>
     );
 }
@@ -120,10 +130,10 @@ export default function TV() {
     const [ error, setError ] = useState(null);
 
     // Parental control states
-    const [parentalUnlocked, setParentalUnlocked] = useState(false);
-    const [showCodeDialog, setShowCodeDialog] = useState(false);
-    const [codeInput, setCodeInput] = useState('');
-    const [codeError, setCodeError] = useState(false);
+    const [ parentalUnlocked, setParentalUnlocked ] = useState(false);
+    const [ showCodeDialog, setShowCodeDialog ] = useState(false);
+    const [ codeInput, setCodeInput ] = useState('');
+    const [ codeError, setCodeError ] = useState(false);
     const SECRET_CODE = '1234'; // Secret parental code
 
     useEffect(() => {
@@ -200,12 +210,12 @@ export default function TV() {
 
             {/* Parental Control Lock/Unlock Button */}
             <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', mb: 2, maxWidth: 900 }}>
-                <IconButton 
+                <IconButton
                     onClick={handleParentalToggle}
                     color={parentalUnlocked ? 'success' : 'default'}
                     title={parentalUnlocked ? 'Lock Parental Controls' : 'Unlock Parental Controls'}
                 >
-                    {parentalUnlocked ? <LockOpenIcon /> : <LockIcon />}
+                    {parentalUnlocked ? <LockOpenIcon/> : <LockIcon/>}
                 </IconButton>
             </Box>
 

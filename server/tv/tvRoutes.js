@@ -41,6 +41,7 @@ router.get(tvRoute(), async function (req, res) {
             show.name = pathDetails[tvTitleIndex];
             show.episode = movie.name;
             show.id = movie.id;
+            show.rating = movie.rating; // Include rating field
 
             acc.push(show);
             return acc;
