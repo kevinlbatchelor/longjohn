@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Box, Button, Card, CardContent, CardMedia, CircularProgress, FormControl, Grid, MenuItem, NativeSelect, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, CardMedia, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, IconButton, MenuItem, NativeSelect, TextField, Typography } from '@mui/material';
 import LocalMovies from '@mui/icons-material/LocalMovies';
+import LockIcon from '@mui/icons-material/Lock';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
 import { cssVars } from './styles.jsx';
 
 const BASE = process.env.BASE_HOST;
@@ -57,6 +59,13 @@ export default function Movies() {
 
     const [categories, setCategories] = useState([]);
     const [catError, setCatError] = useState(null);
+
+    // Parental control states
+    const [parentalUnlocked, setParentalUnlocked] = useState(false);
+    const [showCodeDialog, setShowCodeDialog] = useState(false);
+    const [codeInput, setCodeInput] = useState('');
+    const [codeError, setCodeError] = useState(false);
+    const SECRET_CODE = '1234'; // Secret parental code
 
     useEffect(() => {
         const query = getQueryParams();
@@ -118,11 +127,67 @@ export default function Movies() {
             });
     };
 
+    const handleParentalToggle = () => {
+        if (parentalUnlocked) {
+            // Lock it back
+            setParentalUnlocked(false);
+        } else {
+            // Show dialog to unlock
+            setShowCodeDialog(true);
+            setCodeInput('');
+            setCodeError(false);
+        }
+    };
+
+    const handleCodeSubmit = () => {
+        if (codeInput === SECRET_CODE) {
+            setParentalUnlocked(true);
+            setShowCodeDialog(false);
+            setCodeInput('');
+            setCodeError(false);
+        } else {
+            setCodeError(true);
+        }
+    };
+
+    // Filter movies based on parental control
+    const filteredMovies = parentalUnlocked 
+        ? movieList 
+        : movieList.filter(movie => movie.rating !== 'R');
+
     if (loading) return <Centered><CircularProgress sx={{ color: cssVars.green }}/></Centered>;
     if (error) return <Centered><Alert severity="error">Load error – {error}</Alert></Centered>;
 
     return (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+            {/* Parental Control Dialog */}
+            <Dialog open={showCodeDialog} onClose={() => setShowCodeDialog(false)}>
+                <DialogTitle>Enter Parental Control Code</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Secret Code"
+                        type="password"
+                        fullWidth
+                        variant="standard"
+                        value={codeInput}
+                        onChange={(e) => setCodeInput(e.target.value)}
+                        error={codeError}
+                        helperText={codeError ? 'Incorrect code' : ''}
+                        onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                                handleCodeSubmit();
+                            }
+                        }}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setShowCodeDialog(false)}>Cancel</Button>
+                    <Button onClick={handleCodeSubmit}>Unlock</Button>
+                </DialogActions>
+            </Dialog>
+
             {/* search bar + category select */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, width: '100%', maxWidth: 900 }}>
                 <TextField
@@ -147,6 +212,15 @@ export default function Movies() {
                 <Button variant="contained" sx={{ alignSelf: 'center' }} onClick={handleSearchSubmit}>
                     Search
                 </Button>
+
+                <IconButton 
+                    onClick={handleParentalToggle}
+                    sx={{ ml: 2 }}
+                    color={parentalUnlocked ? 'success' : 'default'}
+                    title={parentalUnlocked ? 'Lock Parental Controls' : 'Unlock Parental Controls'}
+                >
+                    {parentalUnlocked ? <LockOpenIcon /> : <LockIcon />}
+                </IconButton>
             </Box>
 
             {/* error fetching categories (non-fatal) */}
@@ -158,12 +232,19 @@ export default function Movies() {
 
             {/* movie grid */}
             <Grid container spacing={2} style={{ justifyContent: 'center' }}>
-                {movieList.map(({ name, id }) => (
+                {filteredMovies.map(({ name, id }) => (
                     <Grid item key={id} xs={12} sm={6} md={3} >
                         <MovieCard id={id} title={name}/>
                     </Grid>
                 ))}
             </Grid>
+
+            {/* Show message if content is filtered */}
+            {!parentalUnlocked && movieList.length > filteredMovies.length && (
+                <Typography variant="caption" sx={{ mt: 2, color: 'text.secondary' }}>
+                    Some content is hidden due to parental controls
+                </Typography>
+            )}
         </div>
     );
 }
