@@ -16,7 +16,7 @@
     "express": "^4.17.1",
     "finalhandler": "^1.1.2",
     "imdb-api": "^4.4.1",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "moment": "^2.29.4",
     "morgan": "1.10.0",
     "pg": "^8.5.1",
