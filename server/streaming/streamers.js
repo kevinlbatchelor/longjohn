@@ -69,49 +69,40 @@ Streamers.subTitleStreamer = function (path, req, res) {
 };
 
 Streamers.zipFolderStreamer = function (folderPath, res) {
-    // Defensive: make sure the folder exists & is readable
-    fs.access(folderPath, fs.constants.R_OK, (err) => {
+    fs.access(folderPath, fs.constants.R_OK, function (err) {
         if (err) return res.sendStatus(404);
 
-        const zipName = path.basename(folderPath) + ‘.zip’;
+        const zipName = path.basename(folderPath) + '.zip';
         const cachedZip = path.join(folderPath, zipName);
 
-        // If a cached zip already exists, stream it directly
         if (fs.existsSync(cachedZip)) {
-            console.log(‘------->serving cached zip’, cachedZip);
-            const stat = fs.statSync(cachedZip);
+            var stat = fs.statSync(cachedZip);
             res.set({
-                ‘Content-Type’: ‘application/zip’,
-                ‘Content-Disposition’: `attachment; filename="${zipName}"`,
-                ‘Content-Length’: stat.size
+                'Content-Type': 'application/zip',
+                'Content-Disposition': 'attachment; filename="' + zipName + '"',
+                'Content-Length': stat.size
             });
             return fs.createReadStream(cachedZip).pipe(res);
         }
 
-        console.log(‘------->building zip for’, folderPath);
         res.set({
-            ‘Content-Type’: ‘application/zip’,
-            ‘Content-Disposition’: `attachment; filename="${zipName}"`
+            'Content-Type': 'application/zip',
+            'Content-Disposition': 'attachment; filename="' + zipName + '"'
         });
 
-        const archive = archiver(‘zip’, { zlib: { level: 9 } });
-
-        // Save to disk for future requests
+        const archive = archiver('zip', { zlib: { level: 9 } });
         const cacheStream = fs.createWriteStream(cachedZip);
 
-        archive.on(‘error’, (e) => {
-            console.error(‘ARCHIVE ERROR:’, e);
+        archive.on('error', function (e) {
+            console.error('ARCHIVE ERROR:', e);
             if (!res.headersSent) res.status(500);
             res.end();
         });
 
-        // Pipe to both the response and the cache file
         archive.pipe(res);
         archive.pipe(cacheStream);
 
-        // Exclude any existing zip files so we don’t zip a zip
-        archive.glob(‘**/*’, { cwd: folderPath, ignore: [‘*.zip’] });
-
+        archive.glob('**/*', { cwd: folderPath, ignore: ['*.zip'] });
         archive.finalize();
     });
 };
