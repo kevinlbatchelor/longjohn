@@ -1,6 +1,5 @@
 let express = require('express');
 let logger = require('morgan');
-let bodyParser = require('body-parser');
 let _ = require('lodash');
 
 let config = require('./util/config');
@@ -13,7 +12,7 @@ app.use(cors({
 }));
 
 app.use(logger('dev'));
-app.use(bodyParser.json());
+app.use(express.json());
 app.use(express.static('public'));
 app.use('/', require('./util/status'));
 app.use('/', require('./movie/movieRoutes'));
