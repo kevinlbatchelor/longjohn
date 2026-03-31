@@ -4,7 +4,6 @@ const movie = require('../movie/movie');
 const audioBook = require('../audioBooks/audioBook');
 const Promise = require('bluebird');
 const imdb = require('imdb-api');
-const _ = require('lodash');
 const scanner = {};
 const os = require('os');
 const dl = require('../util/downloadCoverArt.js');
@@ -90,12 +89,12 @@ scanner.scanForAudio = function (scanPaths) {
                 });
 
                 if (!found) {
-                    const saved = await audioBook.create(newAudio, { raw: true });
+                    await audioBook.create(newAudio, { raw: true });
                     acc.push(newAudio.track);
 
                     if (!nameCache.includes(name)) {
-                        const bookMeta = await dl.fetchBookMeta(_.startCase(name));
-                        console.log('------->bookMeta', bookMeta);
+                        const bookMeta = await dl.fetchBookMeta(name);
+
                         if (bookMeta.coverUrl) {
                             await dl.downloadCoverArt(
                                 bookMeta.coverUrl,

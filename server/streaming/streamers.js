@@ -72,29 +72,47 @@ Streamers.zipFolderStreamer = function (folderPath, res) {
     // Defensive: make sure the folder exists & is readable
     fs.access(folderPath, fs.constants.R_OK, (err) => {
         if (err) return res.sendStatus(404);
-        console.log('------->folderPath', folderPath);
-        // Tell the browser it’s a download
+
+        const zipName = path.basename(folderPath) + ‘.zip’;
+        const cachedZip = path.join(folderPath, zipName);
+
+        // If a cached zip already exists, stream it directly
+        if (fs.existsSync(cachedZip)) {
+            console.log(‘------->serving cached zip’, cachedZip);
+            const stat = fs.statSync(cachedZip);
+            res.set({
+                ‘Content-Type’: ‘application/zip’,
+                ‘Content-Disposition’: `attachment; filename="${zipName}"`,
+                ‘Content-Length’: stat.size
+            });
+            return fs.createReadStream(cachedZip).pipe(res);
+        }
+
+        console.log(‘------->building zip for’, folderPath);
         res.set({
-            'Content-Type': 'application/zip',
-            'Content-Disposition': `attachment; filename="${path.basename(folderPath)}.zip"`
+            ‘Content-Type’: ‘application/zip’,
+            ‘Content-Disposition’: `attachment; filename="${zipName}"`
         });
 
-        // Pipe an on‑the‑fly ZIP into the response
-        const archive = archiver('zip', { zlib: { level: 9 } });
+        const archive = archiver(‘zip’, { zlib: { level: 9 } });
 
-        archive.on('error', (e) => {
-            console.error('ARCHIVE ERROR:', e);
-            // Flush whatever has been sent so far, then end the response
+        // Save to disk for future requests
+        const cacheStream = fs.createWriteStream(cachedZip);
+
+        archive.on(‘error’, (e) => {
+            console.error(‘ARCHIVE ERROR:’, e);
             if (!res.headersSent) res.status(500);
             res.end();
         });
 
+        // Pipe to both the response and the cache file
         archive.pipe(res);
+        archive.pipe(cacheStream);
 
-        // Second arg === false → drop the parent folder, send just its contents
-        archive.directory(folderPath, false);
+        // Exclude any existing zip files so we don’t zip a zip
+        archive.glob(‘**/*’, { cwd: folderPath, ignore: [‘*.zip’] });
 
-        archive.finalize();          // << starts streaming immediately
+        archive.finalize();
     });
 };
 
