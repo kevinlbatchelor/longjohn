@@ -1,55 +1,45 @@
 import React, { useEffect, useState } from 'react';
 import {
-    Box, Grid, Card, CardMedia, CardContent, Typography, Collapse,
+    Box, Grid, Card, CardMedia, CardContent, Typography,
     IconButton, CircularProgress, Alert, List, ListItemButton, ListItemText,
     Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button
 } from '@mui/material';
 import LiveTvIcon from '@mui/icons-material/LiveTv';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
-import { styled } from '@mui/material/styles';
 
 const BASE = process.env.BASE_HOST;
 const API_ROOT = BASE + ':3000/api/v1/tv?category=TV&name=%';
 const COVER_ROOT = BASE + ':3000/api/v1/cover';
 
-/* little helper so the expand icon rotates                                    */
-const ExpandMore = styled(IconButton, {
-    shouldForwardProp: (prop) => prop !== 'expand'
-})(({ expand }) => ({
-    transform: expand ? 'rotate(180deg)' : 'rotate(0deg)',
-    transition: 'transform 0.2s'
-}));
-
-/* card for ONE show – internally manages its "open/closed" state             */
 function ShowCard({ show, parentalUnlocked }) {
-    const [ open, setOpen ] = useState(false);
+    const [ dialogOpen, setDialogOpen ] = useState(false);
     const [ imgError, setImgError ] = useState(false);
 
-    /* cover: try first episode's ID, fall back to icon if it 404s */
     const firstEpId = show.episodes[0]?.name;
     const coverUrl = `${COVER_ROOT}/${encodeURIComponent(firstEpId)}`;
 
-
-    // Filter episodes based on parental control
     const filteredEpisodes = parentalUnlocked
         ? show.episodes
-        : show.episodes.filter(ep => {
-            console.log('>>>>ep: ', ep);
+        : show.episodes.filter(ep => ep.rating !== 'R');
 
-            return ep.rating !== 'R';
-        });
+    if (filteredEpisodes.length === 0) return null;
+
+    const sortedEpisodes = filteredEpisodes
+        .slice()
+        .sort((a, b) => a.episode.localeCompare(b.episode, undefined, { numeric: true }));
 
     return (
-        <Card sx={{ width: 200, display: 'flex', flexDirection: 'column' }}>
-            {filteredEpisodes.length > 0 && (<>
+        <>
+            <Card
+                sx={{ width: 200, display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
+                onClick={() => setDialogOpen(true)}
+            >
                 {imgError ? (
                     <Box sx={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <LiveTvIcon/>
                     </Box>
                 ) : (
-
                     <CardMedia
                         component="img"
                         image={coverUrl}
@@ -57,70 +47,56 @@ function ShowCard({ show, parentalUnlocked }) {
                         sx={{ height: 260 }}
                         onError={() => setImgError(true)}
                     />
-
-
                 )}
-
-                <CardContent
-                    sx={{
-                        py: 1,
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        cursor: 'pointer'
-                    }}
-                    onClick={() => setOpen(!open)}
-                >
-                    <Typography variant="subtitle1" noWrap sx={{ mr: 1 }}>
+                <CardContent sx={{ py: 1 }}>
+                    <Typography variant="subtitle1" noWrap>
                         {show.name}
                     </Typography>
-                    <ExpandMore
-                        expand={open ? 1 : 0}
-                        onClick={() => setOpen(!open)}
-                        aria-label="show episodes"
-                    >
-                        <ExpandMoreIcon/>
-                    </ExpandMore>
                 </CardContent>
+            </Card>
 
-                <Collapse in={open} timeout="auto" unmountOnExit>
-                    <List dense disablePadding sx={{ background: '#000' }}>
-                        {filteredEpisodes
-                            .slice()                      // shallow-copy so we can sort
-                            .sort((a, b) => a.episode.localeCompare(b.episode, undefined, { numeric: true }))
-                            .map((ep, idx, arr) => {
-                                let match = ep.episode.match(/([Ss]\d{2}[Ee]\d{2})/);
-                                let showName = match ? match[1] : ep.episode;
+            <Dialog
+                open={dialogOpen}
+                onClose={() => setDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+                scroll="paper"
+            >
+                <DialogTitle>{show.name}</DialogTitle>
+                <DialogContent dividers sx={{ p: 0, background: '#000' }}>
+                    <List dense disablePadding>
+                        {sortedEpisodes.map((ep, idx, arr) => {
+                            const match = ep.episode.match(/([Ss]\d{2}[Ee]\d{2})/);
+                            const label = match ? match[1] : ep.episode;
+                            const queue = arr.slice(idx + 1).map(e => e.id + ':' + e.episode).join(',');
 
-                                const queue = arr.slice(idx + 1).map(e => {
-                                    const queItem = e.id + ':' + e.episode;
-                                    return queItem;
-                                }).join(',');
-
-                                return (
-                                    <ListItemButton
-                                        key={ep.id}
-                                        component="a"
-                                        href={`#/play/${ep.id}${queue ? `?queue=${queue}&name=${ep?.name}` : ''}`}
-                                        sx={{ pl: 2 }}
-                                    >
-                                        <ListItemText
-                                            primary={showName}
-                                            primaryTypographyProps={{ noWrap: true, sx: { color: '#0f0' } }}
-                                        />
-                                    </ListItemButton>
-                                );
-                            })
-                        }
+                            return (
+                                <ListItemButton
+                                    key={ep.id}
+                                    component="a"
+                                    href={`#/play/${ep.id}${queue ? `?queue=${queue}&name=${ep?.name}` : ''}`}
+                                    sx={{ pl: 2 }}
+                                    onClick={() => setDialogOpen(false)}
+                                >
+                                    <ListItemText
+                                        primary={label}
+                                        primaryTypographyProps={{ noWrap: true, sx: { color: '#0f0' } }}
+                                    />
+                                </ListItemButton>
+                            );
+                        })}
                     </List>
                     {!parentalUnlocked && show.episodes.length > filteredEpisodes.length && (
                         <Typography variant="caption" sx={{ p: 1, color: 'text.secondary', display: 'block', textAlign: 'center' }}>
                             Some episodes hidden
                         </Typography>
                     )}
-                </Collapse>
-            </>)}
-        </Card>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDialogOpen(false)}>Close</Button>
+                </DialogActions>
+            </Dialog>
+        </>
     );
 }
 
