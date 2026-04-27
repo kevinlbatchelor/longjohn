@@ -65,6 +65,7 @@ export function ShowEpisodes({ name }) {
     const [ show, setShow ] = useState(null);
     const [ loading, setLoading ] = useState(true);
     const [ error, setError ] = useState(null);
+    const [ imgError, setImgError ] = useState(false);
     const parentalUnlocked = sessionStorage.getItem(PARENTAL_KEY) === '1';
 
     useEffect(() => {
@@ -96,35 +97,54 @@ export function ShowEpisodes({ name }) {
         .slice()
         .sort((a, b) => a.episode.localeCompare(b.episode, undefined, { numeric: true }));
 
+    const coverUrl = `${COVER_ROOT}/${encodeURIComponent(show.episodes[0]?.name)}`;
+
     return (
         <Box sx={{ p: 2, width: '100%' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
                 <Button
                     href="#/tv"
-                    startIcon={<ArrowBackIcon sx={{ fontSize: 32 }}/>}
+                    size="small"
+                    startIcon={<ArrowBackIcon sx={{ fontSize: 16 }}/>}
                     sx={{
                         color: '#0f0',
-                        fontSize: '1.25rem',
-                        minHeight: 64,
-                        minWidth: 140,
-                        border: '2px solid #0f0'
+                        fontSize: 12,
+                        py: 0.25,
+                        px: 1,
+                        minHeight: 0
                     }}
                 >
                     Back
                 </Button>
-                <Typography variant="h4" sx={{ color: '#0f0' }}>
+                <Typography variant="subtitle1" sx={{ color: '#0f0' }}>
                     {show.name}
                 </Typography>
             </Box>
 
-            <Grid container spacing={2} justifyContent="center">
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+                {imgError ? (
+                    <Box sx={{ height: 220, width: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <LiveTvIcon sx={{ color: '#0f0' }}/>
+                    </Box>
+                ) : (
+                    <Box
+                        component="img"
+                        src={coverUrl}
+                        alt={show.name}
+                        onError={() => setImgError(true)}
+                        sx={{ height: 220, width: 'auto' }}
+                    />
+                )}
+            </Box>
+
+            <Grid container spacing={1} justifyContent="center">
                 {sortedEpisodes.map((ep, idx, arr) => {
                     const match = ep.episode.match(/([Ss]\d{2}[Ee]\d{2})/);
                     const label = match ? match[1] : ep.episode;
                     const queue = arr.slice(idx + 1).map(e => e.id + ':' + e.episode).join(',');
 
                     return (
-                        <Grid item key={ep.id} xs={6} sm={4} md={3} lg={2}>
+                        <Grid item key={ep.id}>
                             <Card
                                 component="a"
                                 href={`#/play/${ep.id}${queue ? `?queue=${queue}&name=${ep?.name}` : ''}`}
@@ -132,15 +152,16 @@ export function ShowEpisodes({ name }) {
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    height: 110,
+                                    minWidth: 70,
+                                    px: 1,
+                                    py: 0.5,
                                     cursor: 'pointer',
-                                    border: '2px solid #0f0',
                                     backgroundColor: '#000',
                                     textDecoration: 'none',
                                     '&:hover': { backgroundColor: '#003300' }
                                 }}
                             >
-                                <Typography variant="h5" sx={{ color: '#0f0' }}>
+                                <Typography sx={{ color: '#0f0', fontSize: 12 }}>
                                     {label}
                                 </Typography>
                             </Card>
