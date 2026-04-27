@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import {
     Box, Grid, Card, CardMedia, CardContent, Typography,
-    IconButton, CircularProgress, Alert, List, ListItemButton, ListItemText,
+    IconButton, CircularProgress, Alert,
     Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button
 } from '@mui/material';
 import LiveTvIcon from '@mui/icons-material/LiveTv';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const BASE = process.env.BASE_HOST;
 const API_ROOT = BASE + ':3000/api/v1/tv?category=TV&name=%';
 const COVER_ROOT = BASE + ':3000/api/v1/cover';
 
+const PARENTAL_KEY = 'parentalUnlocked';
+
 function ShowCard({ show, parentalUnlocked }) {
-    const [ dialogOpen, setDialogOpen ] = useState(false);
     const [ imgError, setImgError ] = useState(false);
 
     const firstEpId = show.episodes[0]?.name;
@@ -25,78 +27,134 @@ function ShowCard({ show, parentalUnlocked }) {
 
     if (filteredEpisodes.length === 0) return null;
 
+    return (
+        <Card
+            component="a"
+            href={`#/show/${encodeURIComponent(show.name)}`}
+            sx={{
+                width: 200,
+                display: 'flex',
+                flexDirection: 'column',
+                cursor: 'pointer',
+                textDecoration: 'none'
+            }}
+        >
+            {imgError ? (
+                <Box sx={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <LiveTvIcon/>
+                </Box>
+            ) : (
+                <CardMedia
+                    component="img"
+                    image={coverUrl}
+                    alt={show.name}
+                    sx={{ height: 260 }}
+                    onError={() => setImgError(true)}
+                />
+            )}
+            <CardContent sx={{ py: 1 }}>
+                <Typography variant="subtitle1" noWrap>
+                    {show.name}
+                </Typography>
+            </CardContent>
+        </Card>
+    );
+}
+
+export function ShowEpisodes({ name }) {
+    const [ show, setShow ] = useState(null);
+    const [ loading, setLoading ] = useState(true);
+    const [ error, setError ] = useState(null);
+    const parentalUnlocked = sessionStorage.getItem(PARENTAL_KEY) === '1';
+
+    useEffect(() => {
+        fetch(API_ROOT)
+            .then((r) => {
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return r.json();
+            })
+            .then((data) => {
+                const found = data.rows.find((s) => s.name === name);
+                setShow(found || null);
+                setLoading(false);
+            })
+            .catch((err) => {
+                setError(err.message);
+                setLoading(false);
+            });
+    }, [name]);
+
+    if (loading) return <Centered><CircularProgress sx={{ color: '#0f0' }}/></Centered>;
+    if (error) return <Centered><Alert severity="error">Load error – {error}</Alert></Centered>;
+    if (!show) return <Centered><Alert severity="warning">Show not found</Alert></Centered>;
+
+    const filteredEpisodes = parentalUnlocked
+        ? show.episodes
+        : show.episodes.filter(ep => ep.rating !== 'R');
+
     const sortedEpisodes = filteredEpisodes
         .slice()
         .sort((a, b) => a.episode.localeCompare(b.episode, undefined, { numeric: true }));
 
     return (
-        <>
-            <Card
-                sx={{ width: 200, display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
-                onClick={() => setDialogOpen(true)}
-            >
-                {imgError ? (
-                    <Box sx={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <LiveTvIcon/>
-                    </Box>
-                ) : (
-                    <CardMedia
-                        component="img"
-                        image={coverUrl}
-                        alt={show.name}
-                        sx={{ height: 260 }}
-                        onError={() => setImgError(true)}
-                    />
-                )}
-                <CardContent sx={{ py: 1 }}>
-                    <Typography variant="subtitle1" noWrap>
-                        {show.name}
-                    </Typography>
-                </CardContent>
-            </Card>
+        <Box sx={{ p: 2, width: '100%' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
+                <Button
+                    href="#/tv"
+                    startIcon={<ArrowBackIcon sx={{ fontSize: 32 }}/>}
+                    sx={{
+                        color: '#0f0',
+                        fontSize: '1.25rem',
+                        minHeight: 64,
+                        minWidth: 140,
+                        border: '2px solid #0f0'
+                    }}
+                >
+                    Back
+                </Button>
+                <Typography variant="h4" sx={{ color: '#0f0' }}>
+                    {show.name}
+                </Typography>
+            </Box>
 
-            <Dialog
-                open={dialogOpen}
-                onClose={() => setDialogOpen(false)}
-                maxWidth="sm"
-                fullWidth
-                scroll="paper"
-            >
-                <DialogTitle>{show.name}</DialogTitle>
-                <DialogContent dividers sx={{ p: 0, background: '#000' }}>
-                    <List dense disablePadding>
-                        {sortedEpisodes.map((ep, idx, arr) => {
-                            const match = ep.episode.match(/([Ss]\d{2}[Ee]\d{2})/);
-                            const label = match ? match[1] : ep.episode;
-                            const queue = arr.slice(idx + 1).map(e => e.id + ':' + e.episode).join(',');
+            <Grid container spacing={2} justifyContent="center">
+                {sortedEpisodes.map((ep, idx, arr) => {
+                    const match = ep.episode.match(/([Ss]\d{2}[Ee]\d{2})/);
+                    const label = match ? match[1] : ep.episode;
+                    const queue = arr.slice(idx + 1).map(e => e.id + ':' + e.episode).join(',');
 
-                            return (
-                                <ListItemButton
-                                    key={ep.id}
-                                    component="a"
-                                    href={`#/play/${ep.id}${queue ? `?queue=${queue}&name=${ep?.name}` : ''}`}
-                                    sx={{ pl: 2 }}
-                                    onClick={() => setDialogOpen(false)}
-                                >
-                                    <ListItemText
-                                        primary={label}
-                                        primaryTypographyProps={{ noWrap: true, sx: { color: '#0f0' } }}
-                                    />
-                                </ListItemButton>
-                            );
-                        })}
-                    </List>
-                    {!parentalUnlocked && show.episodes.length > filteredEpisodes.length && (
-                        <Typography variant="caption" sx={{ p: 1, color: 'text.secondary', display: 'block', textAlign: 'center' }}>
-                            Some episodes hidden
-                        </Typography>
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setDialogOpen(false)}>Close</Button>
-                </DialogActions>
-            </Dialog>
-        </>
+                    return (
+                        <Grid item key={ep.id} xs={6} sm={4} md={3} lg={2}>
+                            <Card
+                                component="a"
+                                href={`#/play/${ep.id}${queue ? `?queue=${queue}&name=${ep?.name}` : ''}`}
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    height: 110,
+                                    cursor: 'pointer',
+                                    border: '2px solid #0f0',
+                                    backgroundColor: '#000',
+                                    textDecoration: 'none',
+                                    '&:hover': { backgroundColor: '#003300' }
+                                }}
+                            >
+                                <Typography variant="h5" sx={{ color: '#0f0' }}>
+                                    {label}
+                                </Typography>
+                            </Card>
+                        </Grid>
+                    );
+                })}
+            </Grid>
+
+            {!parentalUnlocked && show.episodes.length > filteredEpisodes.length && (
+                <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mt: 3, color: 'text.secondary' }}>
+                    Some episodes hidden
+                </Typography>
+            )}
+        </Box>
     );
 }
 
@@ -106,7 +164,9 @@ export default function TV() {
     const [ error, setError ] = useState(null);
 
     // Parental control states
-    const [ parentalUnlocked, setParentalUnlocked ] = useState(false);
+    const [ parentalUnlocked, setParentalUnlocked ] = useState(
+        () => sessionStorage.getItem(PARENTAL_KEY) === '1'
+    );
     const [ showCodeDialog, setShowCodeDialog ] = useState(false);
     const [ codeInput, setCodeInput ] = useState('');
     const [ codeError, setCodeError ] = useState(false);
@@ -130,10 +190,9 @@ export default function TV() {
 
     const handleParentalToggle = () => {
         if (parentalUnlocked) {
-            // Lock it back
+            sessionStorage.removeItem(PARENTAL_KEY);
             setParentalUnlocked(false);
         } else {
-            // Show dialog to unlock
             setShowCodeDialog(true);
             setCodeInput('');
             setCodeError(false);
@@ -142,6 +201,7 @@ export default function TV() {
 
     const handleCodeSubmit = () => {
         if (codeInput === SECRET_CODE) {
+            sessionStorage.setItem(PARENTAL_KEY, '1');
             setParentalUnlocked(true);
             setShowCodeDialog(false);
             setCodeInput('');

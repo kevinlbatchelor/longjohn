@@ -5,7 +5,7 @@ import { GlobalStyles, ThemeProvider } from '@mui/material';
 import { cssVars, hackerTheme } from './styles.jsx';
 import MoviePlayer from './moviePlayer.jsx';
 import Admin from './admin';
-import TV from './tv';
+import TV, { ShowEpisodes } from './tv';
 
 const NotFound = () => <h2>404 – Not found</h2>;
 
@@ -20,6 +20,12 @@ const routes = {
 function resolveRoute(path) {
     // exact matches first
     if (routes[path]) return routes[path];
+
+    const showMatch = path.match(/^\/show\/(.+)$/);
+    if (showMatch) {
+        const name = decodeURIComponent(showMatch[1]);
+        return () => <ShowEpisodes name={name}/>;
+    }
 
     const playMatch = path.match(/^\/play\/([^?]+)(?:\?(.+))?$/);
     if (playMatch) {
