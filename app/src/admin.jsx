@@ -93,23 +93,14 @@ export default function Admin() {
                             value={playback.skipIntroSeconds}
                             onChange={editPlayback('skipIntroSeconds')}
                         />
-                        <TextField
-                            label="End early (seconds)"
-                            type="number"
-                            size="small"
-                            inputProps={{ min: 0 }}
-                            value={playback.endEarlySeconds}
-                            onChange={editPlayback('endEarlySeconds')}
-                        />
-
                         <Button variant="contained" onClick={savePlayback}>Save</Button>
 
                         {saved && <Alert severity="success">Saved</Alert>}
 
                         <Typography variant="caption" sx={{ color: '#888' }}>
                             0 = off. Stored in this browser only, and applies to every
-                            video. Ending early stops before the credits, so the next
-                            episode will not auto-play.
+                            video. The sleep timer is not here - it is a toggle on the
+                            player itself, armed one episode at a time.
                         </Typography>
                     </Stack>
                 </Paper>

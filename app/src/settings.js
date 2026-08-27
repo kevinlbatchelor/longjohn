@@ -1,12 +1,15 @@
 /* Playback settings ---------------------------------------------------------
- * Two global numbers kept in localStorage. There is no settings table or API
+ * One global number kept in localStorage. There is no settings table or API
  * yet, so this is the whole storage layer - keep every key behind these two
  * helpers rather than touching localStorage from components.
+ *
+ * The player's sleep timer deliberately lives outside this file: it is a
+ * per-playback toggle on the player page, not a saved preference.
  */
 
 const KEY = 'playbackSettings';
 
-export const DEFAULTS = { skipIntroSeconds: 0, endEarlySeconds: 0 };
+export const DEFAULTS = { skipIntroSeconds: 0 };
 
 // Coerce to a non-negative finite number; anything unparseable falls back.
 const num = (v, fallback) => {
@@ -18,8 +21,7 @@ export function loadSettings() {
     try {
         const raw = JSON.parse(localStorage.getItem(KEY)) || {};
         return {
-            skipIntroSeconds: num(raw.skipIntroSeconds, DEFAULTS.skipIntroSeconds),
-            endEarlySeconds : num(raw.endEarlySeconds,  DEFAULTS.endEarlySeconds)
+            skipIntroSeconds: num(raw.skipIntroSeconds, DEFAULTS.skipIntroSeconds)
         };
     } catch (e) {
         // corrupt JSON, or storage blocked entirely (private mode)

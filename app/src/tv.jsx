@@ -144,9 +144,10 @@ export function ShowEpisodes({ name }) {
                     const queue = arr.slice(idx + 1).map(e => e.id + ':' + e.episode).join(',');
                     // Titles contain & and ?, so the queue has to travel as a single
                     // encoded value or the query string truncates at the first one.
-                    const params = queue
-                        ? `?queue=${encodeURIComponent(queue)}&name=${encodeURIComponent(ep.name || '')}`
-                        : '';
+                    // The show name always travels, queue or not - it is how the
+                    // player knows this is an episode and offers the sleep timer,
+                    // and the last episode of a show has nothing left to queue.
+                    const params = `?${queue ? `queue=${encodeURIComponent(queue)}&` : ''}name=${encodeURIComponent(ep.name || '')}`;
 
                     return (
                         <Grid item key={ep.id}>
