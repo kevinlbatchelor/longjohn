@@ -13,6 +13,7 @@ const cover = 'C:\\Users\\kevin\\Documents\\Cover';
 
 const config = {
     omdbApiKey:'',
+    tmdbApiKey:'',
     goog:'',
     tvFolderName,
     database: {

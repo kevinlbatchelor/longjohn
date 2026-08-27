@@ -139,15 +139,20 @@ export function ShowEpisodes({ name }) {
 
             <Grid container spacing={1} justifyContent="center">
                 {sortedEpisodes.map((ep, idx, arr) => {
-                    const match = ep.episode.match(/([Ss]\d{2}[Ee]\d{2})/);
+                    const match = ep.episode.match(/([Ss]\d{2}[Ee]\d{2}(?:-[Ee]\d{2})?)/);
                     const label = match ? match[1] : ep.episode;
                     const queue = arr.slice(idx + 1).map(e => e.id + ':' + e.episode).join(',');
+                    // Titles contain & and ?, so the queue has to travel as a single
+                    // encoded value or the query string truncates at the first one.
+                    const params = queue
+                        ? `?queue=${encodeURIComponent(queue)}&name=${encodeURIComponent(ep.name || '')}`
+                        : '';
 
                     return (
                         <Grid item key={ep.id}>
                             <Card
                                 component="a"
-                                href={`#/play/${ep.id}${queue ? `?queue=${queue}&name=${ep?.name}` : ''}`}
+                                href={`#/play/${ep.id}${params}`}
                                 sx={{
                                     display: 'flex',
                                     alignItems: 'center',
