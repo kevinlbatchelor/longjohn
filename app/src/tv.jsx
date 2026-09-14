@@ -1,186 +1,293 @@
 import React, { useEffect, useState } from 'react';
 import {
     Box, Grid, Card, CardMedia, CardContent, Typography,
-    IconButton, CircularProgress, Alert,
-    Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button
+    CircularProgress, Alert, Button, IconButton,
+    Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions
 } from '@mui/material';
 import LiveTvIcon from '@mui/icons-material/LiveTv';
-import LockIcon from '@mui/icons-material/Lock';
-import LockOpenIcon from '@mui/icons-material/LockOpen';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import EditIcon from '@mui/icons-material/Edit';
+import EditOffIcon from '@mui/icons-material/EditOff';
+import DeleteIcon from '@mui/icons-material/Delete';
+import {
+    COVER_ROOT, deleteEpisode, deleteShow, episodeLabel, fetchShow, fetchShowSummaries,
+    forgetEpisode, forgetShow
+} from './showCache';
 
-const BASE = process.env.BASE_HOST;
-const API_ROOT = BASE + ':3000/api/v1/tv?category=TV&name=%';
-const COVER_ROOT = BASE + ':3000/api/v1/cover';
+/* Every sx object below is hoisted out of render. Emotion caches on object
+   identity, so a literal written inside a map is re-serialised for every card on
+   every render - which is the whole grid, on the device that can least afford
+   it. */
+const showCardSx = {
+    width: 200,
+    display: 'flex',
+    flexDirection: 'column',
+    cursor: 'pointer',
+    textDecoration: 'none',
+    position: 'relative'
+};
+/* A show card is 200px, so unlike an episode chip it has room for the delete
+   button to sit in a corner and leave the rest of the card as the link. */
+const showDeleteButtonSx = {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    zIndex: 2,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    color: '#f44',
+    '&:hover': { backgroundColor: 'rgba(0,0,0,0.85)' }
+};
+const showGridHeaderSx = { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', width: '100%', mb: 1 };
+const showFallbackSx = { height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' };
+const showMediaSx = { height: 260 };
+const showContentSx = { py: 1 };
 
-const PARENTAL_KEY = 'parentalUnlocked';
+const episodeCardSx = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 70,
+    px: 1,
+    py: 0.5,
+    cursor: 'pointer',
+    backgroundColor: '#000',
+    textDecoration: 'none',
+    '&:hover': { backgroundColor: '#003300' }
+};
+const episodeLabelSx = { color: '#0f0', fontSize: 12 };
+/* Edit mode: the card stops being a link and becomes the delete target itself.
+   An episode card is 70px wide, so an icon tucked into a corner of it would be
+   most of the card - the whole card is the hit area instead. */
+const episodeDeleteCardSx = {
+    ...episodeCardSx,
+    border: '1px solid #f44',
+    '&:hover': { backgroundColor: '#330000' }
+};
+const episodeDeleteLabelSx = { ...episodeLabelSx, color: '#f44' };
+const episodeDeleteIconSx = { color: '#f44', fontSize: 14, mr: 0.5 };
+const editButtonSx = { ml: 'auto' };
+const deleteHintSx = { color: '#f44', fontSize: 12, mb: 1, textAlign: 'center' };
+/* A plain wrapping flex row. MUI's Grid builds a styled wrapper element per
+   child, and a long-running show is several hundred children. */
+const episodeGridSx = { display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center' };
 
-function ShowCard({ show, parentalUnlocked }) {
+const headerSx = { display: 'flex', alignItems: 'center', mb: 2, gap: 1 };
+const backButtonSx = { color: '#0f0', fontSize: 12, py: 0.25, px: 1, minHeight: 0 };
+const backIconSx = { fontSize: 16 };
+const titleSx = { color: '#0f0' };
+const heroWrapSx = { display: 'flex', justifyContent: 'center', mb: 3 };
+const heroFallbackSx = { height: 220, width: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' };
+const heroIconSx = { color: '#0f0' };
+const heroImgSx = { height: 220, width: 'auto' };
+const spinnerSx = { color: '#0f0' };
+const centeredSx = { mt: 8 };
+const pageSx = { p: 2, width: '100%' };
+// Same reasoning as the episode row: a Grid item per show is a styled wrapper
+// per show, and the cards are a fixed width anyway.
+const showGridSx = { display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center' };
+
+const coverUrlFor = (showName) => `${COVER_ROOT}/${encodeURIComponent(showName)}`;
+
+const ShowCard = React.memo(function ShowCard({ show, editMode, onDelete }) {
     const [ imgError, setImgError ] = useState(false);
 
-    const firstEpId = show.episodes[0]?.name;
-    const coverUrl = `${COVER_ROOT}/${encodeURIComponent(firstEpId)}`;
-
-    const filteredEpisodes = parentalUnlocked
-        ? show.episodes
-        : show.episodes.filter(ep => ep.rating !== 'R');
-
-    if (filteredEpisodes.length === 0) return null;
-
     return (
-        <Card
-            component="a"
-            href={`#/show/${encodeURIComponent(show.name)}`}
-            sx={{
-                width: 200,
-                display: 'flex',
-                flexDirection: 'column',
-                cursor: 'pointer',
-                textDecoration: 'none'
-            }}
-        >
+        <Card component="a" href={`#/show/${encodeURIComponent(show.name)}`} sx={showCardSx}>
+            {editMode && (
+                <IconButton
+                    size="small"
+                    /* The card is the link, so the button has to stop the click
+                       reaching it or deleting would navigate into the show. */
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(show); }}
+                    title={`Delete ${show.name}`}
+                    sx={showDeleteButtonSx}
+                >
+                    <DeleteIcon fontSize="small"/>
+                </IconButton>
+            )}
             {imgError ? (
-                <Box sx={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Box sx={showFallbackSx}>
                     <LiveTvIcon/>
                 </Box>
             ) : (
                 <CardMedia
                     component="img"
-                    image={coverUrl}
+                    image={coverUrlFor(show.name)}
                     alt={show.name}
-                    sx={{ height: 260 }}
+                    sx={showMediaSx}
                     onError={() => setImgError(true)}
                 />
             )}
-            <CardContent sx={{ py: 1 }}>
+            <CardContent sx={showContentSx}>
                 <Typography variant="subtitle1" noWrap>
                     {show.name}
                 </Typography>
             </CardContent>
         </Card>
     );
-}
+});
 
 export function ShowEpisodes({ name }) {
     const [ show, setShow ] = useState(null);
     const [ loading, setLoading ] = useState(true);
     const [ error, setError ] = useState(null);
     const [ imgError, setImgError ] = useState(false);
-    const parentalUnlocked = sessionStorage.getItem(PARENTAL_KEY) === '1';
 
+    // Edit mode, same idea as the movie grid: deleting a file is off by default
+    // so a mis-tap on a small screen cannot take an episode with it.
+    const [ editMode, setEditMode ] = useState(false);
+    const [ deleteTarget, setDeleteTarget ] = useState(null);
+    const [ deleting, setDeleting ] = useState(false);
+    const [ deleteError, setDeleteError ] = useState(null);
+
+    /* Straight to the server rather than through the cache, so an episode added
+       since the tab opened still turns up - it is one show's worth of rows now,
+       not the whole catalogue. */
     useEffect(() => {
-        fetch(API_ROOT)
-            .then((r) => {
-                if (!r.ok) throw new Error(`HTTP ${r.status}`);
-                return r.json();
-            })
-            .then((data) => {
-                const found = data.rows.find((s) => s.name === name);
-                setShow(found || null);
+        let live = true;
+
+        fetchShow(name)
+            .then((found) => {
+                if (!live) return;
+                setShow(found);
                 setLoading(false);
             })
             .catch((err) => {
+                if (!live) return;
                 setError(err.message);
                 setLoading(false);
             });
+
+        return () => { live = false; };
     }, [name]);
 
-    if (loading) return <Centered><CircularProgress sx={{ color: '#0f0' }}/></Centered>;
+
+    // Already in episode order - fetchShow sorts on the way into the cache.
+    const episodes = show ? show.episodes : [];
+
+    const handleConfirmDelete = () => {
+        if (!deleteTarget) return;
+        const { id } = deleteTarget;
+        setDeleting(true);
+        setDeleteError(null);
+
+        deleteEpisode(id)
+            .then(() => {
+                // Drop it from the cached show as well as from what is on screen,
+                // or the player would still offer it as the next episode.
+                forgetEpisode(name, id);
+
+                const remaining = episodes.filter((ep) => ep.id !== id);
+                setShow((current) => (current ? { ...current, episodes: remaining } : current));
+                setDeleting(false);
+                setDeleteTarget(null);
+
+                /* That was the last episode, so the server has just cleaned the
+                   show up behind it - there is no show left for this page to
+                   draw. Back to the grid, which no longer lists it either. */
+                if (!remaining.length) window.location.hash = '#/tv';
+            })
+            .catch((err) => {
+                setDeleteError(err.message);
+                setDeleting(false);
+            });
+    };
+
+    if (loading) return <Centered><CircularProgress sx={spinnerSx}/></Centered>;
     if (error) return <Centered><Alert severity="error">Load error – {error}</Alert></Centered>;
     if (!show) return <Centered><Alert severity="warning">Show not found</Alert></Centered>;
 
-    const filteredEpisodes = parentalUnlocked
-        ? show.episodes
-        : show.episodes.filter(ep => ep.rating !== 'R');
-
-    const sortedEpisodes = filteredEpisodes
-        .slice()
-        .sort((a, b) => a.episode.localeCompare(b.episode, undefined, { numeric: true }));
-
-    const coverUrl = `${COVER_ROOT}/${encodeURIComponent(show.episodes[0]?.name)}`;
-
     return (
-        <Box sx={{ p: 2, width: '100%' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
-                <Button
-                    href="#/tv"
-                    size="small"
-                    startIcon={<ArrowBackIcon sx={{ fontSize: 16 }}/>}
-                    sx={{
-                        color: '#0f0',
-                        fontSize: 12,
-                        py: 0.25,
-                        px: 1,
-                        minHeight: 0
-                    }}
-                >
+        <Box sx={pageSx}>
+            <Box sx={headerSx}>
+                <Button href="#/tv" size="small" startIcon={<ArrowBackIcon sx={backIconSx}/>} sx={backButtonSx}>
                     Back
                 </Button>
-                <Typography variant="subtitle1" sx={{ color: '#0f0' }}>
+                <Typography variant="subtitle1" sx={titleSx}>
                     {show.name}
                 </Typography>
+                <IconButton
+                    size="small"
+                    onClick={() => setEditMode((v) => !v)}
+                    color={editMode ? 'error' : 'default'}
+                    title={editMode ? 'Exit edit mode' : 'Edit (delete episodes)'}
+                    sx={editButtonSx}
+                >
+                    {editMode ? <EditOffIcon fontSize="small"/> : <EditIcon fontSize="small"/>}
+                </IconButton>
             </Box>
 
-            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+            <Box sx={heroWrapSx}>
                 {imgError ? (
-                    <Box sx={{ height: 220, width: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <LiveTvIcon sx={{ color: '#0f0' }}/>
+                    <Box sx={heroFallbackSx}>
+                        <LiveTvIcon sx={heroIconSx}/>
                     </Box>
                 ) : (
                     <Box
                         component="img"
-                        src={coverUrl}
+                        src={coverUrlFor(show.name)}
                         alt={show.name}
                         onError={() => setImgError(true)}
-                        sx={{ height: 220, width: 'auto' }}
+                        sx={heroImgSx}
                     />
                 )}
             </Box>
 
-            <Grid container spacing={1} justifyContent="center">
-                {sortedEpisodes.map((ep, idx, arr) => {
-                    const match = ep.episode.match(/([Ss]\d{2}[Ee]\d{2}(?:-[Ee]\d{2})?)/);
-                    const label = match ? match[1] : ep.episode;
-                    const queue = arr.slice(idx + 1).map(e => e.id + ':' + e.episode).join(',');
-                    // Titles contain & and ?, so the queue has to travel as a single
-                    // encoded value or the query string truncates at the first one.
-                    // The show name always travels, queue or not - it is how the
-                    // player knows this is an episode and offers the sleep timer,
-                    // and the last episode of a show has nothing left to queue.
-                    const params = `?${queue ? `queue=${encodeURIComponent(queue)}&` : ''}name=${encodeURIComponent(ep.name || '')}`;
-
-                    return (
-                        <Grid item key={ep.id}>
-                            <Card
-                                component="a"
-                                href={`#/play/${ep.id}${params}`}
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    minWidth: 70,
-                                    px: 1,
-                                    py: 0.5,
-                                    cursor: 'pointer',
-                                    backgroundColor: '#000',
-                                    textDecoration: 'none',
-                                    '&:hover': { backgroundColor: '#003300' }
-                                }}
-                            >
-                                <Typography sx={{ color: '#0f0', fontSize: 12 }}>
-                                    {label}
-                                </Typography>
-                            </Card>
-                        </Grid>
-                    );
-                })}
-            </Grid>
-
-            {!parentalUnlocked && show.episodes.length > filteredEpisodes.length && (
-                <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mt: 3, color: 'text.secondary' }}>
-                    Some episodes hidden
+            {/* The show name is all the player needs to work out what follows -
+                it looks the ordered list up itself. Spelling the rest of the run
+                out in every href cost a quadratic pile of URL text, which on a
+                long-running show was most of what this page put in memory. */}
+            {editMode && (
+                <Typography sx={deleteHintSx}>
+                    Tap an episode to delete its file
                 </Typography>
             )}
+
+            <Box sx={episodeGridSx}>
+                {episodes.map((ep) => (editMode ? (
+                    <Card
+                        key={ep.id}
+                        onClick={() => setDeleteTarget({ id: ep.id, label: episodeLabel(ep) })}
+                        title={`Delete ${episodeLabel(ep)}`}
+                        sx={episodeDeleteCardSx}
+                    >
+                        <DeleteIcon sx={episodeDeleteIconSx}/>
+                        <Typography sx={episodeDeleteLabelSx}>
+                            {episodeLabel(ep)}
+                        </Typography>
+                    </Card>
+                ) : (
+                    <Card
+                        key={ep.id}
+                        component="a"
+                        href={`#/play/${ep.id}?name=${encodeURIComponent(show.name)}`}
+                        sx={episodeCardSx}
+                    >
+                        <Typography sx={episodeLabelSx}>
+                            {episodeLabel(ep)}
+                        </Typography>
+                    </Card>
+                )))}
+            </Box>
+
+            <Dialog open={!!deleteTarget} onClose={() => !deleting && setDeleteTarget(null)}>
+                <DialogTitle>Delete episode?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Permanently delete "{show.name} {deleteTarget?.label}" and remove its file
+                        from disk? This cannot be undone.
+                    </DialogContentText>
+                    {deleteError && (
+                        <Alert severity="error" sx={{ mt: 2 }}>Delete failed – {deleteError}</Alert>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button disabled={deleting} onClick={() => setDeleteTarget(null)}>Cancel</Button>
+                    <Button disabled={deleting} color="error" onClick={handleConfirmDelete}>
+                        {deleting ? 'Deleting…' : 'Delete'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }
@@ -190,111 +297,105 @@ export default function TV() {
     const [ loading, setLoading ] = useState(true);
     const [ error, setError ] = useState(null);
 
-    // Parental control states
-    const [ parentalUnlocked, setParentalUnlocked ] = useState(
-        () => sessionStorage.getItem(PARENTAL_KEY) === '1'
-    );
-    const [ showCodeDialog, setShowCodeDialog ] = useState(false);
-    const [ codeInput, setCodeInput ] = useState('');
-    const [ codeError, setCodeError ] = useState(false);
-    const SECRET_CODE = '1234'; // Secret parental code
+    const [ editMode, setEditMode ] = useState(false);
+    const [ deleteTarget, setDeleteTarget ] = useState(null);
+    const [ deleting, setDeleting ] = useState(false);
+    const [ deleteError, setDeleteError ] = useState(null);
 
+    /* Summaries only - a name per show. The grid never draws an episode, so
+       pulling every episode of every show down here was the single biggest thing
+       the TV pages asked a stick to download and parse. */
     useEffect(() => {
-        fetch(API_ROOT)
-            .then((r) => {
-                if (!r.ok) throw new Error(`HTTP ${r.status}`);
-                return r.json();
-            })
-            .then((data) => {
-                setShows(data.rows);
+        let live = true;
+
+        fetchShowSummaries()
+            .then((rows) => {
+                if (!live) return;
+                setShows(rows);
                 setLoading(false);
             })
             .catch((err) => {
+                if (!live) return;
                 setError(err.message);
                 setLoading(false);
             });
+
+        return () => { live = false; };
     }, []);
 
-    const handleParentalToggle = () => {
-        if (parentalUnlocked) {
-            sessionStorage.removeItem(PARENTAL_KEY);
-            setParentalUnlocked(false);
-        } else {
-            setShowCodeDialog(true);
-            setCodeInput('');
-            setCodeError(false);
-        }
+    const handleConfirmDelete = () => {
+        if (!deleteTarget) return;
+        const { name } = deleteTarget;
+        setDeleting(true);
+        setDeleteError(null);
+
+        deleteShow(name)
+            .then(() => {
+                forgetShow(name);
+                setShows((list) => list.filter((s) => s.name !== name));
+                setDeleting(false);
+                setDeleteTarget(null);
+            })
+            .catch((err) => {
+                setDeleteError(err.message);
+                setDeleting(false);
+            });
     };
 
-    const handleCodeSubmit = () => {
-        if (codeInput === SECRET_CODE) {
-            sessionStorage.setItem(PARENTAL_KEY, '1');
-            setParentalUnlocked(true);
-            setShowCodeDialog(false);
-            setCodeInput('');
-            setCodeError(false);
-        } else {
-            setCodeError(true);
-        }
-    };
-
-    if (loading) return <Centered><CircularProgress sx={{ color: '#0f0' }}/></Centered>;
+    if (loading) return <Centered><CircularProgress sx={spinnerSx}/></Centered>;
     if (error) return <Centered><Alert severity="error">Load error – {error}</Alert></Centered>;
+
+    const targetCount = deleteTarget && deleteTarget.episodeCount;
 
     return (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            {/* Parental Control Dialog */}
-            <Dialog open={showCodeDialog} onClose={() => setShowCodeDialog(false)}>
-                <DialogTitle>Enter Parental Control Code</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        label="Secret Code"
-                        type="password"
-                        fullWidth
-                        variant="standard"
-                        value={codeInput}
-                        onChange={(e) => setCodeInput(e.target.value)}
-                        error={codeError}
-                        helperText={codeError ? 'Incorrect code' : ''}
-                        onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                                handleCodeSubmit();
-                            }
-                        }}
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setShowCodeDialog(false)}>Cancel</Button>
-                    <Button onClick={handleCodeSubmit}>Unlock</Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Parental Control Lock/Unlock Button */}
-            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', mb: 2, maxWidth: 900 }}>
+            <Box sx={showGridHeaderSx}>
                 <IconButton
-                    onClick={handleParentalToggle}
-                    color={parentalUnlocked ? 'success' : 'default'}
-                    title={parentalUnlocked ? 'Lock Parental Controls' : 'Unlock Parental Controls'}
+                    size="small"
+                    onClick={() => setEditMode((v) => !v)}
+                    color={editMode ? 'error' : 'default'}
+                    title={editMode ? 'Exit edit mode' : 'Edit (delete shows)'}
                 >
-                    {parentalUnlocked ? <LockOpenIcon/> : <LockIcon/>}
+                    {editMode ? <EditOffIcon fontSize="small"/> : <EditIcon fontSize="small"/>}
                 </IconButton>
             </Box>
 
-            <Grid container spacing={2} style={{ justifyContent: 'center' }}>
+            <Box sx={showGridSx}>
                 {shows.map((show) => (
-                    <Grid item key={show.name} xs={12} sm={6} md={3}>
-                        <ShowCard show={show} parentalUnlocked={parentalUnlocked}/>
-                    </Grid>
+                    <ShowCard
+                        key={show.name}
+                        show={show}
+                        editMode={editMode}
+                        onDelete={setDeleteTarget}
+                    />
                 ))}
-            </Grid>
+            </Box>
+
+            <Dialog open={!!deleteTarget} onClose={() => !deleting && setDeleteTarget(null)}>
+                <DialogTitle>Delete show?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Permanently delete "{deleteTarget?.name}"
+                        {targetCount ? ` and all ${targetCount} of its episodes` : ' and all of its episodes'},
+                        removing the files from disk? This cannot be undone.
+                    </DialogContentText>
+                    {deleteError && (
+                        <Alert severity="error" sx={{ mt: 2 }}>Delete failed – {deleteError}</Alert>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button disabled={deleting} onClick={() => setDeleteTarget(null)}>Cancel</Button>
+                    <Button disabled={deleting} color="error" onClick={handleConfirmDelete}>
+                        {deleting ? 'Deleting…' : 'Delete'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 }
 
 const Centered = ({ children }) => (
-    <Grid container justifyContent="center" alignItems="center" sx={{ mt: 8 }}>
+    <Grid container justifyContent="center" alignItems="center" sx={centeredSx}>
         {children}
     </Grid>
 );

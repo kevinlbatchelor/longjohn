@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Box, Button, Card, CardContent, CardMedia, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, Grid, IconButton, MenuItem, NativeSelect, TextField, Typography } from '@mui/material';
 import LocalMovies from '@mui/icons-material/LocalMovies';
 import LockIcon from '@mui/icons-material/Lock';
@@ -16,29 +16,56 @@ const CATEGORY_LIST = BASE + ':3000/api/v1/categories';
 
 const getQueryParams = () => new URLSearchParams(window.location.search);
 
-function MovieCard({ id, title, editMode, onDelete, onChangeCover, coverV }) {
+/* Hoisted out of the card. Emotion caches on object identity, so a literal
+   written inside the component is re-serialised for every card on every render,
+   and this grid runs to a thousand of them. */
+const cardSx = { height: '100%', width: 200, display: 'flex', flexDirection: 'column', position: 'relative' };
+const deleteButtonSx = {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    zIndex: 2,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    color: '#f44',
+    '&:hover': { backgroundColor: 'rgba(0,0,0,0.85)' }
+};
+const coverButtonSx = {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    zIndex: 2,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    color: cssVars.green,
+    '&:hover': { backgroundColor: 'rgba(0,0,0,0.85)' }
+};
+const cardFallbackSx = { height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' };
+const cardMediaSx = { height: 260 };
+const cardContentSx = { py: 1 };
+const cardTitleSx = { cursor: 'pointer' };
+/* A plain wrapping flex row. MUI's Grid item resolves the theme and its
+   breakpoints per child, and memoising the card cannot help because the Grid is
+   the card's parent - it re-renders regardless. The cards are a fixed 200px, so
+   wrapping is all the Grid was buying. */
+const movieGridSx = { display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center' };
+
+/* Memoised: the page holds a dozen pieces of dialog state, and without this
+   every keystroke in the parental or cover-search field re-rendered the whole
+   grid. Its handler props have to keep their identity for that to hold. */
+const MovieCard = React.memo(function MovieCard({ id, title, editMode, onDelete, onChangeCover, coverV }) {
     const [imgError, setImgError] = useState(false);
     const coverUrl = `${COVER_ROOT}/${encodeURIComponent(id)}${coverV ? `?v=${coverV}` : ''}`;
 
     useEffect(() => { setImgError(false); }, [coverV]);
 
     return (
-        <Card sx={{ height: '100%', width: 200, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        <Card sx={cardSx}>
             {editMode && (
                 <>
                     <IconButton
                         size="small"
                         onClick={() => onDelete({ id, title })}
                         title={`Delete ${title}`}
-                        sx={{
-                            position: 'absolute',
-                            top: 4,
-                            right: 4,
-                            zIndex: 2,
-                            backgroundColor: 'rgba(0,0,0,0.6)',
-                            color: '#f44',
-                            '&:hover': { backgroundColor: 'rgba(0,0,0,0.85)' }
-                        }}
+                        sx={deleteButtonSx}
                     >
                         <DeleteIcon fontSize="small"/>
                     </IconButton>
@@ -46,22 +73,14 @@ function MovieCard({ id, title, editMode, onDelete, onChangeCover, coverV }) {
                         size="small"
                         onClick={() => onChangeCover({ id, title })}
                         title={`Change cover for ${title}`}
-                        sx={{
-                            position: 'absolute',
-                            top: 4,
-                            left: 4,
-                            zIndex: 2,
-                            backgroundColor: 'rgba(0,0,0,0.6)',
-                            color: cssVars.green,
-                            '&:hover': { backgroundColor: 'rgba(0,0,0,0.85)' }
-                        }}
+                        sx={coverButtonSx}
                     >
                         <ImageIcon fontSize="small"/>
                     </IconButton>
                 </>
             )}
             {imgError ? (
-                <Box sx={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Box sx={cardFallbackSx}>
                     <LocalMovies/>
                 </Box>
             ) : (
@@ -69,17 +88,17 @@ function MovieCard({ id, title, editMode, onDelete, onChangeCover, coverV }) {
                     component="img"
                     image={coverUrl}
                     alt={title}
-                    sx={{ height: 260 }}
+                    sx={cardMediaSx}
                     onError={() => setImgError(true)}
                 />
             )}
 
-            <CardContent sx={{ py: 1 }}>
+            <CardContent sx={cardContentSx}>
                 <Typography
                     component="a"
                     href={`#/play/${id}`}
                     variant="subtitle1"
-                    sx={{ cursor: 'pointer' }}
+                    sx={cardTitleSx}
                     noWrap
                     title={title}
                 >
@@ -88,7 +107,7 @@ function MovieCard({ id, title, editMode, onDelete, onChangeCover, coverV }) {
             </CardContent>
         </Card>
     );
-}
+});
 
 export default function Movies() {
     /* movies */
@@ -208,14 +227,22 @@ export default function Movies() {
         }
     };
 
-    const openCoverPicker = ({ id, title }) => {
+    /* No dependencies, so the cards never see a new handler. The search it used
+       to fire directly is driven off coverTarget below - reaching runCoverSearch
+       from here would tie this identity to the query field, and re-render the
+       whole grid on every character typed into it. */
+    const openCoverPicker = useCallback(({ id, title }) => {
         setCoverTarget({ id, title });
         setCoverQuery(title);
         setCoverResults([]);
         setCoverError(null);
         setCoverSaving(null);
-        runCoverSearch(title);
-    };
+    }, []);
+
+    // Opening the picker searches for whatever it was opened on.
+    useEffect(() => {
+        if (coverTarget) runCoverSearch(coverTarget.title);
+    }, [coverTarget]);
 
     const runCoverSearch = (q) => {
         const query = (q ?? coverQuery).trim();
@@ -502,20 +529,19 @@ export default function Movies() {
             )}
 
             {/* movie grid */}
-            <Grid container spacing={2} style={{ justifyContent: 'center' }}>
+            <Box sx={movieGridSx}>
                 {filteredMovies.map(({ name, id }) => (
-                    <Grid item key={id} xs={12} sm={6} md={3} >
-                        <MovieCard
-                            id={id}
-                            title={name}
-                            editMode={editMode}
-                            onDelete={setDeleteTarget}
-                            onChangeCover={openCoverPicker}
-                            coverV={coverVersions[id]}
-                        />
-                    </Grid>
+                    <MovieCard
+                        key={id}
+                        id={id}
+                        title={name}
+                        editMode={editMode}
+                        onDelete={setDeleteTarget}
+                        onChangeCover={openCoverPicker}
+                        coverV={coverVersions[id]}
+                    />
                 ))}
-            </Grid>
+            </Box>
 
             {/* Show message if content is filtered */}
             {!parentalUnlocked && movieList.length > filteredMovies.length && (

@@ -17,29 +17,33 @@ const routes = {
     '/tv': TV
 };
 
-function resolveRoute(path) {
-    // exact matches first
-    if (routes[path]) return routes[path];
+/* Returns the element, not a component. Handing back a fresh arrow function per
+   render gave React a new component type each time, so every re-render tore the
+   whole page down and built it again - a full refetch for the lists and a
+   discarded buffer for the player. The keys keep the one remount that is
+   wanted: a new episode starts a fresh player. */
+function renderRoute(path) {
+    const Exact = routes[path];
+    if (Exact) return <Exact/>;
 
     const showMatch = path.match(/^\/show\/(.+)$/);
     if (showMatch) {
         const name = decodeURIComponent(showMatch[1]);
-        return () => <ShowEpisodes name={name}/>;
+        return <ShowEpisodes key={name} name={name}/>;
     }
 
     const playMatch = path.match(/^\/play\/([^?]+)(?:\?(.+))?$/);
     if (playMatch) {
         const id = playMatch[1];
         const params = new URLSearchParams(playMatch[2] || '');
-        const queue = params.get('queue') || '';
+        // The show name is the whole contract now - the player looks the rest
+        // of the run up from it rather than being handed it in the URL.
         const name = params.get('name') || '';
-        const [nextId, ...rest] = queue.split(',').filter(Boolean);
-        const nextQueue = rest.join(',');
 
-        return () => <MoviePlayer id={id} next={nextId} queue={nextQueue} name={name}/>;
+        return <MoviePlayer key={id} id={id} name={name}/>;
     }
 
-    return NotFound;
+    return <NotFound/>;
 }
 
 export default function App() {
@@ -50,8 +54,6 @@ export default function App() {
         window.addEventListener('hashchange', handler);
         return () => window.removeEventListener('hashchange', handler);
     }, []);
-
-    const Page = resolveRoute(path);
 
     return (
         <>
@@ -71,7 +73,7 @@ export default function App() {
                     <a href={`#/movies`}>Movies</a> | {' '}
                     <a href={`#/admin`}>Admin</a>
                 </nav>
-                <Page/>
+                {renderRoute(path)}
             </ThemeProvider>
         </>
     );

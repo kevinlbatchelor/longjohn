@@ -9,6 +9,9 @@ const axios = require('axios');
 const config = require('../util/config');
 const dl = require('../util/downloadCoverArt');
 const streamers = require('../streaming/streamers');
+const moviePath = require('./moviePath');
+const { removeMovie } = require('./removeMovie');
+const { showNameFor, showFolderFor, cleanUpShowIfEmpty } = require('../tv/showCleanup');
 const { Op } = require('sequelize');
 
 router.get(route(), async (req, res) => {
@@ -34,18 +37,27 @@ router.get(route(), async (req, res) => {
     }
 
     try {
-        const list = await Movie.findAndCountAll({
+        /* The grid renders a title and a cover and filters on the rating, and
+           that is the whole of what the client reads off a row. Naming those
+           three columns leaves the imdb JSONB blob behind, which was 84% of a
+           1.6 MB response - on the route the app opens on. raw skips building a
+           thousand model instances only to serialise them straight back out. */
+        const rows = await Movie.findAll({
+            raw: true,
+            attributes: ['id', 'name', 'rating'],
             where,
             order: [['createdAt', 'DESC']],
             offset: 0,
             limit: 1000
         });
 
-        list.rows.forEach(movie => {
+        rows.forEach(movie => {
             movie.name = _.startCase(movie.name);
         });
 
-        res.json(list);
+        // count came from findAndCountAll, which spent a second query on a
+        // number nothing reads. Kept in the shape so the response is unchanged.
+        res.json({ count: rows.length, rows });
     } catch (e) {
         console.error('LONG-JOHN ERROR:', e);
         res.status(500).json({ error: e });
@@ -170,10 +182,43 @@ router.get(route('cover-search'), async function (req, res) {
     }
 });
 
+/* The one place the imdb blob is read back out. It is deliberately kept off
+   both list routes - it was 84% of the catalogue response - so the player asks
+   for it per movie, which is the only granularity anything ever wanted.
+
+   Two segments, so the streaming route below cannot shadow it. */
+router.get(route(':id/info'), async function (req, res) {
+    try {
+        const row = await Movie.findByPk(req.params.id, {
+            raw: true,
+            attributes: ['id', 'name', 'rating', 'genre', 'imdb']
+        });
+
+        if (!row) return res.status(404).json({ error: 'Movie not found' });
+
+        /* null rather than a 404: a row scanned before the OMDb key was set,
+           or one the lookup timed out on, simply has nothing to show. That is
+           an ordinary state, and the player draws no panel for it. */
+        res.json({
+            id: row.id,
+            name: row.name,
+            rating: row.rating,
+            genre: row.genre,
+            imdb: row.imdb || null
+        });
+    } catch (e) {
+        console.error('LONG-JOHN ERROR:', e);
+        res.status(500).json({ error: e });
+    }
+});
+
 router.get(route(':id'), async function (req, res) {
-    const id = req.params.id;
-    const file = await Movie.findByPk(id);
-    streamers.videoStreamer(file.path, req, res);
+    // Every range request lands here, so the path comes from the memo rather
+    // than a fresh row read per chunk.
+    const filePath = await moviePath.pathFor(req.params.id);
+    if (!filePath) return res.sendStatus(404);
+
+    streamers.videoStreamer(filePath, req, res);
 });
 
 router.get(coverRoute(':id'), function (req, res) {
@@ -199,6 +244,7 @@ router.put(route(':id'), async function (req, res) {
         const partData = req.body;
         movie.set(partData);
         const part = await movie.save();
+        moviePath.forget(id);
         res.json(part);
     } catch (e) {
         console.error('LONG-JOHN ERROR:', e);
@@ -210,36 +256,26 @@ router.put(route(':id'), async function (req, res) {
 router.delete(route(':id'), async function (req, res) {
     try {
         const id = req.params.id;
-        const movie = await Movie.findByPk(id, { paranoid: false });
-        if (!movie) {
+
+        // Read the path first: if this row turns out to be the last episode of
+        // a TV show, it is the only thing left saying which show that was.
+        const row = await Movie.findByPk(id, { raw: true, attributes: ['path'], paranoid: false });
+
+        const removed = await removeMovie(id);
+        if (!removed) {
             return res.status(404).json({ error: 'Movie not found' });
         }
 
-        if (movie.path) {
-            try {
-                await fs.promises.unlink(movie.path);
-            } catch (e) {
-                if (e.code !== 'ENOENT') console.error('LONG-JOHN unlink movie file:', e);
-            }
-
-            const dir = path.dirname(movie.path);
-            const base = path.basename(movie.path, path.extname(movie.path));
-            const vtt = path.join(dir, base + '.vtt');
-            try {
-                await fs.promises.unlink(vtt);
-            } catch (e) {
-                if (e.code !== 'ENOENT') console.error('LONG-JOHN unlink subtitle:', e);
-            }
+        if (row && row.path) {
+            await cleanUpShowIfEmpty(showNameFor(row.path), showFolderFor(row.path));
         }
 
-        const coverPath = path.join(config.cover, id + '.jpg');
-        try {
-            await fs.promises.unlink(coverPath);
-        } catch (e) {
-            if (e.code !== 'ENOENT') console.error('LONG-JOHN unlink cover:', e);
-        }
-
-        await movie.destroy({ force: true });
+        /* A TV episode is a movie row too, so a delete from either list can
+           leave the grouped TV catalogue holding a row that is gone. Required
+           here rather than at the top of the file: every route module shares one
+           express Router, so requiring tvRoutes at load time would register its
+           routes ahead of these ones. */
+        require('../tv/tvRoutes').invalidateTvCatalog();
         res.json('Movie has been deleted.');
     } catch (e) {
         console.error('LONG-JOHN ERROR:', e);

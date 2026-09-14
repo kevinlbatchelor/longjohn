@@ -9,7 +9,13 @@
 
 const KEY = 'playbackSettings';
 
-export const DEFAULTS = { skipIntroSeconds: 0 };
+/* 60 rather than 0, so the button is there on a device that has never visited
+   the admin page. It was defaulting to off, and since this lives in
+   localStorage - per browser, per origin, never synced - the setting goes away
+   with cleared site data, a different browser, or the app being opened on a
+   different host or port, and the button silently went with it. 0 still means
+   off, it just has to be asked for now. */
+export const DEFAULTS = { skipIntroSeconds: 60 };
 
 // Coerce to a non-negative finite number; anything unparseable falls back.
 const num = (v, fallback) => {
