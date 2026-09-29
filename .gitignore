@@ -1,3 +1,8 @@
 .idea
 node_modules
 longjohn.iml
+# Android app build output
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The web app's hacker palette, so the native screens match. -->
+    <color name="black">#111111</color>
+    <color name="green">#00FF00</color>
+    <color name="dimGreen">#007700</color>
+    <color name="red">#FF4444</color>
+    <color name="ic_launcher_background">#111111</color>
+</resources>
