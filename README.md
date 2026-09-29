@@ -104,6 +104,7 @@ Create the file `server/util/config.js` with your settings:
 const tvFolderName = 'TV';
 const moviesPath = ['C:\\Users\\YourUsername\\Documents\\Movies'];
 const audioBookPath = ['C:\\Users\\YourUsername\\Documents\\AudioBooks'];
+const eBookPath = ['C:\\Users\\YourUsername\\Documents\\eBooks'];   // Kindle files: .mobi, .azw, .azw3, .prc
 const TV = ['C:\\Users\\YourUsername\\Documents\\' + tvFolderName];
 const cover = 'C:\\Users\\YourUsername\\Documents\\Cover';
 
@@ -131,6 +132,7 @@ const config = {
     TV: TV,
     cover: cover,
     audioBooks: audioBookPath
+    eBooks: eBookPath,
 };
 
 module.exports = config;

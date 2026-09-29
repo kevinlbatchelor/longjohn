@@ -10,6 +10,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { cssVars } from './styles.jsx';
 import MovieInfo from './movieInfo.jsx';
+import CoverPicker from './coverPicker.jsx';
 
 const BASE = process.env.BASE_HOST;
 const API_ROOT = BASE + ':3000/api/v1/movie';
@@ -17,6 +18,26 @@ const COVER_ROOT = BASE + ':3000/api/v1/cover';
 const CATEGORY_LIST = BASE + ':3000/api/v1/categories';
 
 const getQueryParams = () => new URLSearchParams(window.location.search);
+
+/* The two calls the shared cover picker needs. A search answers
+   { results, provider, message } - message being a provider that replied with
+   a complaint rather than posters - and a save hands the server the poster URL
+   to fetch, so the cover folder stays the one place covers come from. */
+const searchMovieCovers = (q) => fetch(`${API_ROOT}/cover-search?q=${encodeURIComponent(q)}`)
+    .then(async (r) => {
+        const body = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
+        return body;
+    });
+
+const setMovieCover = (id, url) => fetch(`${API_ROOT}/${encodeURIComponent(id)}/cover`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url })
+}).then((r) => {
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+});
 
 /* Hoisted out of the card. Emotion caches on object identity, so a literal
    written inside the component is re-serialised for every card on every render,
@@ -170,14 +191,9 @@ export default function Movies() {
     const [detailsTarget, setDetailsTarget] = useState(null);
     const [detailsCoverError, setDetailsCoverError] = useState(false);
 
-    // Cover-picker states
-    const [coverTarget, setCoverTarget] = useState(null);
-    const [coverQuery, setCoverQuery] = useState('');
-    const [coverResults, setCoverResults] = useState([]);
-    const [coverProvider, setCoverProvider] = useState(null);
-    const [coverSearching, setCoverSearching] = useState(false);
-    const [coverError, setCoverError] = useState(null);
-    const [coverSaving, setCoverSaving] = useState(null); // result.id being saved
+    // Which movie's cover is being picked, and the bust values that make the
+    // cards re-fetch a cover that has just been replaced at the same URL.
+    const [coverTarget, setCoverTarget] = useState(null); // { id, title }
     const [coverVersions, setCoverVersions] = useState({}); // id -> bust value
 
     useEffect(() => {
@@ -263,79 +279,14 @@ export default function Movies() {
         }
     };
 
-    /* No dependencies, so the cards never see a new handler. The search it used
-       to fire directly is driven off coverTarget below - reaching runCoverSearch
-       from here would tie this identity to the query field, and re-render the
-       whole grid on every character typed into it. */
-    const openCoverPicker = useCallback(({ id, title }) => {
-        setCoverTarget({ id, title });
-        setCoverQuery(title);
-        setCoverResults([]);
-        setCoverError(null);
-        setCoverSaving(null);
-    }, []);
+    // A state setter, so the memoised cards never see a new handler.
+    const openCoverPicker = useCallback(({ id, title }) => setCoverTarget({ id, title }), []);
 
     // A state setter, so the memoised cards never see a new handler.
     const openDetails = useCallback(({ id, title }) => {
         setDetailsCoverError(false);
         setDetailsTarget({ id, title });
     }, []);
-
-    // Opening the picker searches for whatever it was opened on.
-    useEffect(() => {
-        if (coverTarget) runCoverSearch(coverTarget.title);
-    }, [coverTarget]);
-
-    const runCoverSearch = (q) => {
-        const query = (q ?? coverQuery).trim();
-        if (!query) {
-            setCoverResults([]);
-            return;
-        }
-        setCoverSearching(true);
-        setCoverError(null);
-        fetch(`${API_ROOT}/cover-search?q=${encodeURIComponent(query)}`)
-            .then(async r => {
-                const body = await r.json().catch(() => ({}));
-                if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
-                return body;
-            })
-            .then(body => {
-                setCoverResults(body.results || []);
-                setCoverProvider(body.provider || null);
-                if (body.message) setCoverError(body.message);
-                setCoverSearching(false);
-            })
-            .catch(err => {
-                setCoverError(err.message);
-                setCoverSearching(false);
-            });
-    };
-
-    const handlePickCover = (result) => {
-        if (!coverTarget) return;
-        const { id } = coverTarget;
-        setCoverSaving(result.id);
-        setCoverError(null);
-        fetch(`${API_ROOT}/${encodeURIComponent(id)}/cover`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: result.poster })
-        })
-            .then(r => {
-                if (!r.ok) throw new Error(`HTTP ${r.status}`);
-                return r.json();
-            })
-            .then(() => {
-                setCoverVersions(v => ({ ...v, [id]: Date.now() }));
-                setCoverSaving(null);
-                setCoverTarget(null);
-            })
-            .catch(err => {
-                setCoverError(err.message);
-                setCoverSaving(null);
-            });
-    };
 
     const handleConfirmDelete = () => {
         if (!deleteTarget) return;
@@ -488,109 +439,16 @@ export default function Movies() {
                 </DialogActions>
             </Dialog>
 
-            {/* Cover picker dialog */}
-            <Dialog
-                open={!!coverTarget}
-                onClose={() => !coverSaving && setCoverTarget(null)}
-                maxWidth="md"
-                fullWidth
-            >
-                <DialogTitle>Change cover – {coverTarget?.title}</DialogTitle>
-                <DialogContent>
-                    <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                        <TextField
-                            autoFocus
-                            fullWidth
-                            variant="standard"
-                            label={`Search ${coverProvider === 'both' ? 'TMDb + OMDb' : coverProvider === 'tmdb' ? 'TMDb' : 'OMDb'}`}
-                            value={coverQuery}
-                            onChange={(e) => setCoverQuery(e.target.value)}
-                            onKeyPress={(e) => { if (e.key === 'Enter') runCoverSearch(); }}
-                        />
-                        <Button onClick={() => runCoverSearch()} disabled={coverSearching}>
-                            {coverSearching ? '…' : 'Search'}
-                        </Button>
-                    </Box>
-
-                    {coverError && (
-                        <Alert severity="error" sx={{ mb: 2 }}>{coverError}</Alert>
-                    )}
-
-                    {coverSearching ? (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                            <CircularProgress sx={{ color: cssVars.green }}/>
-                        </Box>
-                    ) : (
-                        <Grid container spacing={2}>
-                            {coverResults.map(r => (
-                                <Grid item key={`${r.source || ''}-${r.type || ''}-${r.id}`} xs={6} sm={4} md={3}>
-                                    <Card
-                                        onClick={() => !coverSaving && handlePickCover(r)}
-                                        sx={{
-                                            cursor: coverSaving ? 'wait' : 'pointer',
-                                            opacity: coverSaving && coverSaving !== r.id ? 0.4 : 1,
-                                            position: 'relative'
-                                        }}
-                                    >
-                                        {r.source && (
-                                            <Box sx={{
-                                                position: 'absolute',
-                                                top: 4,
-                                                left: 4,
-                                                px: 0.75,
-                                                py: 0.1,
-                                                borderRadius: 0.5,
-                                                fontSize: 10,
-                                                fontFamily: '"Source Code Pro", monospace',
-                                                color: cssVars.green,
-                                                backgroundColor: 'rgba(0,0,0,0.7)',
-                                                zIndex: 1
-                                            }}>
-                                                {r.source.toUpperCase()}
-                                            </Box>
-                                        )}
-                                        <CardMedia
-                                            component="img"
-                                            image={r.poster}
-                                            alt={r.title}
-                                            sx={{ height: 220 }}
-                                        />
-                                        {coverSaving === r.id && (
-                                            <Box sx={{
-                                                position: 'absolute', inset: 0,
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                backgroundColor: 'rgba(0,0,0,0.6)'
-                                            }}>
-                                                <CircularProgress size={28} sx={{ color: cssVars.green }}/>
-                                            </Box>
-                                        )}
-                                        <CardContent sx={{ py: 1 }}>
-                                            <Typography variant="caption" noWrap title={`${r.title} (${r.year})`}>
-                                                {r.title} ({r.year})
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                            ))}
-                            {!coverSearching && coverResults.length === 0 && coverQuery && (
-                                <Grid item xs={12}>
-                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                        No results.
-                                    </Typography>
-                                </Grid>
-                            )}
-                        </Grid>
-                    )}
-                </DialogContent>
-                <DialogActions sx={{ justifyContent: 'space-between' }}>
-                    {(coverProvider === 'tmdb' || coverProvider === 'both') ? (
-                        <Typography variant="caption" sx={{ color: 'text.secondary', pl: 2 }}>
-                            This product uses the TMDb API but is not endorsed or certified by TMDb.
-                        </Typography>
-                    ) : <span/>}
-                    <Button disabled={!!coverSaving} onClick={() => setCoverTarget(null)}>Close</Button>
-                </DialogActions>
-            </Dialog>
+            {coverTarget && (
+                <CoverPicker
+                    name={coverTarget.title}
+                    kind="movie"
+                    search={searchMovieCovers}
+                    save={(url) => setMovieCover(coverTarget.id, url)}
+                    onClose={() => setCoverTarget(null)}
+                    onSaved={() => setCoverVersions((v) => ({ ...v, [coverTarget.id]: Date.now() }))}
+                />
+            )}
 
             {/* error fetching categories (non-fatal) */}
             {catError && (

@@ -19,6 +19,7 @@ app.use('/', require('./movie/movieRoutes'));
 app.use('/', require('./tv/tvRoutes.js'));
 app.use('/', require('./movie/subTitleRoutes'));
 app.use('/', require('./audioBooks/audioBookRoutes'));
+app.use('/', require('./eBooks/eBookRoutes'));
 app.use('/', require('./movie/movieCategoryRoutes'));
 app.use('/', require('./scanner/scannerRoutes'));
 
@@ -37,8 +38,12 @@ app.use(function (err, req, res, next) {
     }
 
     if (_.isObject(err)) {
-        res.status(err.code || 500);
-        res.json({error: err.msg || 'Unknown server error'});
+        /* Only a real HTTP status goes to res.status: a file error's code is
+           a string like ENOENT, and handing that over threw inside this very
+           handler and took the server down with it. */
+        const status = Number.isInteger(err.status) && err.status >= 400 && err.status < 600 ? err.status : 500;
+        res.status(status);
+        res.json({error: err.msg || err.message || 'Unknown server error'});
         if (err.stack) {
             console.log('Express Stack: ', err.stack);
         }
@@ -47,6 +52,22 @@ app.use(function (err, req, res, next) {
         res.json({error: err});
     }
 });
+// Tables and columns that arrived after the first release are added on an
+// older database here, without touching the rows.
+require('./audioBooks/audioBook').ensureSchema().catch((e) => {
+    console.error('LONG-JOHN audiobook table update failed:', e.message);
+});
+require('./eBooks/eBook').ensureSchema().catch((e) => {
+    console.error('LONG-JOHN ebook table update failed:', e.message);
+});
+
+/* A rejection nothing caught would take the whole server down on Node 15 and
+   later. Logged instead: the request that caused it has already failed, and
+   everyone else's stream carries on. */
+process.on('unhandledRejection', (reason) => {
+    console.error('LONG-JOHN unhandled rejection:', reason instanceof Error ? reason.stack : reason);
+});
+
 // Start the server
 
 app.set('port', config.server.port);

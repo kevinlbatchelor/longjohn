@@ -9,7 +9,7 @@ const API = {
     movies : '/scan',
     audio  : '/scan/audio',
     tv     : '/scan/TV',
-    ebooks : '/bookScanner'
+    ebooks : '/scan/ebooks'
 };
 
 const BASE = process.env.BASE_HOST;
@@ -32,9 +32,18 @@ export default function Admin() {
 
         try {
             const r = await fetch(`${ADMIN}${route}`);
-            if (!r.ok) throw new Error(`HTTP ${r.status}`);
 
-            const data = await r.json();
+            /* Read as text first: a scan that failed answers with its reason,
+               and one that died quietly answers with nothing at all - either
+               way the message here should say so, not "unexpected end of
+               JSON input". */
+            const text = await r.text();
+            let data = null;
+            try { data = text ? JSON.parse(text) : null; } catch (e) { data = null; }
+
+            if (!r.ok) throw new Error((data && data.error) || `HTTP ${r.status}`);
+            if (data === null) throw new Error('The scan returned nothing – see the server log (npx pm2 logs longjohn)');
+
             setResult(JSON.stringify(data, null, 2));
         } catch (err) {
             setError(err.message);

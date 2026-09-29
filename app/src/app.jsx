@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Audiobooks from './audiobooks';
+import EBooks from './ebooks';
 import Movies from './movies';
 import { GlobalStyles, ThemeProvider } from '@mui/material';
 import { cssVars, hackerTheme } from './styles.jsx';
@@ -12,6 +13,7 @@ const NotFound = () => <h2>404 – Not found</h2>;
 const routes = {
     '/': Movies,
     '/audiobooks': Audiobooks,
+    '/ebooks': EBooks,
     '/movies': Movies,
     '/admin': Admin,
     '/tv': TV
@@ -70,6 +72,7 @@ export default function App() {
                 <nav style={{ marginBottom: 16, textAlign: 'center' }}>
                     <a href={`#/tv`}>TV</a> | {' '}
                     <a href={`#/audiobooks`}>AudioBooks</a> | {' '}
+                    <a href={`#/ebooks`}>eBooks</a> | {' '}
                     <a href={`#/movies`}>Movies</a> | {' '}
                     <a href={`#/admin`}>Admin</a>
                 </nav>

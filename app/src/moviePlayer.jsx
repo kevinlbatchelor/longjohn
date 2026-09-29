@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { Button, GlobalStyles, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import FastForwardIcon from '@mui/icons-material/FastForward';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
+import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
+import DownloadIcon from '@mui/icons-material/Download';
 import { loadSettings } from './settings';
 import { loadShow } from './showCache';
 import MovieInfo from './movieInfo.jsx';
@@ -86,16 +89,47 @@ const pageStyle = { width: '90%', maxWidth: 900, margin: '0 auto' };
 
 /* The overlays have to survive fullscreen, and only descendants of the
    fullscreen element are drawn there. So this wrapper is what goes fullscreen,
-   never the bare video - the fullscreenchange handler moves it up here when
-   the browser's own button fullscreens the video. lineHeight 0 kills the
+   never the bare video - the native fullscreen button is hidden and the
+   overlay's own button fullscreens the wrapper instead. lineHeight 0 kills the
    inline gap a video leaves under itself. */
 const playerStyle = { position: 'relative', width: '100%', backgroundColor: '#000', lineHeight: 0 };
+/* The stand-in for browsers without a working Fullscreen API - the TV
+   browser apps, mostly: the wrapper is pinned over the whole viewport
+   instead, which looks the same from the sofa and keeps the overlays. */
+const playerPinnedStyle = {
+    ...playerStyle,
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100vw',
+    height: '100vh',
+    zIndex: 1300
+};
 const videoStyle = { display: 'block', width: '100%', height: 'auto', backgroundColor: '#000' };
+
+const fullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+
 const videoFullscreenStyle = { ...videoStyle, height: '100%', objectFit: 'contain' };
 
-// Sitting clear of the native control bar, which draws along the bottom edge.
-const overlayStyle = { position: 'absolute', display: 'flex', gap: 8, zIndex: 1, lineHeight: 'normal' };
-const lowerRightStyle = { ...overlayStyle, right: 16, bottom: 72 };
+/* The native bar is pared back to play, time, the timeline and the captions
+   menu, and our buttons take the room that frees up on its right. Chromium
+   draws the buttons in a row above the timeline, the three-dot menu at its
+   far right, and the offsets here put ours on that row just inside the menu.
+   Only Chromium exposes the volume and fullscreen parts to page CSS; another
+   browser keeps its own buttons and ours sit alongside. The three-dot menu
+   itself is out of reach: with download, speed, casting and picture-in-
+   picture switched off it holds nothing but the captions toggle, and it goes
+   away by itself on a video with no subtitle track. */
+const VIDEO_CLASS = 'longjohn-video';
+const nativeControlStyles = {
+    [`.${VIDEO_CLASS}::-webkit-media-controls-mute-button`]: { display: 'none' },
+    [`.${VIDEO_CLASS}::-webkit-media-controls-volume-slider`]: { display: 'none' },
+    [`.${VIDEO_CLASS}::-webkit-media-controls-volume-control-container`]: { display: 'none' },
+    [`.${VIDEO_CLASS}::-webkit-media-controls-fullscreen-button`]: { display: 'none' },
+};
+
+const overlayStyle = { position: 'absolute', display: 'flex', gap: 6, zIndex: 1, lineHeight: 'normal' };
+const lowerRightStyle = { ...overlayStyle, right: 40, bottom: 34 };
 
 const overlayButtonSx = {
     minWidth: 0,
@@ -123,6 +157,7 @@ const nextLabelStyle = { color: 'green', marginTop: 16, textAlign: 'left' };
 export default function MoviePlayer({ id, name }) {
     const src = `${MOVIE_ROOT}/${id}`;
     const subs = `${SUBS_ROOT}/${id}`;
+    const download = `${MOVIE_ROOT}/${id}/download`;
 
     const videoRef = useRef(null);
     const playerRef = useRef(null);
@@ -176,30 +211,78 @@ export default function MoviePlayer({ id, name }) {
         return () => { live = false; };
     }, [id, name]);
 
-    /* The browser's own fullscreen button (and a double-click) fullscreens the
-       bare video, which is exactly where the overlays cannot follow. It is
-       bounced up to the wrapper here, and the wrapper's state is tracked so
-       the video can be told to fill it. */
+    /* Tracks whether the wrapper is the fullscreen element, so the video can
+       be told to fill it and the toggle can show the right icon. Older
+       WebKit spells the API with a prefix, so both spellings are watched.
+       Nothing is done about the video itself going fullscreen (a browser
+       that ignores controlsList still offers its own button): a fullscreen
+       request has to come straight from a click, so bouncing it onto the
+       wrapper afterwards is refused, and the exit is all that lands. */
     useEffect(() => {
         const handleChange = () => {
-            const active = document.fullscreenElement;
-            setFullscreen(Boolean(active) && active === playerRef.current);
-
-            if (active && active === videoRef.current) {
-                Promise.resolve(document.exitFullscreen())
-                    .then(() => {
-                        const player = playerRef.current;
-                        return player && player.requestFullscreen ? player.requestFullscreen() : undefined;
-                    })
-                    .catch((e) => {
-                        console.warn('[longjohn] could not move fullscreen onto the player:', e.message);
-                    });
-            }
+            setFullscreen(fullscreenElement() === playerRef.current);
         };
 
         document.addEventListener('fullscreenchange', handleChange);
-        return () => document.removeEventListener('fullscreenchange', handleChange);
+        document.addEventListener('webkitfullscreenchange', handleChange);
+        return () => {
+            document.removeEventListener('fullscreenchange', handleChange);
+            document.removeEventListener('webkitfullscreenchange', handleChange);
+        };
     }, []);
+
+    /* The pinned stand-in: Escape leaves it, and the page behind it must not
+       scroll while it is up. */
+    const [pinned, setPinned] = useState(false);
+
+    useEffect(() => {
+        if (!pinned) return undefined;
+
+        const onKey = (e) => { if (e.key === 'Escape') setPinned(false); };
+        const previous = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        document.addEventListener('keydown', onKey);
+
+        return () => {
+            document.body.style.overflow = previous;
+            document.removeEventListener('keydown', onKey);
+        };
+    }, [pinned]);
+
+    /* Called from the overlay button, so the request carries the click.
+       The real Fullscreen API first, under either spelling; the browser apps
+       on TV boxes tend to lack it or accept the call and do nothing, and
+       either way the wrapper is pinned over the viewport instead. A moment's
+       grace is given for the browser to answer, since the prefixed call does
+       not return a promise. */
+    const toggleFullscreen = () => {
+        const player = playerRef.current;
+        if (!player) return;
+
+        if (pinned) {
+            setPinned(false);
+            return;
+        }
+
+        if (fullscreenElement()) {
+            const exit = document.exitFullscreen || document.webkitExitFullscreen;
+            Promise.resolve(exit && exit.call(document)).catch(() => {});
+            return;
+        }
+
+        const request = player.requestFullscreen || player.webkitRequestFullscreen;
+        if (!request) {
+            setPinned(true);
+            return;
+        }
+
+        const fallBack = () => { if (fullscreenElement() !== player) setPinned(true); };
+        Promise.resolve(request.call(player))
+            .then(() => setTimeout(fallBack, 500))
+            .catch(fallBack);
+    };
+
+    const isFull = fullscreen || pinned;
 
     // The level to fade down from, and back up to if the fade is called off.
     const baseVolumeRef = useRef(1);
@@ -377,15 +460,19 @@ export default function MoviePlayer({ id, name }) {
 
     return (
         <div style={pageStyle}>
-            <div ref={playerRef} style={playerStyle}>
+            <GlobalStyles styles={nativeControlStyles}/>
+            <div ref={playerRef} style={pinned ? playerPinnedStyle : playerStyle}>
                 <video
                     ref={videoRef}
+                    className={VIDEO_CLASS}
                     autoPlay
                     preload="none"
                     src={src}
                     controls
+                    controlsList="nofullscreen nodownload noplaybackrate noremoteplayback"
+                    disablePictureInPicture
                     crossOrigin="anonymous"
-                    style={fullscreen ? videoFullscreenStyle : videoStyle}
+                    style={isFull ? videoFullscreenStyle : videoStyle}
                     onEnded={handleEnded}
                     onTimeUpdate={handleTimeUpdate}
                     onVolumeChange={handleVolumeChange}
@@ -395,30 +482,45 @@ export default function MoviePlayer({ id, name }) {
                     <track label="English" kind="subtitles" srcLang="en" src={subs} default/>
                 </video>
 
-                {(skipVisible || nextVisible) && (
-                    <div style={lowerRightStyle}>
-                        {skipVisible && (
-                            <Button
-                                sx={overlayButtonSx}
-                                onClick={skipAhead}
-                                title={`Skip ${settings.skipIntroSeconds}s`}
-                                aria-label={`Skip ${settings.skipIntroSeconds} seconds`}
-                            >
-                                <FastForwardIcon/>
-                            </Button>
-                        )}
-                        {nextVisible && (
-                            <Button
-                                sx={overlayButtonSx}
-                                onClick={playNext}
-                                title={`Play next: ${next.episode}`}
-                                aria-label="Play next episode"
-                            >
-                                <PlayArrowIcon/>
-                            </Button>
-                        )}
-                    </div>
-                )}
+                <div style={lowerRightStyle}>
+                    {skipVisible && (
+                        <Button
+                            sx={overlayButtonSx}
+                            onClick={skipAhead}
+                            title={`Skip ${settings.skipIntroSeconds}s`}
+                            aria-label={`Skip ${settings.skipIntroSeconds} seconds`}
+                        >
+                            <FastForwardIcon/>
+                        </Button>
+                    )}
+                    {nextVisible && (
+                        <Button
+                            sx={overlayButtonSx}
+                            onClick={playNext}
+                            title={`Play next: ${next.episode}`}
+                            aria-label="Play next episode"
+                        >
+                            <PlayArrowIcon/>
+                        </Button>
+                    )}
+                    <Button
+                        sx={overlayButtonSx}
+                        component="a"
+                        href={download}
+                        title="Download"
+                        aria-label="Download this video"
+                    >
+                        <DownloadIcon/>
+                    </Button>
+                    <Button
+                        sx={overlayButtonSx}
+                        onClick={toggleFullscreen}
+                        title={isFull ? 'Exit fullscreen' : 'Fullscreen'}
+                        aria-label={isFull ? 'Exit fullscreen' : 'Fullscreen'}
+                    >
+                        {isFull ? <FullscreenExitIcon/> : <FullscreenIcon/>}
+                    </Button>
+                </div>
             </div>
 
             {isEpisode && (

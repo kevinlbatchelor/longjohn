@@ -224,6 +224,22 @@ router.get(route(':id/info'), async function (req, res) {
     }
 });
 
+/* The whole file as an attachment, named as it is on disk. The streaming route
+   below answers nothing but range requests (a plain GET gets a 416), so the
+   browser's own download of the stream URL never worked; this one goes
+   through res.download, which sets Content-Disposition and still honours
+   ranges for a download manager that resumes. Two segments, like info, so it
+   is not shadowed by the stream. */
+router.get(route(':id/download'), async function (req, res) {
+    const filePath = await moviePath.pathFor(req.params.id);
+    if (!filePath) return res.sendStatus(404);
+
+    res.download(filePath, path.basename(filePath), function (err) {
+        if (!err || res.headersSent) return;
+        res.sendStatus(err.code === 'ENOENT' ? 404 : 500);
+    });
+});
+
 router.get(route(':id'), async function (req, res) {
     // Every range request lands here, so the path comes from the memo rather
     // than a fresh row read per chunk.
