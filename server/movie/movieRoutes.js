@@ -64,7 +64,7 @@ router.get(route(), async (req, res) => {
     }
 });
 
-async function searchOmdb(q) {
+async function searchOmdb(q, kind) {
     if (!config.omdbApiKey) {
         const err = new Error('OMDb API key not configured on server');
         err.status = 400;
@@ -74,7 +74,15 @@ async function searchOmdb(q) {
     let message = null;
     for (let page = 1; page <= 3; page++) {
         const { data } = await axios.get('https://www.omdbapi.com/', {
-            params: { s: q, apikey: config.omdbApiKey, page },
+            /* OMDb takes the filter itself, which matters more here than it
+               looks: a show's name is very often also a film's, and searching
+               "Fargo" unfiltered buries the series under the movie. */
+            params: {
+                s: q,
+                apikey: config.omdbApiKey,
+                page,
+                ...(kind === 'series' ? { type: 'series' } : {})
+            },
             timeout: 5000,
             validateStatus: () => true
         });
@@ -98,7 +106,7 @@ async function searchOmdb(q) {
     return { provider: 'omdb', results: all, ...(message ? { message } : {}) };
 }
 
-async function searchTmdb(q) {
+async function searchTmdb(q, kind) {
     if (!config.tmdbApiKey) {
         const err = new Error('TMDb API key not configured on server');
         err.status = 400;
@@ -112,8 +120,9 @@ async function searchTmdb(q) {
             validateStatus: () => true
         });
         if (!data || !Array.isArray(data.results)) break;
+        const wanted = kind === 'series' ? ['tv'] : ['movie', 'tv'];
         const pageResults = data.results
-            .filter(r => (r.media_type === 'movie' || r.media_type === 'tv') && r.poster_path)
+            .filter(r => wanted.includes(r.media_type) && r.poster_path)
             .map(r => {
                 const isMovie = r.media_type === 'movie';
                 const date = isMovie ? r.release_date : r.first_air_date;
@@ -150,14 +159,17 @@ router.get(route('cover-search'), async function (req, res) {
 
         const providerLabel = providers.length > 1 ? 'both' : providers[0].name;
         const q = (req.query.q || '').trim();
+        /* Anything but the one value we know how to narrow on is ignored, so a
+           stray ?type= cannot quietly empty the results. */
+        const kind = req.query.type === 'series' ? 'series' : null;
         if (!q) return res.json({ provider: providerLabel, results: [] });
 
         if (providers.length === 1) {
-            const out = await providers[0].fn(q);
+            const out = await providers[0].fn(q, kind);
             return res.json(out);
         }
 
-        const settled = await Promise.allSettled(providers.map(p => p.fn(q)));
+        const settled = await Promise.allSettled(providers.map(p => p.fn(q, kind)));
         const results = [];
         const messages = [];
         settled.forEach((s, i) => {

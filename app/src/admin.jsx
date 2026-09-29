@@ -6,14 +6,10 @@ import {
 import { loadSettings, saveSettings } from './settings';
 
 const API = {
-    movies   : '/scan',
-    audio    : '/scan/audio',
-    tv       : '/scan/TV',
-    ebooks   : '/bookScanner',
-    /* Fills in OMDb data for rows that were scanned without it. Capped server
-       side per run, so this is a button you press again rather than one that
-       spends the whole daily API quota in one go. */
-    metadata : '/scan/metadata'
+    movies : '/scan',
+    audio  : '/scan/audio',
+    tv     : '/scan/TV',
+    ebooks : '/bookScanner'
 };
 
 const BASE = process.env.BASE_HOST;
@@ -82,7 +78,6 @@ export default function Admin() {
                         <Button variant="contained" onClick={() => runScan(API.audio)}>Find Audio</Button>
                         <Button variant="contained" onClick={() => runScan(API.tv)}>Find&nbsp;TV</Button>
                         <Button variant="contained" onClick={() => runScan(API.ebooks)}>Find&nbsp;eBooks</Button>
-                        <Button variant="contained" onClick={() => runScan(API.metadata)}>Fetch&nbsp;Metadata</Button>
                     </Stack>
                 </Paper>
 
@@ -106,8 +101,8 @@ export default function Admin() {
                             0 = off, 60 unless changed. Stored in this browser only, so
                             clearing site data or moving to another browser puts it back
                             to 60. Applies to every video. The sleep timer is not here -
-                            it is a toggle on the player itself, armed one episode at a
-                            time.
+                            it is a toggle on the player itself, armed while watching and
+                            never saved.
                         </Typography>
                     </Stack>
                 </Paper>

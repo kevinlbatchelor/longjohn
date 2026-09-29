@@ -11,6 +11,9 @@
 
 const BASE = process.env.BASE_HOST;
 const TV_ROOT = BASE + ':3000/api/v1/tv';
+// Cover search is provider plumbing, not a movie thing - it lives on the movie
+// router because that is where it was first needed, and shows use it as it is.
+const MOVIE_ROOT = BASE + ':3000/api/v1/movie';
 
 export const COVER_ROOT = BASE + ':3000/api/v1/cover';
 
@@ -120,6 +123,27 @@ export function deleteEpisode(id) {
 export function deleteShow(name) {
     return fetch(`${TV_ROOT}/show/${encodeURIComponent(name)}`, { method: 'DELETE' })
         .then(readJson);
+}
+
+/* Cover art for a show ---------------------------------------------------------
+ * A movie's cover is filed under its row id; a show has no row, so its cover is
+ * filed under the show's name - which is also the only handle the grid has for
+ * it. Hence a route of its own rather than the movie one.
+ */
+export function searchShowCovers(q) {
+    /* type=series narrows both providers. A show's name is very often a film's
+       as well, and unfiltered the film wins - searching "Fargo" for the series
+       came back with the 1996 poster first. */
+    return fetch(`${MOVIE_ROOT}/cover-search?q=${encodeURIComponent(q)}&type=series`)
+        .then(readJson);
+}
+
+export function setShowCover(name, url) {
+    return fetch(`${TV_ROOT}/show/${encodeURIComponent(name)}/cover`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+    }).then(readJson);
 }
 
 export function forgetShow(name) {

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Collapse, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { cssVars } from './styles.jsx';
 
-/* The OMDb blob, on the player page ---------------------------------------------
+/* The OMDb blob, on the player page and in the details modal ---------------------
  * The scanner has been writing this column since the beginning and nothing has
  * ever read it back, so it arrives here with two habits worth knowing about.
  *
@@ -51,7 +51,7 @@ const badgeBaseSx = {
 };
 
 // Built once, with the sx baked in - Emotion caches on object identity, and a
-// style object written inline would be re-serialised on every expand/collapse.
+// style object written inline would be re-serialised on every render.
 const SOURCES = {
     'Internet Movie Database': {
         label: '★',
@@ -81,9 +81,10 @@ const panelSx = {
     borderTop: '1px solid rgba(0,255,0,0.25)',
     textAlign: 'left'
 };
+// In the details modal the panel is the whole content, so no rule above it.
+const flushPanelSx = { textAlign: 'left' };
 const headlineSx = { color: cssVars.green, fontSize: 14, fontWeight: 700, letterSpacing: 0.5 };
 const badgeRowSx = { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1, mt: 1 };
-const detailsButtonSx = { ml: 'auto', fontSize: 12, py: 0.25, px: 1, minHeight: 0 };
 const plotSx = { color: cssVars.green, fontSize: 13, mt: 1.5, opacity: 0.9 };
 /* Labels in a fixed first column so the values line up down the page - a plain
    two-column grid does that without a wrapper element per row. */
@@ -130,9 +131,8 @@ function ratingsOf(imdb) {
     return fallback;
 }
 
-export default function MovieInfo({ id }) {
+export default function MovieInfo({ id, flush = false }) {
     const [ info, setInfo ] = useState(null);
-    const [ open, setOpen ] = useState(false);
 
     useEffect(() => {
         let live = true;
@@ -140,7 +140,6 @@ export default function MovieInfo({ id }) {
         // The player remounts per episode, but the id can also change under it -
         // clear first so the last movie's panel is never shown against this one.
         setInfo(null);
-        setOpen(false);
 
         fetch(`${INFO_ROOT}/${encodeURIComponent(id)}/info`)
             .then((r) => (r.ok ? r.json() : null))
@@ -180,47 +179,40 @@ export default function MovieInfo({ id }) {
     ].filter(([ , value ]) => value);
 
     const url = clean(imdb.imdburl);
-    const hasDetails = Boolean(plot) || details.length > 0;
 
     // Nothing but a bare headline is not worth a panel and a border.
     if (!headline && !ratings.length) return null;
 
     return (
-        <Box sx={panelSx}>
+        <Box sx={flush ? flushPanelSx : panelSx}>
             {headline && <Typography sx={headlineSx}>{headline}</Typography>}
 
-            <Box sx={badgeRowSx}>
-                {ratings.map((entry) => (
-                    <RatingBadge key={entry.source} source={entry.source} value={entry.value}/>
-                ))}
+            {ratings.length > 0 && (
+                <Box sx={badgeRowSx}>
+                    {ratings.map((entry) => (
+                        <RatingBadge key={entry.source} source={entry.source} value={entry.value}/>
+                    ))}
+                </Box>
+            )}
 
-                {hasDetails && (
-                    <Button size="small" sx={detailsButtonSx} onClick={() => setOpen((v) => !v)}>
-                        Details {open ? '▴' : '▾'}
-                    </Button>
-                )}
-            </Box>
+            {plot && <Typography sx={plotSx}>{plot}</Typography>}
 
-            <Collapse in={open} unmountOnExit>
-                {plot && <Typography sx={plotSx}>{plot}</Typography>}
+            {details.length > 0 && (
+                <Box sx={detailGridSx}>
+                    {details.map(([ label, value ]) => (
+                        <React.Fragment key={label}>
+                            <Typography sx={detailLabelSx}>{label}</Typography>
+                            <Typography sx={detailValueSx}>{value}</Typography>
+                        </React.Fragment>
+                    ))}
+                </Box>
+            )}
 
-                {details.length > 0 && (
-                    <Box sx={detailGridSx}>
-                        {details.map(([ label, value ]) => (
-                            <React.Fragment key={label}>
-                                <Typography sx={detailLabelSx}>{label}</Typography>
-                                <Typography sx={detailValueSx}>{value}</Typography>
-                            </React.Fragment>
-                        ))}
-                    </Box>
-                )}
-
-                {url && (
-                    <Typography component="a" href={url} target="_blank" rel="noreferrer" sx={linkSx}>
-                        View on IMDb ↗
-                    </Typography>
-                )}
-            </Collapse>
+            {url && (
+                <Typography component="a" href={url} target="_blank" rel="noreferrer" sx={linkSx}>
+                    View on IMDb ↗
+                </Typography>
+            )}
         </Box>
     );
 }

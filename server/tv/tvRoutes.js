@@ -5,8 +5,12 @@ const coverRoute = router.v1Path('cover');
 const _ = require('lodash');
 const streamers = require('../streaming/streamers');
 const moviePath = require('../movie/moviePath');
-const { removeMovie } = require('../movie/removeMovie');
+const { removeMovie, unlinkQuietly } = require('../movie/removeMovie');
 const { showNameFor, showFolderFor, episodeRowsFor, cleanUpShowIfEmpty } = require('./showCleanup');
+const config = require('../util/config');
+const dl = require('../util/downloadCoverArt');
+const path = require('path');
+const fs = require('fs');
 const { Op } = require('sequelize');
 // tv shows share a data model with movies for now so use there sequelize data model in movie.js
 
@@ -217,6 +221,57 @@ router.delete(tvRoute('show/:name'), async function (req, res) {
         console.error('LONG-JOHN ERROR:', e);
         res.status(500);
         res.json({ error: e });
+    }
+});
+
+/* Picking a show's cover by hand ------------------------------------------------
+ * The movie version of this is POST /movie/:id/cover, keyed by row id, and a
+ * show has no row to key on - its cover is filed under the show's name, because
+ * that is the only handle the grid has. Same shape otherwise: the client sends a
+ * poster URL it picked out of /movie/cover-search, and the server is what
+ * fetches it, so the cover folder stays the one place covers come from.
+ */
+router.post(tvRoute('show/:name/cover'), async function (req, res) {
+    try {
+        const showName = req.params.name;
+        const url = req.body && req.body.url;
+        if (!url) return res.status(400).json({ error: 'Missing url' });
+
+        // No rows, no show - otherwise a typo in the name quietly writes a cover
+        // into the folder that nothing will ever ask for or clean up.
+        const episodes = await episodeRowsFor(showName);
+        if (!episodes.length) return res.status(404).json({ error: 'Show not found' });
+
+        /* Fetched to one side and moved into place, rather than clearing the
+           old cover and hoping. downloadCoverArt reports a failed fetch by
+           resolving to nothing, so removing the old file first meant a dead
+           poster URL left the show with no cover at all - and still answered
+           ok. A show that already looks right cannot be made worse by picking
+           a cover that turns out not to load. */
+        const coverPath = path.join(config.cover, showName + '.jpg');
+        const incomingKey = showName + '.incoming';
+        const incomingPath = path.join(config.cover, incomingKey + '.jpg');
+
+        const written = await dl.downloadCoverArt(url, config.cover, incomingKey, false);
+        if (!written) {
+            await unlinkQuietly(incomingPath, 'half-written show cover');
+            return res.status(502).json({ error: 'Could not fetch that poster' });
+        }
+
+        try {
+            await fs.promises.rename(incomingPath, coverPath);
+        } catch (e) {
+            /* Windows refuses to rename over a file something else has open,
+               which here is a cover being streamed to another viewer at that
+               moment. Second go, with the old one out of the way. */
+            await unlinkQuietly(coverPath, 'old show cover');
+            await fs.promises.rename(incomingPath, coverPath);
+        }
+
+        res.json({ ok: true });
+    } catch (e) {
+        console.error('LONG-JOHN set-show-cover ERROR:', e);
+        res.status(500).json({ error: e.message });
     }
 });
 

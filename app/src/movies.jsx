@@ -7,7 +7,9 @@ import EditIcon from '@mui/icons-material/Edit';
 import EditOffIcon from '@mui/icons-material/EditOff';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ImageIcon from '@mui/icons-material/Image';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { cssVars } from './styles.jsx';
+import MovieInfo from './movieInfo.jsx';
 
 const BASE = process.env.BASE_HOST;
 const API_ROOT = BASE + ':3000/api/v1/movie';
@@ -38,6 +40,17 @@ const coverButtonSx = {
     color: cssVars.green,
     '&:hover': { backgroundColor: 'rgba(0,0,0,0.85)' }
 };
+// Over the cover, out of the way of the edit-mode buttons in the top corners.
+const infoButtonSx = {
+    position: 'absolute',
+    bottom: 4,
+    right: 4,
+    zIndex: 2,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    color: cssVars.green,
+    '&:hover': { backgroundColor: 'rgba(0,0,0,0.85)' }
+};
+const coverBoxSx = { position: 'relative', height: 260 };
 const cardFallbackSx = { height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' };
 const cardMediaSx = { height: 260 };
 const cardContentSx = { py: 1 };
@@ -48,12 +61,21 @@ const cardTitleSx = { cursor: 'pointer' };
    wrapping is all the Grid was buying. */
 const movieGridSx = { display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center' };
 
+/* The details modal: the cover down the left, the OMDb panel filling the rest,
+   stacking on a narrow screen. */
+const detailsBodySx = { display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'flex-start' };
+const detailsCoverSx = { width: 200, height: 300, objectFit: 'cover', borderRadius: 1, flexShrink: 0 };
+const detailsCoverFallbackSx = { ...detailsCoverSx, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,255,0,0.08)' };
+const detailsInfoSx = { flex: 1, minWidth: 240 };
+
 /* Memoised: the page holds a dozen pieces of dialog state, and without this
    every keystroke in the parental or cover-search field re-rendered the whole
    grid. Its handler props have to keep their identity for that to hold. */
-const MovieCard = React.memo(function MovieCard({ id, title, editMode, onDelete, onChangeCover, coverV }) {
+const coverUrlOf = (id, coverV) => `${COVER_ROOT}/${encodeURIComponent(id)}${coverV ? `?v=${coverV}` : ''}`;
+
+const MovieCard = React.memo(function MovieCard({ id, title, editMode, onDelete, onChangeCover, onDetails, coverV }) {
     const [imgError, setImgError] = useState(false);
-    const coverUrl = `${COVER_ROOT}/${encodeURIComponent(id)}${coverV ? `?v=${coverV}` : ''}`;
+    const coverUrl = coverUrlOf(id, coverV);
 
     useEffect(() => { setImgError(false); }, [coverV]);
 
@@ -79,19 +101,29 @@ const MovieCard = React.memo(function MovieCard({ id, title, editMode, onDelete,
                     </IconButton>
                 </>
             )}
-            {imgError ? (
-                <Box sx={cardFallbackSx}>
-                    <LocalMovies/>
-                </Box>
-            ) : (
-                <CardMedia
-                    component="img"
-                    image={coverUrl}
-                    alt={title}
-                    sx={cardMediaSx}
-                    onError={() => setImgError(true)}
-                />
-            )}
+            <Box sx={coverBoxSx}>
+                {imgError ? (
+                    <Box sx={cardFallbackSx}>
+                        <LocalMovies/>
+                    </Box>
+                ) : (
+                    <CardMedia
+                        component="img"
+                        image={coverUrl}
+                        alt={title}
+                        sx={cardMediaSx}
+                        onError={() => setImgError(true)}
+                    />
+                )}
+                <IconButton
+                    size="small"
+                    onClick={() => onDetails({ id, title })}
+                    title={`Details for ${title}`}
+                    sx={infoButtonSx}
+                >
+                    <InfoOutlinedIcon fontSize="small"/>
+                </IconButton>
+            </Box>
 
             <CardContent sx={cardContentSx}>
                 <Typography
@@ -133,6 +165,10 @@ export default function Movies() {
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState(null);
+
+    // Details modal: { id, title } of the movie being looked at, or null.
+    const [detailsTarget, setDetailsTarget] = useState(null);
+    const [detailsCoverError, setDetailsCoverError] = useState(false);
 
     // Cover-picker states
     const [coverTarget, setCoverTarget] = useState(null);
@@ -237,6 +273,12 @@ export default function Movies() {
         setCoverResults([]);
         setCoverError(null);
         setCoverSaving(null);
+    }, []);
+
+    // A state setter, so the memoised cards never see a new handler.
+    const openDetails = useCallback(({ id, title }) => {
+        setDetailsCoverError(false);
+        setDetailsTarget({ id, title });
     }, []);
 
     // Opening the picker searches for whatever it was opened on.
@@ -417,6 +459,35 @@ export default function Movies() {
                 </DialogActions>
             </Dialog>
 
+            {/* Details modal: the cover plus everything OMDb had on the title */}
+            <Dialog open={!!detailsTarget} onClose={() => setDetailsTarget(null)} maxWidth="md" fullWidth>
+                <DialogTitle>{detailsTarget?.title}</DialogTitle>
+                <DialogContent>
+                    {detailsTarget && (
+                        <Box sx={detailsBodySx}>
+                            {detailsCoverError ? (
+                                <Box sx={detailsCoverFallbackSx}><LocalMovies/></Box>
+                            ) : (
+                                <Box
+                                    component="img"
+                                    src={coverUrlOf(detailsTarget.id, coverVersions[detailsTarget.id])}
+                                    alt={detailsTarget.title}
+                                    sx={detailsCoverSx}
+                                    onError={() => setDetailsCoverError(true)}
+                                />
+                            )}
+                            <Box sx={detailsInfoSx}>
+                                <MovieInfo id={detailsTarget.id} flush/>
+                            </Box>
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button component="a" href={`#/play/${detailsTarget?.id}`}>Play ▶</Button>
+                    <Button onClick={() => setDetailsTarget(null)}>Close</Button>
+                </DialogActions>
+            </Dialog>
+
             {/* Cover picker dialog */}
             <Dialog
                 open={!!coverTarget}
@@ -538,6 +609,7 @@ export default function Movies() {
                         editMode={editMode}
                         onDelete={setDeleteTarget}
                         onChangeCover={openCoverPicker}
+                        onDetails={openDetails}
                         coverV={coverVersions[id]}
                     />
                 ))}

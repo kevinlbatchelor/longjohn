@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     Box, Grid, Card, CardMedia, CardContent, Typography,
-    CircularProgress, Alert, Button, IconButton,
+    CircularProgress, Alert, Button, IconButton, TextField,
     Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions
 } from '@mui/material';
 import LiveTvIcon from '@mui/icons-material/LiveTv';
@@ -9,9 +9,11 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import EditOffIcon from '@mui/icons-material/EditOff';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ImageIcon from '@mui/icons-material/Image';
+import { cssVars } from './styles.jsx';
 import {
     COVER_ROOT, deleteEpisode, deleteShow, episodeLabel, fetchShow, fetchShowSummaries,
-    forgetEpisode, forgetShow
+    forgetEpisode, forgetShow, searchShowCovers, setShowCover
 } from './showCache';
 
 /* Every sx object below is hoisted out of render. Emotion caches on object
@@ -37,7 +39,51 @@ const showDeleteButtonSx = {
     color: '#f44',
     '&:hover': { backgroundColor: 'rgba(0,0,0,0.85)' }
 };
+/* Opposite corner to the delete button, so the destructive one is never where
+   a thumb expects the harmless one. */
+const showCoverButtonSx = {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    zIndex: 2,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    color: cssVars.green,
+    '&:hover': { backgroundColor: 'rgba(0,0,0,0.85)' }
+};
 const showGridHeaderSx = { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', width: '100%', mb: 1 };
+
+/* Cover picker. Hoisted for the same reason as the card styles - the results
+   grid is up to sixty posters, each one re-serialising any literal written
+   inside the map. */
+const coverSearchRowSx = { display: 'flex', gap: 1, mb: 2 };
+const coverBusySx = { display: 'flex', justifyContent: 'center', py: 4 };
+const coverSpinnerSx = { color: cssVars.green };
+const coverResultMediaSx = { height: 220 };
+const coverResultContentSx = { py: 1 };
+const coverBadgeSx = {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    px: 0.75,
+    py: 0.1,
+    borderRadius: 0.5,
+    fontSize: 10,
+    fontFamily: '"Source Code Pro", monospace',
+    color: cssVars.green,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    zIndex: 1
+};
+const coverSavingOverlaySx = {
+    position: 'absolute',
+    inset: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)'
+};
+const coverCreditSx = { color: 'text.secondary', pl: 2 };
+const coverActionsSx = { justifyContent: 'space-between' };
+const coverAlertSx = { mb: 2 };
 const showFallbackSx = { height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' };
 const showMediaSx = { height: 260 };
 const showContentSx = { py: 1 };
@@ -66,6 +112,8 @@ const episodeDeleteCardSx = {
 const episodeDeleteLabelSx = { ...episodeLabelSx, color: '#f44' };
 const episodeDeleteIconSx = { color: '#f44', fontSize: 14, mr: 0.5 };
 const editButtonSx = { ml: 'auto' };
+// Pushed to the right-hand end of the header, with the edit toggle beside it.
+const heroCoverButtonSx = { ml: 'auto', color: cssVars.green };
 const deleteHintSx = { color: '#f44', fontSize: 12, mb: 1, textAlign: 'center' };
 /* A plain wrapping flex row. MUI's Grid builds a styled wrapper element per
    child, and a long-running show is several hundred children. */
@@ -86,10 +134,18 @@ const pageSx = { p: 2, width: '100%' };
 // per show, and the cards are a fixed width anyway.
 const showGridSx = { display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center' };
 
-const coverUrlFor = (showName) => `${COVER_ROOT}/${encodeURIComponent(showName)}`;
+/* The version is a cache buster. The cover lives at one URL per show and a new
+   one is written over the old file, so without it the browser keeps showing the
+   poster it has already cached. */
+const coverUrlFor = (showName, version) =>
+    `${COVER_ROOT}/${encodeURIComponent(showName)}${version ? `?v=${version}` : ''}`;
 
-const ShowCard = React.memo(function ShowCard({ show, editMode, onDelete }) {
+const ShowCard = React.memo(function ShowCard({ show, editMode, onDelete, onChangeCover, coverV }) {
     const [ imgError, setImgError ] = useState(false);
+
+    // A show that had no cover has one now - give the image another go rather
+    // than leaving the fallback icon sitting there until the page is reloaded.
+    useEffect(() => { setImgError(false); }, [coverV]);
 
     return (
         <Card component="a" href={`#/show/${encodeURIComponent(show.name)}`} sx={showCardSx}>
@@ -97,7 +153,18 @@ const ShowCard = React.memo(function ShowCard({ show, editMode, onDelete }) {
                 <IconButton
                     size="small"
                     /* The card is the link, so the button has to stop the click
-                       reaching it or deleting would navigate into the show. */
+                       reaching it or picking a cover would navigate into the
+                       show instead. */
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onChangeCover(show); }}
+                    title={`Change cover for ${show.name}`}
+                    sx={showCoverButtonSx}
+                >
+                    <ImageIcon fontSize="small"/>
+                </IconButton>
+            )}
+            {editMode && (
+                <IconButton
+                    size="small"
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(show); }}
                     title={`Delete ${show.name}`}
                     sx={showDeleteButtonSx}
@@ -112,7 +179,7 @@ const ShowCard = React.memo(function ShowCard({ show, editMode, onDelete }) {
             ) : (
                 <CardMedia
                     component="img"
-                    image={coverUrlFor(show.name)}
+                    image={coverUrlFor(show.name, coverV)}
                     alt={show.name}
                     sx={showMediaSx}
                     onError={() => setImgError(true)}
@@ -127,6 +194,144 @@ const ShowCard = React.memo(function ShowCard({ show, editMode, onDelete }) {
     );
 });
 
+/* The cover picker ---------------------------------------------------------------
+ * Mounted by whichever page wants it and unmounted when it closes, so the
+ * search, the results and the half-finished state go with it - there is nothing
+ * to reset on the way in. `show` being the thing that mounts it is also what
+ * makes the opening search fire exactly once.
+ */
+function CoverPicker({ show, onClose, onSaved }) {
+    const [ query, setQuery ] = useState(show.name);
+    const [ results, setResults ] = useState([]);
+    const [ provider, setProvider ] = useState(null);
+    const [ searching, setSearching ] = useState(false);
+    const [ error, setError ] = useState(null);
+    const [ saving, setSaving ] = useState(null); // the result being saved
+
+    const runSearch = (q) => {
+        const text = (q ?? query).trim();
+        if (!text) {
+            setResults([]);
+            return;
+        }
+        setSearching(true);
+        setError(null);
+
+        searchShowCovers(text)
+            .then((body) => {
+                setResults(body.results || []);
+                setProvider(body.provider || null);
+                // A provider that answered with a complaint rather than results.
+                if (body.message) setError(body.message);
+                setSearching(false);
+            })
+            .catch((err) => {
+                setError(err.message);
+                setSearching(false);
+            });
+    };
+
+    // The show's own name is the first thing worth trying, so it is tried
+    // without being asked for.
+    useEffect(() => { runSearch(show.name); }, [show.name]);
+
+    const pick = (result) => {
+        setSaving(result.id);
+        setError(null);
+
+        setShowCover(show.name, result.poster)
+            .then(() => {
+                onSaved(show.name);
+                setSaving(null);
+                onClose();
+            })
+            .catch((err) => {
+                setError(err.message);
+                setSaving(null);
+            });
+    };
+
+    const providerLabel = provider === 'both' ? 'TMDb + OMDb' : provider === 'tmdb' ? 'TMDb' : 'OMDb';
+
+    return (
+        <Dialog open onClose={() => !saving && onClose()} maxWidth="md" fullWidth>
+            <DialogTitle>Cover art – {show.name}</DialogTitle>
+            <DialogContent>
+                <Box sx={coverSearchRowSx}>
+                    <TextField
+                        autoFocus
+                        fullWidth
+                        variant="standard"
+                        label={`Search ${providerLabel} for a series`}
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        onKeyPress={(e) => { if (e.key === 'Enter') runSearch(); }}
+                    />
+                    <Button onClick={() => runSearch()} disabled={searching}>
+                        {searching ? '…' : 'Search'}
+                    </Button>
+                </Box>
+
+                {error && <Alert severity="error" sx={coverAlertSx}>{error}</Alert>}
+
+                {searching ? (
+                    <Box sx={coverBusySx}>
+                        <CircularProgress sx={coverSpinnerSx}/>
+                    </Box>
+                ) : (
+                    <Grid container spacing={2}>
+                        {results.map((r) => (
+                            <Grid item key={`${r.source || ''}-${r.type || ''}-${r.id}`} xs={6} sm={4} md={3}>
+                                <Card
+                                    onClick={() => !saving && pick(r)}
+                                    sx={{
+                                        cursor: saving ? 'wait' : 'pointer',
+                                        opacity: saving && saving !== r.id ? 0.4 : 1,
+                                        position: 'relative'
+                                    }}
+                                >
+                                    {r.source && <Box sx={coverBadgeSx}>{r.source.toUpperCase()}</Box>}
+                                    <CardMedia
+                                        component="img"
+                                        image={r.poster}
+                                        alt={r.title}
+                                        sx={coverResultMediaSx}
+                                    />
+                                    {saving === r.id && (
+                                        <Box sx={coverSavingOverlaySx}>
+                                            <CircularProgress size={28} sx={coverSpinnerSx}/>
+                                        </Box>
+                                    )}
+                                    <CardContent sx={coverResultContentSx}>
+                                        <Typography variant="caption" noWrap title={`${r.title} (${r.year})`}>
+                                            {r.title} ({r.year})
+                                        </Typography>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                        ))}
+                        {!searching && results.length === 0 && query && (
+                            <Grid item xs={12}>
+                                <Typography variant="caption" sx={coverCreditSx}>
+                                    No series found – try the name as the provider spells it.
+                                </Typography>
+                            </Grid>
+                        )}
+                    </Grid>
+                )}
+            </DialogContent>
+            <DialogActions sx={coverActionsSx}>
+                {(provider === 'tmdb' || provider === 'both') ? (
+                    <Typography variant="caption" sx={coverCreditSx}>
+                        This product uses the TMDb API but is not endorsed or certified by TMDb.
+                    </Typography>
+                ) : <span/>}
+                <Button disabled={!!saving} onClick={onClose}>Close</Button>
+            </DialogActions>
+        </Dialog>
+    );
+}
+
 export function ShowEpisodes({ name }) {
     const [ show, setShow ] = useState(null);
     const [ loading, setLoading ] = useState(true);
@@ -139,6 +344,11 @@ export function ShowEpisodes({ name }) {
     const [ deleteTarget, setDeleteTarget ] = useState(null);
     const [ deleting, setDeleting ] = useState(false);
     const [ deleteError, setDeleteError ] = useState(null);
+
+    // The cover is as easy to get wrong from here as from the grid, and this is
+    // the page you are on when you notice it is wrong.
+    const [ pickingCover, setPickingCover ] = useState(false);
+    const [ coverV, setCoverV ] = useState(null);
 
     /* Straight to the server rather than through the cache, so an episode added
        since the tab opened still turns up - it is one show's worth of rows now,
@@ -208,10 +418,17 @@ export function ShowEpisodes({ name }) {
                 </Typography>
                 <IconButton
                     size="small"
+                    onClick={() => setPickingCover(true)}
+                    title={`Change cover for ${show.name}`}
+                    sx={heroCoverButtonSx}
+                >
+                    <ImageIcon fontSize="small"/>
+                </IconButton>
+                <IconButton
+                    size="small"
                     onClick={() => setEditMode((v) => !v)}
                     color={editMode ? 'error' : 'default'}
                     title={editMode ? 'Exit edit mode' : 'Edit (delete episodes)'}
-                    sx={editButtonSx}
                 >
                     {editMode ? <EditOffIcon fontSize="small"/> : <EditIcon fontSize="small"/>}
                 </IconButton>
@@ -225,7 +442,7 @@ export function ShowEpisodes({ name }) {
                 ) : (
                     <Box
                         component="img"
-                        src={coverUrlFor(show.name)}
+                        src={coverUrlFor(show.name, coverV)}
                         alt={show.name}
                         onError={() => setImgError(true)}
                         sx={heroImgSx}
@@ -270,6 +487,19 @@ export function ShowEpisodes({ name }) {
                 )))}
             </Box>
 
+            {pickingCover && (
+                <CoverPicker
+                    show={show}
+                    onClose={() => setPickingCover(false)}
+                    onSaved={() => {
+                        // New file, same URL - and the fallback icon gets
+                        // another go at drawing a cover that now exists.
+                        setCoverV(Date.now());
+                        setImgError(false);
+                    }}
+                />
+            )}
+
             <Dialog open={!!deleteTarget} onClose={() => !deleting && setDeleteTarget(null)}>
                 <DialogTitle>Delete episode?</DialogTitle>
                 <DialogContent>
@@ -302,6 +532,11 @@ export default function TV() {
     const [ deleting, setDeleting ] = useState(false);
     const [ deleteError, setDeleteError ] = useState(null);
 
+    // Which show's cover is being picked, and the bust values that make the
+    // cards re-fetch a cover that has just been replaced at the same URL.
+    const [ coverTarget, setCoverTarget ] = useState(null);
+    const [ coverVersions, setCoverVersions ] = useState({}); // show name -> bust value
+
     /* Summaries only - a name per show. The grid never draws an episode, so
        pulling every episode of every show down here was the single biggest thing
        the TV pages asked a stick to download and parse. */
@@ -321,6 +556,15 @@ export default function TV() {
             });
 
         return () => { live = false; };
+    }, []);
+
+    /* Stable, so a re-render of the grid does not re-render every memoised
+       card along with it. */
+    const openCoverPicker = useCallback((show) => setCoverTarget(show), []);
+
+    const handleCoverSaved = useCallback((name) => {
+        // Same URL, new file - the card needs a reason to fetch it again.
+        setCoverVersions((v) => ({ ...v, [name]: Date.now() }));
     }, []);
 
     const handleConfirmDelete = () => {
@@ -367,9 +611,19 @@ export default function TV() {
                         show={show}
                         editMode={editMode}
                         onDelete={setDeleteTarget}
+                        onChangeCover={openCoverPicker}
+                        coverV={coverVersions[show.name]}
                     />
                 ))}
             </Box>
+
+            {coverTarget && (
+                <CoverPicker
+                    show={coverTarget}
+                    onClose={() => setCoverTarget(null)}
+                    onSaved={handleCoverSaved}
+                />
+            )}
 
             <Dialog open={!!deleteTarget} onClose={() => !deleting && setDeleteTarget(null)}>
                 <DialogTitle>Delete show?</DialogTitle>
