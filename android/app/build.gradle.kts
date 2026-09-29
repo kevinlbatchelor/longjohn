@@ -13,8 +13,8 @@ android {
         // first release with adaptive icons, which is all the icon this app has.
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
     }
 
     /* Signed with a key that lives in the repo. This app is sideloaded onto

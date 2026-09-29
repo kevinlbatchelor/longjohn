@@ -3,8 +3,14 @@ package com.longjohn.tv
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
+import android.view.InputDevice
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
@@ -14,6 +20,7 @@ import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
@@ -26,6 +33,10 @@ import androidx.core.view.WindowInsetsControllerCompat
  * history, the video player's own fullscreen works because the fullscreen
  * callback is handled here, and a page that will not load offers the way to
  * Settings rather than a blank screen.
+ *
+ * The D-pad drives a pointer rather than jumping focus between links: the
+ * arrows move it, OK clicks where it is, pushing past an edge scrolls the
+ * page, and a long press on OK switches to plain focus navigation and back.
  */
 class MainActivity : AppCompatActivity() {
 
@@ -33,6 +44,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fullscreenHolder: FrameLayout
     private lateinit var errorPanel: View
     private lateinit var errorText: TextView
+    private lateinit var cursor: CursorView
 
     private var customView: View? = null
     private var customViewCallback: WebChromeClient.CustomViewCallback? = null
@@ -40,6 +52,10 @@ class MainActivity : AppCompatActivity() {
     /** The address the page was loaded from, so a change in Settings reloads. */
     private var loadedFrom = ""
     private var askedForAddress = false
+
+    private var pointerMode = true
+    private val handler = Handler(Looper.getMainLooper())
+    private val hidePointer = Runnable { cursor.shown = false }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +65,7 @@ class MainActivity : AppCompatActivity() {
         fullscreenHolder = findViewById(R.id.fullscreenHolder)
         errorPanel = findViewById(R.id.errorPanel)
         errorText = findViewById(R.id.errorText)
+        cursor = findViewById(R.id.cursor)
         findViewById<Button>(R.id.settingsButton).setOnClickListener { openSettings() }
         findViewById<Button>(R.id.retryButton).setOnClickListener { load(force = true) }
 
@@ -82,18 +99,99 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        handler.removeCallbacksAndMessages(null)
         webView.destroy()
         super.onDestroy()
     }
 
-    /** MENU on the remote opens Settings; there is no on-screen chrome to reach it from. */
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+    // The remote ---------------------------------------------------------------
+
+    private fun pointerActive() = pointerMode && errorPanel.visibility != View.VISIBLE
+
+    /** MENU opens Settings; the arrows steer the pointer; OK is tracked for tap-or-hold. */
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (keyCode == KeyEvent.KEYCODE_MENU) {
             openSettings()
             return true
         }
-        return super.onKeyDown(keyCode, event)
+        if (!pointerActive()) return super.onKeyDown(keyCode, event)
+
+        val step = stepFor(event.repeatCount)
+        when (keyCode) {
+            KeyEvent.KEYCODE_DPAD_LEFT -> nudge(-step, 0f)
+            KeyEvent.KEYCODE_DPAD_RIGHT -> nudge(step, 0f)
+            KeyEvent.KEYCODE_DPAD_UP -> nudge(0f, -step)
+            KeyEvent.KEYCODE_DPAD_DOWN -> nudge(0f, step)
+            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
+                if (event.repeatCount == 0) event.startTracking()
+            }
+            else -> return super.onKeyDown(keyCode, event)
+        }
+        return true
     }
+
+    /** A short OK is a click at the pointer; a long one was handled below and is cancelled here. */
+    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
+        if (pointerActive() && (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER)) {
+            if (!event.isCanceled) {
+                showPointer()
+                tap(cursor.cx, cursor.cy)
+            }
+            return true
+        }
+        return super.onKeyUp(keyCode, event)
+    }
+
+    /** Holding OK switches between the pointer and plain focus navigation. */
+    override fun onKeyLongPress(keyCode: Int, event: KeyEvent): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
+            pointerMode = !pointerMode
+            if (pointerMode) showPointer() else cursor.shown = false
+            Toast.makeText(this, if (pointerMode) R.string.pointer_on else R.string.pointer_off, Toast.LENGTH_SHORT).show()
+            return true
+        }
+        return super.onKeyLongPress(keyCode, event)
+    }
+
+    /** Faster the longer an arrow is held: a tap is precise, a hold crosses the screen. */
+    private fun stepFor(repeatCount: Int): Float {
+        val density = resources.displayMetrics.density
+        return 12f * density * minOf(5, 1 + repeatCount / 3)
+    }
+
+    /** Moves the pointer; at an edge, scrolls the page in that direction instead. */
+    private fun nudge(dx: Float, dy: Float) {
+        showPointer()
+        if (!cursor.moveBy(dx, dy) && customView == null) {
+            webView.scrollBy(dx.toInt(), dy.toInt())
+        }
+    }
+
+    private fun showPointer() {
+        cursor.shown = true
+        handler.removeCallbacks(hidePointer)
+        handler.postDelayed(hidePointer, 4000)
+    }
+
+    /**
+     * A finger-tap at a point, delivered to the whole content view so it lands
+     * on whatever is there - the page, or the fullscreen video. The pointer
+     * layer is not clickable, so the event passes through it.
+     */
+    private fun tap(x: Float, y: Float) {
+        val root = findViewById<ViewGroup>(android.R.id.content)
+        val t = SystemClock.uptimeMillis()
+        val down = MotionEvent.obtain(t, t, MotionEvent.ACTION_DOWN, x, y, 0)
+        val up = MotionEvent.obtain(t, t + 60, MotionEvent.ACTION_UP, x, y, 0)
+        down.source = InputDevice.SOURCE_TOUCHSCREEN
+        up.source = InputDevice.SOURCE_TOUCHSCREEN
+        root.dispatchTouchEvent(down)
+        root.dispatchTouchEvent(up)
+        down.recycle()
+        up.recycle()
+    }
+
+    // The page -----------------------------------------------------------------
 
     /**
      * Loads the server's page. With no address saved yet, Settings is opened
@@ -127,7 +225,7 @@ class MainActivity : AppCompatActivity() {
             mediaPlaybackRequiresUserGesture = false
             loadWithOverviewMode = true
             useWideViewPort = true
-            userAgentString = "$userAgentString LongJohnTV/1.0"
+            userAgentString = "$userAgentString LongJohnTV/1.1"
         }
         view.setBackgroundColor(Color.BLACK)
 
@@ -182,6 +280,7 @@ class MainActivity : AppCompatActivity() {
         errorText.text = getString(R.string.could_not_reach, Prefs.serverUrl(this), message)
         webView.visibility = View.GONE
         errorPanel.visibility = View.VISIBLE
+        cursor.shown = false
         findViewById<Button>(R.id.retryButton).requestFocus()
     }
 

@@ -4,10 +4,12 @@
     android:layout_height="match_parent"
     android:background="@color/black">
 
+    <!-- The top inset keeps the web app's menu clear of the screen's bezel. -->
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:paddingTop="20dp" />
 
     <!-- Where the player's fullscreen video is shown; hidden until then. -->
     <FrameLayout
@@ -55,4 +57,10 @@
                 android:text="@string/settings" />
         </LinearLayout>
     </LinearLayout>
+
+    <!-- The D-pad pointer, drawn over everything; it takes no touches itself. -->
+    <com.longjohn.tv.CursorView
+        android:id="@+id/cursor"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 </FrameLayout>

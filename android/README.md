@@ -41,12 +41,21 @@ every build is signed with the same key.
 
 ## Using it
 
-- **Back** on the remote goes back a page, and exits the app from the front page.
-- **Menu** on the remote opens Settings to change the address. So does the
-  Settings button on the "could not reach" screen if the server is down.
+- It opens straight into LongJohn at `192.168.1.12`. To point it elsewhere,
+  press **Menu** on the remote for Settings; the Settings button on the
+  "could not reach" screen does the same when the server is down.
+- **The arrows move a pointer** and **OK clicks** where it is. Hold an arrow
+  to move faster; push past an edge and the page scrolls. The pointer fades
+  after a few seconds and comes back on the next press.
+- **Hold OK** to switch the pointer off and steer by focus instead, the way
+  the stock TV browsers do. Hold again to switch it back.
+- **Back** goes back a page, and exits the app from the front page.
 - The player's fullscreen button gives real fullscreen here, which most TV
   browser apps cannot do.
-- Navigation with the D-pad moves between links and buttons on the page.
+- The page sits 20dp below the top of the screen so the menu clears the bezel;
+  the number is `paddingTop` in `res/layout/activity_main.xml`.
+- The launcher icon and banner are the same green play mark the web app now
+  uses as its favicon (`app/public/favicon.svg`).
 
 ## Notes for whoever changes it
 
