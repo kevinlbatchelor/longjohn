@@ -26,8 +26,9 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - uses: android-actions/setup-android@v3
-
+      # No SDK install step: GitHub's Ubuntu runner ships with the Android
+      # SDK at $ANDROID_HOME, licences accepted, and Gradle fetches the
+      # platform and build tools it needs from there.
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
