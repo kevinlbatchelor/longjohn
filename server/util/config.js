@@ -1,5 +1,6 @@
 // const moviesPath = ['/media/pi/LongJohn/Movies'];
 // const audioBookPath = ['/media/pi/LongJohn/Audio Books'];
+// const eBookPath = ['/media/pi/LongJohn/eBooks'];
 // const tvFolderName = 'TV';
 // const TV = ['/media/pi/LongJohn/'+tvFolderName];
 // const cover = '/media/pi/LongJohn/Covers';
@@ -8,7 +9,8 @@
 const tvFolderName = 'TV';
 const moviesPath = ['C:\\Users\\kevin\\Documents\\Movies'];
 const audioBookPath = ['C:\\Users\\kevin\\Documents\\AudioBooks'];
-const TV = ['C:\\Users\\kevin\\Documents\\' + tvFolderName];
+const eBookPath = ['C:\\Users\\kevin\\Documents\\eBooks'];   // Kindle files: .mobi, .azw, .azw3, .prc
+const TV =['C:\\Users\\kevin\\Documents\\' + tvFolderName];
 const cover = 'C:\\Users\\kevin\\Documents\\Cover';
 
 const config = {
@@ -29,6 +31,7 @@ const config = {
     movies: moviesPath,
     TV: TV,
     cover: cover,
-    audioBooks: audioBookPath
+    audioBooks: audioBookPath,
+    eBooks: eBookPath
 };
 module.exports = config;
