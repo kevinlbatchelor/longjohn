@@ -9,7 +9,7 @@ You never need Android Studio. GitHub builds the APK.
 
 ## Getting an APK
 
-Tag the repo and push the tag. The `Android app` workflow builds a signed APK
+Tag the repo and push the tag. The `Build Android APK` workflow builds a signed APK
 and attaches it to a GitHub release named after the tag:
 
 ```
