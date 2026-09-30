@@ -38,46 +38,49 @@ does not exist until the run has finished; before that it is a 404.
 For a test build with no release, open the workflow on the Actions tab and
 press "Run workflow".
 
-### 2. Park it on the Pi
+### 2. Install it on the TV with adb (the reliable way)
 
-Typing a GitHub URL with a TV remote is miserable, and LongJohn already
-serves its `public` folder, so give the APK a short address on the home
-network. On the Pi, in PuTTY:
+One-time setup on the stick: Settings, System, About, tap "Android TV OS
+build" seven times, then Settings, System, Developer options, turn on
+Network debugging. On the PC, get Google's platform tools (a small zip from
+https://developer.android.com/tools/releases/platform-tools) and unzip it
+anywhere.
+
+Then, from wherever `adb` is, with the APK downloaded from the release:
 
 ```
-cd /home/pi/Documents/dev/longjohn
-mkdir -p public
-curl -L -o public/LongJohn-2.apk https://github.com/kevinlbatchelor/longjohn/releases/download/v2/LongJohn-2.apk
+adb connect 192.168.1.5:5555
+adb install -r LongJohn-3.apk
 ```
 
-No restart needed. Check it from any browser on the network:
-`http://192.168.1.12:3000/LongJohn-2.apk` should download the file.
+The first connect shows an "Allow USB debugging?" dialog on the TV: tick
+"Always allow from this computer" and OK. After that it never asks again,
+and every later release is those two lines. `-r` installs over the old
+version. If an install fails, adb prints the real reason, which the TV's
+own installer never does.
 
-### 3. Install it on the TV
+### 3. Or install it with Downloader (worked once, then stopped)
 
-Sideloading with the free **Downloader** app, which is the standard tool for
-this on Google TV and the onn stick. All done with the remote.
+The Downloader app on the stick can fetch the APK and install it, and it is
+how the first version went on. But it later kept delivering broken files,
+every one of which the stick reported as "problem parsing the package", and
+the same files installed fine with adb. If adb is not an option:
 
-1. Open the Play Store on the TV and install "Downloader by AFTVnews".
-2. Allow it to install apps: Settings, Privacy, Security & restrictions,
-   Unknown sources, and switch on Downloader. On some builds the path is
-   Settings, Apps, Security & restrictions.
-3. Open Downloader and type the short address into its box:
+1. On the Pi, park the APK where LongJohn already serves files, so the
+   address is short enough to type with a remote:
 
    ```
-   192.168.1.12:3000/LongJohn-2.apk
+   cd /home/pi/Documents/dev/longjohn
+   curl -L -o public/LongJohn-3.apk https://github.com/kevinlbatchelor/longjohn/releases/download/v3/LongJohn-3.apk
+   ls -l public/LongJohn-3.apk
    ```
 
-4. It downloads in a second or two and shows the install screen. Choose
-   Install, then Open.
-
-LongJohn is now in the TV's app row with a green play mark, and Downloader
-can stay for the next version.
-
-Without the Pi step, Downloader can fetch from GitHub directly; the address
-is the release link, `github.com/kevinlbatchelor/longjohn/releases/download/v2/LongJohn-2.apk`.
-Same result, far more typing. A USB stick with the file and the TV's file
-manager works too.
+   The size must match the release. A few bytes means the release was not
+   finished when the curl ran; run it again.
+2. On the stick, install "Downloader by AFTVnews" from the Play Store and
+   allow it under Settings, Privacy, Security & restrictions, Unknown sources.
+3. In Downloader, delete any old LongJohn files from its Files tab first,
+   then enter `192.168.1.12:3000/LongJohn-3.apk` and install.
 
 ### 4. Open it
 
@@ -86,8 +89,9 @@ server lives somewhere else, press **Menu** on the remote for Settings.
 
 ### Updating to a new version
 
-Change the number in `package.json`, `npm run release`, then stages 2 and 3
-with the new number. The new APK installs over the old
+Change the number in `package.json`, `npm run release`, download the APK
+from the release, `adb install -r` it. The new version installs over the old
+one, keeping the address, because every build is signed with the same key. The new APK installs over the old
 one, keeping the address, because every build is signed with the same key.
 No uninstall.
 
