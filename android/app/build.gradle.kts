@@ -14,7 +14,8 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = 3
-        versionName = "1.2"
+        // A master build carries the commit it came from: "1.2-6466521".
+        versionName = "1.2" + (project.findProperty("versionSuffix") ?: "")
     }
 
     /* Signed with a key that lives in the repo. This app is sideloaded onto

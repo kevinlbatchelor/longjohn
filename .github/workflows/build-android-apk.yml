@@ -1,14 +1,23 @@
-# Builds the Android/Google TV app and attaches the APK to a GitHub release.
+# Builds the Android/Google TV app and publishes the APK.
 #
-# Nothing to install locally: push a tag that starts with android-v and this
-# does the rest. Or run it by hand from the Actions tab and download the APK
-# from the run's artifacts.
+# Two ways in, nothing to install locally either way:
 #
-#   git tag android-v1.0 && git push origin android-v1.0
+#   A push to master that touches the app rebuilds it and updates the rolling
+#   "android-latest" pre-release, so the newest build always lives at
+#     https://github.com/kevinlbatchelor/longjohn/releases/download/android-latest/LongJohn-latest.apk
+#
+#   A tag starting with android-v makes a numbered release for keeps:
+#     git tag android-v1.3 && git push origin android-v1.3
+#
+# The Actions tab also has a "Run workflow" button for a one-off build.
 name: Build Android APK
 
 on:
   push:
+    branches: [master]
+    paths:
+      - 'android/**'
+      - '.github/workflows/build-android-apk.yml'
     tags: ['android-v*']
   workflow_dispatch:
 
@@ -33,14 +42,24 @@ jobs:
         with:
           gradle-version: '8.9'
 
+      # A tag is a numbered release; anything else is the rolling latest,
+      # and its version name carries the commit so Settings can say which.
+      - name: Decide the version
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            echo "VERSION=${GITHUB_REF_NAME#android-v}" >> "$GITHUB_ENV"
+            echo "SUFFIX=" >> "$GITHUB_ENV"
+          else
+            echo "VERSION=latest" >> "$GITHUB_ENV"
+            echo "SUFFIX=-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+          fi
+
       - name: Build release APK
         working-directory: android
-        run: gradle assembleRelease --no-daemon
+        run: gradle assembleRelease --no-daemon -PversionSuffix="$SUFFIX"
 
-      - name: Name the APK after the tag
+      - name: Name the APK
         run: |
-          VERSION="${GITHUB_REF_NAME#android-v}"
-          [ "$GITHUB_REF_TYPE" = "tag" ] || VERSION="dev-${GITHUB_SHA::7}"
           cp android/app/build/outputs/apk/release/app-release.apk "LongJohn-${VERSION}.apk"
           echo "APK=LongJohn-${VERSION}.apk" >> "$GITHUB_ENV"
 
@@ -49,10 +68,30 @@ jobs:
           name: LongJohn-apk
           path: ${{ env.APK }}
 
-      - name: Attach to the release
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Numbered release (tags)
+        if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ env.APK }}
           body: |
             LongJohn for Google TV and Android. Sideload the APK; see android/README.md.
+
+      # The rolling release: the android-latest tag is moved to this commit
+      # and the one asset replaced, so the download address never changes.
+      - name: Move the android-latest tag
+        if: github.ref_type == 'branch'
+        run: |
+          git tag -f android-latest
+          git push -f origin android-latest
+
+      - name: Rolling release (master)
+        if: github.ref_type == 'branch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-latest
+          name: Latest build
+          prerelease: true
+          files: ${{ env.APK }}
+          body: |
+            The newest build from master, replaced on every push that touches the app.
+            Installed version shows as 1.x-<commit> in Settings. Numbered releases are the ones to keep.

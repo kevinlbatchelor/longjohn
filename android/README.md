@@ -13,23 +13,35 @@ Four stages: build it on GitHub, park the APK on the Pi, fetch it on the TV,
 open it. The first three take about five minutes; only the TV stage is
 repeated when a new version comes out, and it is shorter then.
 
-### 1. Build it: tag and push
+### 1. Build it: push, or tag
 
-Bump the version first, in `app/build.gradle.kts`: `versionCode` up by one,
-`versionName` to the number you want. Commit, then tag and push the tag.
-The tag must start with `android-v`; that is what triggers the build.
+Two kinds of build, both by GitHub's `Build Android APK` workflow.
+
+**Every push to master that touches `android/`** rebuilds the app and
+updates a rolling pre-release called `android-latest`. Its APK always lives
+at the same address, so this is the everyday way to get a build onto the TV:
 
 ```
-git tag android-v1.1
-git push origin android-v1.1
+https://github.com/kevinlbatchelor/longjohn/releases/download/android-latest/LongJohn-latest.apk
 ```
 
-GitHub's `Build Android APK` workflow compiles, signs and publishes it. To
-watch it: the repo's **Actions** tab, the run named after the tag, green
-check when done. Three to five minutes. When it is green, the APK is on the
-**Releases** page under the tag, as an asset named `LongJohn-1.1.apk`. The
-run page also has an "Artifacts" section, but that download comes wrapped in
-a zip, so use the release asset.
+The version inside shows as `1.2-6466521`, the number plus the commit, so
+Settings on the TV tells you exactly which build is installed.
+
+**A tag starting with `android-v`** makes a numbered release for keeps. Bump
+the version first, in `app/build.gradle.kts`: `versionCode` up by one,
+`versionName` to the number. Commit, then:
+
+```
+git tag android-v1.3
+git push origin android-v1.3
+```
+
+Either way, to watch it: the repo's **Actions** tab, green check when done,
+three to five minutes. The APK is on the **Releases** page, under the tag
+for a numbered build or under "Latest build" for the rolling one. The run
+page also has an "Artifacts" section, but that download comes wrapped in a
+zip, so use the release asset.
 
 If the tag was pushed in the same `git push` that first added the workflow
 file, GitHub may not start a run. Delete the tag and push it again:
