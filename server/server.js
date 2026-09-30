@@ -13,7 +13,10 @@ app.use(cors({
 
 app.use(logger('dev'));
 app.use(express.json());
-app.use(express.static('public'));
+// Pinned to the repo rather than the working directory: under pm2 or a
+// cron @reboot the process can start from anywhere, and APKs and the like
+// parked in public/ must still be found.
+app.use(express.static(require('path').join(__dirname, '..', 'public')));
 app.use('/', require('./util/status'));
 app.use('/', require('./movie/movieRoutes'));
 app.use('/', require('./tv/tvRoutes.js'));
