@@ -13,25 +13,25 @@ Four stages: build it on GitHub, park the APK on the Pi, fetch it on the TV,
 open it. The first three take about five minutes; only the TV stage is
 repeated when a new version comes out, and it is shorter then.
 
-### 1. Build it: `npm run release`
+### 1. Build it: set the number, `npm run release`
 
-One command at the repo root, with a clean git tree:
+Releases are plain numbers: 2, 3, 4. Open `package.json` at the repo root,
+change `"version"` to the next number, then:
 
 ```
-npm run release          # 1.3.0 -> 1.3.1
-npm run release:minor    # 1.3.0 -> 1.4.0
+npm run release
 ```
 
 It rebuilds the frontend first, so a release that does not compile is never
-tagged, then bumps the version in `package.json`, commits, tags `v1.3.1`
-and pushes the commit and the tag. That tag is what starts GitHub's
-`Build Android APK` workflow. The app reads its version from the same
-`package.json`, so the tag, the APK's name and the version shown in the
-app's Settings screen are all the same number.
+tagged, then commits the version change, tags `v2` and pushes the commit and
+the tag. That tag is what starts GitHub's `Build Android APK` workflow. The
+app reads the same number from `package.json`, so the tag, the APK's name
+and the version shown in the app's Settings screen all say `2`. If you
+forget to change the number, the script stops and says so.
 
 To watch it: the repo's **Actions** tab, green check when done, three to
 five minutes. The APK is then on the **Releases** page under the tag, as
-`LongJohn-1.3.1.apk`. The run page also has an "Artifacts" section, but that
+`LongJohn-2.apk`. The run page also has an "Artifacts" section, but that
 download comes wrapped in a zip, so use the release asset. A release link
 does not exist until the run has finished; before that it is a 404.
 
@@ -47,11 +47,11 @@ network. On the Pi, in PuTTY:
 ```
 cd /home/pi/Documents/dev/longjohn
 mkdir -p public
-curl -L -o public/LongJohn-1.3.1.apk https://github.com/kevinlbatchelor/longjohn/releases/download/v1.3.1/LongJohn-1.3.1.apk
+curl -L -o public/LongJohn-2.apk https://github.com/kevinlbatchelor/longjohn/releases/download/v2/LongJohn-2.apk
 ```
 
 No restart needed. Check it from any browser on the network:
-`http://192.168.1.12:3000/LongJohn-1.3.1.apk` should download the file.
+`http://192.168.1.12:3000/LongJohn-2.apk` should download the file.
 
 ### 3. Install it on the TV
 
@@ -65,7 +65,7 @@ this on Google TV and the onn stick. All done with the remote.
 3. Open Downloader and type the short address into its box:
 
    ```
-   192.168.1.12:3000/LongJohn-1.3.1.apk
+   192.168.1.12:3000/LongJohn-2.apk
    ```
 
 4. It downloads in a second or two and shows the install screen. Choose
@@ -75,7 +75,7 @@ LongJohn is now in the TV's app row with a green play mark, and Downloader
 can stay for the next version.
 
 Without the Pi step, Downloader can fetch from GitHub directly; the address
-is the release link, `github.com/kevinlbatchelor/longjohn/releases/download/v1.3.1/LongJohn-1.3.1.apk`.
+is the release link, `github.com/kevinlbatchelor/longjohn/releases/download/v2/LongJohn-2.apk`.
 Same result, far more typing. A USB stick with the file and the TV's file
 manager works too.
 
@@ -86,7 +86,8 @@ server lives somewhere else, press **Menu** on the remote for Settings.
 
 ### Updating to a new version
 
-`npm run release`, then stages 2 and 3 with the new number. The new APK installs over the old
+Change the number in `package.json`, `npm run release`, then stages 2 and 3
+with the new number. The new APK installs over the old
 one, keeping the address, because every build is signed with the same key.
 No uninstall.
 
@@ -120,5 +121,5 @@ No uninstall.
 - The server is plain http on the home network, so the manifest allows
   cleartext traffic.
 - The version is not set here. `app/build.gradle.kts` reads it from the
-  root `package.json`, and `npm run release` at the repo root is what bumps
-  it, tags it and pushes.
+  root `package.json`; you set it there and `npm run release` tags and
+  pushes.

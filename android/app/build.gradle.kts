@@ -18,8 +18,9 @@ android {
            code is the number packed so 1.3.1 is 10301 - always climbing, which
            is what an update over an older install needs. */
         val version = (groovy.json.JsonSlurper().parse(rootProject.file("../package.json")) as Map<*, *>)["version"] as String
-        val (major, minor, patch) = version.split(".").map { it.toInt() }
-        versionCode = major * 10000 + minor * 100 + patch
+        // "2" or "2.1" is read as 2.0.0 or 2.1.0 rather than failing the build.
+        val parts = (version.split(".").map { it.toIntOrNull() ?: 0 } + listOf(0, 0, 0)).take(3)
+        versionCode = parts[0] * 10000 + parts[1] * 100 + parts[2]
         versionName = version
     }
 

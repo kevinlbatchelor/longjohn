@@ -6,10 +6,7 @@
     "start": "pm2 start ./server/server.js --name longjohn",
     "updateDB": "node ./server/updateDatabase.js",
     "client": "node ./app/client.js",
-    "release": "npm version patch",
-    "release:minor": "npm version minor",
-    "preversion": "npm --prefix app run build",
-    "postversion": "git push origin master --follow-tags"
+    "release": "node release.js"
   },
   "dependencies": {
     "archiver": "7.0.1",

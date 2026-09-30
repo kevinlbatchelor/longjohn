@@ -461,9 +461,10 @@ This starts a static file server on port 80 serving the React app from `app/publ
 
 `android/` holds a small app that opens LongJohn full screen on a Google TV
 or onn stick, with the remote driving a pointer and the player's fullscreen
-button working properly. You never build it yourself: `npm run release`
-at the repo root rebuilds the frontend, bumps the version, tags and pushes,
-and GitHub builds the APK and puts it on the Releases page. Then park the
+button working properly. You never build it yourself: set the version
+number in `package.json`, run `npm run release` at the repo root, and it
+rebuilds the frontend, tags and pushes, and GitHub builds the APK and puts
+it on the Releases page. Then park the
 APK in the Pi's `public` folder and fetch it on the TV with the Downloader
 app. The full walkthrough, step by step, is in
 [android/README.md](android/README.md).
