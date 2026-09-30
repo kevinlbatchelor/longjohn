@@ -48,4 +48,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/save" />
+
+    <TextView
+        android:id="@+id/versionText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/dimGreen"
+        android:textSize="13sp"
+        android:layout_marginTop="32dp" />
 </LinearLayout>

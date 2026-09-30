@@ -24,6 +24,10 @@ class SettingsActivity : AppCompatActivity() {
         field.setText(Prefs.serverUrl(this))
         field.requestFocus()
 
+        // Which build this is, so "did the update take?" is a Menu press away.
+        val version = packageManager.getPackageInfo(packageName, 0).versionName ?: "?"
+        findViewById<TextView>(R.id.versionText).text = getString(R.string.version, version)
+
         findViewById<Button>(R.id.saveButton).setOnClickListener {
             val url = normalise(field.text.toString())
             if (url == null) {
