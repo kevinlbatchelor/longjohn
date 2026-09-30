@@ -1,6 +1,6 @@
 {
   "name": "longjohn",
-  "version": "3",
+  "version": "4",
   "private": true,
   "scripts": {
     "start": "pm2 start ./server/server.js --name longjohn",
