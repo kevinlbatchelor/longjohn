@@ -54,6 +54,7 @@ class MainActivity : AppCompatActivity() {
     private var askedForAddress = false
 
     private var pointerMode = true
+    private val LONG_PRESS_MS = 600L
     private val handler = Handler(Looper.getMainLooper())
     private val hidePointer = Runnable { cursor.shown = false }
 
@@ -108,49 +109,55 @@ class MainActivity : AppCompatActivity() {
 
     private fun pointerActive() = pointerMode && errorPanel.visibility != View.VISIBLE
 
-    /** MENU opens Settings; the arrows steer the pointer; OK is tracked for tap-or-hold. */
-    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_MENU) {
-            openSettings()
+    /**
+     * Every key comes through here before the page sees it. Left to itself,
+     * the WebView eats the D-pad to move its own focus, so the pointer would
+     * never hear a thing. MENU opens Settings; the arrows steer the pointer;
+     * a short OK clicks where it is and a long one toggles pointer mode.
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (handleRemote(event)) return true
+        return super.dispatchKeyEvent(event)
+    }
+
+    private var okPressedAt = 0L
+
+    private fun handleRemote(event: KeyEvent): Boolean {
+        val down = event.action == KeyEvent.ACTION_DOWN
+        val up = event.action == KeyEvent.ACTION_UP
+
+        if (event.keyCode == KeyEvent.KEYCODE_MENU) {
+            if (down) openSettings()
             return true
         }
-        if (!pointerActive()) return super.onKeyDown(keyCode, event)
+        if (!pointerActive()) return false
 
         val step = stepFor(event.repeatCount)
-        when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_LEFT -> nudge(-step, 0f)
-            KeyEvent.KEYCODE_DPAD_RIGHT -> nudge(step, 0f)
-            KeyEvent.KEYCODE_DPAD_UP -> nudge(0f, -step)
-            KeyEvent.KEYCODE_DPAD_DOWN -> nudge(0f, step)
+        when (event.keyCode) {
+            KeyEvent.KEYCODE_DPAD_LEFT -> if (down) nudge(-step, 0f)
+            KeyEvent.KEYCODE_DPAD_RIGHT -> if (down) nudge(step, 0f)
+            KeyEvent.KEYCODE_DPAD_UP -> if (down) nudge(0f, -step)
+            KeyEvent.KEYCODE_DPAD_DOWN -> if (down) nudge(0f, step)
             KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
-                if (event.repeatCount == 0) event.startTracking()
+                if (down && event.repeatCount == 0) okPressedAt = SystemClock.uptimeMillis()
+                if (up) {
+                    if (SystemClock.uptimeMillis() - okPressedAt >= LONG_PRESS_MS) togglePointer()
+                    else {
+                        showPointer()
+                        tap(cursor.cx, cursor.cy)
+                    }
+                }
             }
-            else -> return super.onKeyDown(keyCode, event)
+            else -> return false
         }
         return true
     }
 
-    /** A short OK is a click at the pointer; a long one was handled below and is cancelled here. */
-    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
-        if (pointerActive() && (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER)) {
-            if (!event.isCanceled) {
-                showPointer()
-                tap(cursor.cx, cursor.cy)
-            }
-            return true
-        }
-        return super.onKeyUp(keyCode, event)
-    }
-
     /** Holding OK switches between the pointer and plain focus navigation. */
-    override fun onKeyLongPress(keyCode: Int, event: KeyEvent): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
-            pointerMode = !pointerMode
-            if (pointerMode) showPointer() else cursor.shown = false
-            Toast.makeText(this, if (pointerMode) R.string.pointer_on else R.string.pointer_off, Toast.LENGTH_SHORT).show()
-            return true
-        }
-        return super.onKeyLongPress(keyCode, event)
+    private fun togglePointer() {
+        pointerMode = !pointerMode
+        if (pointerMode) showPointer() else cursor.shown = false
+        Toast.makeText(this, if (pointerMode) R.string.pointer_on else R.string.pointer_off, Toast.LENGTH_SHORT).show()
     }
 
     /** Faster the longer an arrow is held: a tap is precise, a hold crosses the screen. */
