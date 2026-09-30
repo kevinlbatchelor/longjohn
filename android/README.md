@@ -7,37 +7,92 @@ whole app: one settings screen for the address, one screen for the site.
 
 You never need Android Studio. GitHub builds the APK.
 
-## Getting an APK
+## The whole flow, start to finish
 
-Tag the repo and push the tag. The `Build Android APK` workflow builds a signed APK
-and attaches it to a GitHub release named after the tag:
+Four stages: build it on GitHub, park the APK on the Pi, fetch it on the TV,
+open it. The first three take about five minutes; only the TV stage is
+repeated when a new version comes out, and it is shorter then.
+
+### 1. Build it: tag and push
+
+Bump the version first, in `app/build.gradle.kts`: `versionCode` up by one,
+`versionName` to the number you want. Commit, then tag and push the tag.
+The tag must start with `android-v`; that is what triggers the build.
 
 ```
-git tag android-v1.0
-git push origin android-v1.0
+git tag android-v1.1
+git push origin android-v1.1
 ```
 
-A few minutes later the APK is on the Releases page as `LongJohn-1.0.apk`.
-For a build without a release, run the workflow from the Actions tab and
-download the APK from the run's artifacts.
+GitHub's `Build Android APK` workflow compiles, signs and publishes it. To
+watch it: the repo's **Actions** tab, the run named after the tag, green
+check when done. Three to five minutes. When it is green, the APK is on the
+**Releases** page under the tag, as an asset named `LongJohn-1.1.apk`. The
+run page also has an "Artifacts" section, but that download comes wrapped in
+a zip, so use the release asset.
 
-## Installing on a Google TV
+If the tag was pushed in the same `git push` that first added the workflow
+file, GitHub may not start a run. Delete the tag and push it again:
 
-Sideloading, once per device:
+```
+git push origin :refs/tags/android-v1.1
+git push origin android-v1.1
+```
 
-1. On the TV, allow installs from unknown sources: Settings, Apps, Security &
-   restrictions, Unknown sources, and switch on the app you will install
-   from (Downloader, or the file manager).
-2. Get the APK onto the TV. Easiest is the free **Downloader** app from the
-   Play Store: open it and enter the APK's URL from the GitHub release. A USB
-   stick with the file works too.
-3. Open the APK and install. LongJohn appears in the TV's app row with a
-   green play mark.
-4. First launch asks for the server address. Type the Pi's IP, for example
-   `192.168.1.12`. It is remembered.
+For a test build with no release, open the workflow on the Actions tab and
+press "Run workflow".
 
-A new version installs over the old one; no need to uninstall first, since
-every build is signed with the same key.
+### 2. Park it on the Pi
+
+Typing a GitHub URL with a TV remote is miserable, and LongJohn already
+serves its `public` folder, so give the APK a short address on the home
+network. On the Pi, in PuTTY:
+
+```
+cd /home/pi/Documents/dev/longjohn
+mkdir -p public
+curl -L -o public/LongJohn-1.1.apk https://github.com/kevinlbatchelor/longjohn/releases/download/android-v1.1/LongJohn-1.1.apk
+```
+
+No restart needed. Check it from any browser on the network:
+`http://192.168.1.12:3000/LongJohn-1.1.apk` should download the file.
+
+### 3. Install it on the TV
+
+Sideloading with the free **Downloader** app, which is the standard tool for
+this on Google TV and the onn stick. All done with the remote.
+
+1. Open the Play Store on the TV and install "Downloader by AFTVnews".
+2. Allow it to install apps: Settings, Privacy, Security & restrictions,
+   Unknown sources, and switch on Downloader. On some builds the path is
+   Settings, Apps, Security & restrictions.
+3. Open Downloader and type the short address into its box:
+
+   ```
+   192.168.1.12:3000/LongJohn-1.1.apk
+   ```
+
+4. It downloads in a second or two and shows the install screen. Choose
+   Install, then Open.
+
+LongJohn is now in the TV's app row with a green play mark, and Downloader
+can stay for the next version.
+
+Without the Pi step, Downloader can fetch from GitHub directly; the address
+is the release link, `github.com/kevinlbatchelor/longjohn/releases/download/android-v1.1/LongJohn-1.1.apk`.
+Same result, far more typing. A USB stick with the file and the TV's file
+manager works too.
+
+### 4. Open it
+
+It opens straight into LongJohn at `192.168.1.12`. Nothing to enter. If the
+server lives somewhere else, press **Menu** on the remote for Settings.
+
+### Updating to a new version
+
+Stages 1 to 3 again with the new number. The new APK installs over the old
+one, keeping the address, because every build is signed with the same key.
+No uninstall.
 
 ## Using it
 

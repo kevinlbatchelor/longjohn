@@ -12,8 +12,10 @@
 | -------------- | ------------------------------------------------------------------------- |
 | **Video**      | Streams MP4 (H.264/H.265) with VTT subtitles to any modern browser        |
 | **TV Shows**   | Organizes TV series by show name with episode listings                    |
-| **Audiobooks** | Navigates multi‑level folder structures                                   |
-| **Metadata**   | Auto‑fetches movie data from **OMDb** and book data from **Google Books** |
+| **Audiobooks** | One folder per book; zip download; search, author and category filters   |
+| **eBooks**     | Kindle files (.mobi/.azw/.azw3/.prc), a Kindle-friendly download, and a plain page old Kindles can use |
+| **Metadata**   | Movie data from **OMDb**; book data, shelves and covers from **Audible**  |
+| **TV app**     | A Google TV / Android app that opens straight into LongJohn, with a D-pad pointer. See `android/README.md` |
 | **Indexing**   | Scans your library and stores results in PostgreSQL                       |
 
 ---
@@ -57,8 +59,11 @@ longjohn/
 │   ├── tv/                 # TV show routes (shares movie model)
 │   ├── audioBooks/         # Audiobook routes and data model
 │   ├── scanner/            # Media library scanner
+│   ├── eBooks/             # Kindle eBook routes, model and MOBI header reader
 │   ├── streaming/          # Video/audio streaming utilities
 │   └── server.js           # Express app entry point
+├── android/                # Google TV / Android app (built by GitHub Actions; see android/README.md)
+├── audioGenreReport.js     # Prints how the audiobook library is shelved
 ├── package.json            # Root dependencies and npm scripts
 └── README.md
 ```
@@ -449,6 +454,18 @@ npm run client
 This starts a static file server on port 80 serving the React app from `app/public/`.
 
 > **Note:** Port 80 may require administrator privileges on Windows. You can modify `app/client.js` to use a different port if needed.
+
+---
+
+## The Google TV App
+
+`android/` holds a small app that opens LongJohn full screen on a Google TV
+or onn stick, with the remote driving a pointer and the player's fullscreen
+button working properly. You never build it yourself: push a tag starting
+with `android-v` and GitHub builds the APK and puts it on the Releases page.
+Then park the APK in the Pi's `public` folder and fetch it on the TV with
+the Downloader app. The full walkthrough, step by step, is in
+[android/README.md](android/README.md).
 
 ---
 
