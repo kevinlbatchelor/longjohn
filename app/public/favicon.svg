@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
-  <!-- The same mark as the TV app's icon: a green play triangle on dark. -->
-  <rect width="108" height="108" rx="20" fill="#111111"/>
-  <path d="M40 30 L40 78 L78 54 Z" fill="#00FF00"/>
-</svg>

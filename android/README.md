@@ -110,8 +110,10 @@ No uninstall.
   browser apps cannot do.
 - The page sits 20dp below the top of the screen so the menu clears the bezel;
   the number is `paddingTop` in `res/layout/activity_main.xml`.
-- The launcher icon and banner are the same green play mark the web app now
-  uses as its favicon (`app/public/favicon.svg`).
+- The launcher icon and banner are the LongJohn skull from the web app's
+  `app/public/favicon.ico`, on green. It is 16x16 pixel art blown up a whole
+  number of times per size, so it stays crisp; the generator that made the
+  PNGs read the .ico directly, no image library needed.
 
 ## Notes for whoever changes it
 

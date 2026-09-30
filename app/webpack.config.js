@@ -32,8 +32,8 @@ module.exports = {
                 // The build wipes public/ first, so anything static that
                 // lives there has to be copied back in, like index.html is.
                 {
-                    from: path.resolve(__dirname, './public/favicon.svg'),
-                    to: 'favicon.svg'
+                    from: path.resolve(__dirname, './public/favicon.ico'),
+                    to: 'favicon.ico'
                 }
             ]
         }),
