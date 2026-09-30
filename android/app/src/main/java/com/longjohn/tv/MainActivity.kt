@@ -61,7 +61,7 @@ class MainActivity : AppCompatActivity() {
     private val LONG_PRESS_MS = 600L
 
     /** The bundled web app's front page, served by the asset loader below. */
-    private val PAGES = "https://appassets.androidplatform.net/assets/www/index.html"
+    private val PAGES = "http://appassets.androidplatform.net/assets/www/index.html"
     private val handler = Handler(Looper.getMainLooper())
     private val hidePointer = Runnable { cursor.shown = false }
 
@@ -236,7 +236,12 @@ class MainActivity : AppCompatActivity() {
        pages behave as they would from a server; the API and media come from
        the Pi over plain http, which the mixed-content setting allows. */
     private val assetLoader by lazy {
+        /* Served over http, not https, on purpose: on an https page Chrome
+           silently upgrades every http image and video request to https,
+           and the Pi has no https to answer, so covers and streams break.
+           A plain-http page fetching a plain-http API is not mixed at all. */
         WebViewAssetLoader.Builder()
+            .setHttpAllowed(true)
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
             .build()
     }
