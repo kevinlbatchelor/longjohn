@@ -78,11 +78,6 @@ const writeStoredSleep = (sleep) => {
     }
 };
 
-// The skip button is for intros, so it is only offered through the opening
-// minutes. The play-next button is for credits, so it only shows up at the end.
-const SKIP_VISIBLE_SECONDS = 300;
-const NEXT_VISIBLE_SECONDS = 180;
-
 /* Static, so they are not rebuilt on every render - React diffs style objects
    key by key each time. */
 const pageStyle = { width: '90%', maxWidth: 900, margin: '0 auto' };
@@ -175,10 +170,6 @@ export default function MoviePlayer({ id, name }) {
        counting down. Never a saved preference. */
     const [sleep, setSleep] = useState(() => (isEpisode ? readStoredSleep() : null));
 
-    // The overlays come and go with the playhead. Booleans, so the setters
-    // bail out of a re-render on the ticks where nothing changed.
-    const [showSkip, setShowSkip] = useState(true);
-    const [showNext, setShowNext] = useState(false);
     const [fullscreen, setFullscreen] = useState(false);
 
     /* What follows this episode, as { id, episode }. The show's ordered list
@@ -411,10 +402,6 @@ export default function MoviePlayer({ id, name }) {
         const video = videoRef.current;
         if (!video) return;
 
-        const runtime = runtimeRef.current;
-        setShowSkip(video.currentTime < SKIP_VISIBLE_SECONDS);
-        setShowNext(runtime !== null && runtime - video.currentTime <= NEXT_VISIBLE_SECONDS);
-
         if (sleep) applySleep(video);
     };
 
@@ -455,8 +442,12 @@ export default function MoviePlayer({ id, name }) {
         if (video) runtimeRef.current = runtimeOf(video);
     };
 
-    const skipVisible = settings.skipIntroSeconds > 0 && showSkip;
-    const nextVisible = Boolean(next) && showNext;
+    /* Both stay on screen for the whole episode. They used to come and go
+       with the playhead - skip for the opening minutes, next for the credits -
+       but on a TV a button that is not there cannot be reached with a
+       pointer or a D-pad, and a skip is as handy in the middle as at the start. */
+    const skipVisible = settings.skipIntroSeconds > 0;
+    const nextVisible = Boolean(next);
 
     return (
         <div style={pageStyle}>
