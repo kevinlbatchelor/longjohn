@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, GlobalStyles, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import FastForwardIcon from '@mui/icons-material/FastForward';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -124,7 +124,14 @@ const nativeControlStyles = {
 };
 
 const overlayStyle = { position: 'absolute', display: 'flex', gap: 6, zIndex: 1, lineHeight: 'normal' };
-const lowerRightStyle = { ...overlayStyle, right: 40, bottom: 34 };
+/* The overlays behave like the native controls: shown while someone is
+   doing something - moving the mouse, tapping, pressing a key - and gone a
+   few seconds after they stop. Hidden means invisible and untouchable, so
+   a tap on a hidden button reveals the row rather than firing it, and a
+   button reached by keyboard focus reveals it too. */
+const OVERLAY_IDLE_MS = 3000;
+const lowerRightStyle = { ...overlayStyle, right: 40, bottom: 34, transition: 'opacity 200ms' };
+const lowerRightHiddenStyle = { ...lowerRightStyle, opacity: 0, pointerEvents: 'none' };
 
 const overlayButtonSx = {
     minWidth: 0,
@@ -171,6 +178,33 @@ export default function MoviePlayer({ id, name }) {
     const [sleep, setSleep] = useState(() => (isEpisode ? readStoredSleep() : null));
 
     const [fullscreen, setFullscreen] = useState(false);
+
+    // True while the viewer is active; the overlays follow it.
+    const [active, setActive] = useState(true);
+    const idleTimer = useRef(null);
+
+    const wake = useCallback(() => {
+        setActive(true);
+        clearTimeout(idleTimer.current);
+        idleTimer.current = setTimeout(() => setActive(false), OVERLAY_IDLE_MS);
+    }, []);
+
+    useEffect(() => {
+        const player = playerRef.current;
+        if (!player) return undefined;
+
+        // Shown on arrival so they are discoverable, then they earn their keep.
+        wake();
+        const events = ['mousemove', 'mousedown', 'touchstart', 'keydown'];
+        events.forEach((e) => player.addEventListener(e, wake, { passive: true }));
+        document.addEventListener('keydown', wake);
+
+        return () => {
+            clearTimeout(idleTimer.current);
+            events.forEach((e) => player.removeEventListener(e, wake));
+            document.removeEventListener('keydown', wake);
+        };
+    }, [wake]);
 
     /* What follows this episode, as { id, episode }. The show's ordered list
        used to be spelled out in the URL of every episode card, which cost the
@@ -473,7 +507,7 @@ export default function MoviePlayer({ id, name }) {
                     <track label="English" kind="subtitles" srcLang="en" src={subs} default/>
                 </video>
 
-                <div style={lowerRightStyle}>
+                <div style={active ? lowerRightStyle : lowerRightHiddenStyle} onFocus={wake}>
                     {skipVisible && (
                         <Button
                             sx={overlayButtonSx}
