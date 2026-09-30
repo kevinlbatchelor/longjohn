@@ -13,9 +13,14 @@ android {
         // first release with adaptive icons, which is all the icon this app has.
         minSdk = 26
         targetSdk = 34
-        versionCode = 4
-        // A master build carries the commit it came from: "1.2-6466521".
-        versionName = "1.3" + (project.findProperty("versionSuffix") ?: "")
+        /* One version for the whole project, owned by npm: `npm run release`
+           bumps the root package.json, tags it, and this reads it back. The
+           code is the number packed so 1.3.1 is 10301 - always climbing, which
+           is what an update over an older install needs. */
+        val version = (groovy.json.JsonSlurper().parse(rootProject.file("../package.json")) as Map<*, *>)["version"] as String
+        val (major, minor, patch) = version.split(".").map { it.toInt() }
+        versionCode = major * 10000 + minor * 100 + patch
+        versionName = version
     }
 
     /* Signed with a key that lives in the repo. This app is sideloaded onto
