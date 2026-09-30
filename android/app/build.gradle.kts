@@ -13,9 +13,9 @@ android {
         // first release with adaptive icons, which is all the icon this app has.
         minSdk = 26
         targetSdk = 34
-        versionCode = 3
+        versionCode = 4
         // A master build carries the commit it came from: "1.2-6466521".
-        versionName = "1.2" + (project.findProperty("versionSuffix") ?: "")
+        versionName = "1.3" + (project.findProperty("versionSuffix") ?: "")
     }
 
     /* Signed with a key that lives in the repo. This app is sideloaded onto
