@@ -2,6 +2,7 @@ package com.longjohn.tv
 
 import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -15,8 +16,11 @@ import android.view.WindowManager
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.webkit.WebViewAssetLoader
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
@@ -55,6 +59,9 @@ class MainActivity : AppCompatActivity() {
 
     private var pointerMode = true
     private val LONG_PRESS_MS = 600L
+
+    /** The bundled web app's front page, served by the asset loader below. */
+    private val PAGES = "https://appassets.androidplatform.net/assets/www/index.html"
     private val handler = Handler(Looper.getMainLooper())
     private val hidePointer = Runnable { cursor.shown = false }
 
@@ -216,12 +223,22 @@ class MainActivity : AppCompatActivity() {
         loadedFrom = base
         errorPanel.visibility = View.GONE
         webView.visibility = View.VISIBLE
-        webView.loadUrl(base)
+        webView.loadUrl(PAGES + "?base=" + Uri.encode(base))
     }
 
     private fun openSettings() {
         askedForAddress = true
         startActivity(Intent(this, SettingsActivity::class.java))
+    }
+
+    /* The web app travels inside the APK, under assets/www, put there by the
+       build. WebViewAssetLoader serves it from a real https origin, so the
+       pages behave as they would from a server; the API and media come from
+       the Pi over plain http, which the mixed-content setting allows. */
+    private val assetLoader by lazy {
+        WebViewAssetLoader.Builder()
+            .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
+            .build()
     }
 
     private fun configure(view: WebView) {
@@ -230,13 +247,17 @@ class MainActivity : AppCompatActivity() {
             domStorageEnabled = true
             // The player autoplays the next episode; a tap per episode would defeat it.
             mediaPlaybackRequiresUserGesture = false
+            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             loadWithOverviewMode = true
             useWideViewPort = true
-            userAgentString = "$userAgentString LongJohnTV/1.1"
+            userAgentString = "$userAgentString LongJohnTV"
         }
         view.setBackgroundColor(Color.BLACK)
 
         view.webViewClient = object : WebViewClient() {
+            override fun shouldInterceptRequest(v: WebView, request: WebResourceRequest): WebResourceResponse? =
+                assetLoader.shouldInterceptRequest(request.url)
+
             override fun onReceivedError(v: WebView, request: WebResourceRequest, error: WebResourceError) {
                 // Only the page itself, not a cover image that failed to load.
                 if (request.isForMainFrame) showError(error.description?.toString() ?: "Could not load")

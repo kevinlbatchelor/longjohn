@@ -2,7 +2,7 @@ import React from 'react';
 import MenuBookRounded from '@mui/icons-material/MenuBookRounded';
 import BookShelf from './bookShelf.jsx';
 
-const BASE = process.env.BASE_HOST;
+import { BASE } from './baseHost';
 const API_ROOT = BASE + ':3000/api/v1/audioBooks';
 
 /* Audiobooks are keyed by name - a book is a folder of tracks, folded into

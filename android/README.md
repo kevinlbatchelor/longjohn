@@ -115,6 +115,16 @@ No uninstall.
   number of times per size, so it stays crisp; the generator that made the
   PNGs read the .ico directly, no image library needed.
 
+## The pages live in the app
+
+The web app is built into the APK at release time (the workflow runs the
+frontend build and copies `app/public` to `assets/www`). The app opens
+those pages and hands them the server address from Settings, so a UI change
+reaches the TV with the next release and an `adb install`, and the Pi only
+has to serve the API and the media. The pages the Pi serves to ordinary
+browsers on port 80 are a separate copy, rebuilt on the Pi with
+`npm run build` when you want them updated too.
+
 ## Notes for whoever changes it
 
 - `app/src/main/java/com/longjohn/tv/` holds the two screens. `MainActivity`

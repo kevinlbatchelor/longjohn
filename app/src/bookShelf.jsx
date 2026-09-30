@@ -30,7 +30,7 @@ import { cssVars } from './styles.jsx';
  * { name, authors, categories, series, added, ... } with authors and
  * categories from Audible, so both are empty for a book it did not know. */
 
-const BASE = process.env.BASE_HOST;
+import { BASE } from './baseHost';
 const COVER_ROOT = BASE + ':3000/api/v1/cover';
 
 const fetchJson = (url, opts) => fetch(url, opts).then((r) => {

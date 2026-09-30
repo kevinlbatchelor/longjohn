@@ -2,7 +2,7 @@ import React from 'react';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import BookShelf from './bookShelf.jsx';
 
-const BASE = process.env.BASE_HOST;
+import { BASE } from './baseHost';
 const API_ROOT = BASE + ':3000/api/v1/eBooks';
 
 /* eBooks are keyed by row id - one file is one book - and downloaded as the

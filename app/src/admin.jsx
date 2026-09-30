@@ -12,7 +12,7 @@ const API = {
     ebooks : '/scan/ebooks'
 };
 
-const BASE = process.env.BASE_HOST;
+import { BASE } from './baseHost';
 const ADMIN = BASE + ':3000/api/v1';
 
 export default function Admin() {

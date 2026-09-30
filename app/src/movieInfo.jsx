@@ -16,7 +16,7 @@ import { cssVars } from './styles.jsx';
  * rather than an empty frame.
  */
 
-const BASE = process.env.BASE_HOST;
+import { BASE } from './baseHost';
 const INFO_ROOT = BASE + ':3000/api/v1/movie';
 
 function clean(value) {

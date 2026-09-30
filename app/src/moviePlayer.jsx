@@ -10,7 +10,7 @@ import { loadShow } from './showCache';
 import MovieInfo from './movieInfo.jsx';
 import { cssVars } from './styles.jsx';
 
-const BASE = process.env.BASE_HOST;
+import { BASE } from './baseHost';
 const MOVIE_ROOT = BASE + ':3000/api/v1/movie';
 const SUBS_ROOT = BASE + ':3000/api/v1/subs';
 

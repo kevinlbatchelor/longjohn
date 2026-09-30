@@ -5,6 +5,9 @@
     <title>LongJohn</title>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <link rel="icon" type="image/x-icon" href="favicon.ico"/>
+    <!-- The TV app carries these pages inside it and opens them with
+         ?base=<server address>; the pages read it here, before the bundle. -->
+    <script>window.LONGJOHN_BASE = new URLSearchParams(location.search).get('base') || '';</script>
 </head>
 <body>
 <div id="root"></div>

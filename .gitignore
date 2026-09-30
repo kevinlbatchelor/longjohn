@@ -6,3 +6,6 @@ android/.gradle/
 android/build/
 android/app/build/
 android/local.properties
+
+# The web app copied into the TV app at build time
+android/app/src/main/assets/www/

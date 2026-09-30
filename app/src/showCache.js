@@ -9,7 +9,7 @@
  * about what order the episodes are in or what to call them.
  */
 
-const BASE = process.env.BASE_HOST;
+import { BASE } from './baseHost';
 const TV_ROOT = BASE + ':3000/api/v1/tv';
 // Cover search is provider plumbing, not a movie thing - it lives on the movie
 // router because that is where it was first needed, and shows use it as it is.

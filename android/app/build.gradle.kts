@@ -57,4 +57,6 @@ android {
 dependencies {
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.activity:activity-ktx:1.9.2")
+    // WebViewAssetLoader: serves the bundled web app from a proper https origin.
+    implementation("androidx.webkit:webkit:1.11.0")
 }

@@ -12,7 +12,7 @@ import { cssVars } from './styles.jsx';
 import MovieInfo from './movieInfo.jsx';
 import CoverPicker from './coverPicker.jsx';
 
-const BASE = process.env.BASE_HOST;
+import { BASE } from './baseHost';
 const API_ROOT = BASE + ':3000/api/v1/movie';
 const COVER_ROOT = BASE + ':3000/api/v1/cover';
 const CATEGORY_LIST = BASE + ':3000/api/v1/categories';

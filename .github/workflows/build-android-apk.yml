@@ -33,6 +33,23 @@ jobs:
         with:
           gradle-version: '8.9'
 
+      # The web app rides inside the APK: built here and copied to assets/www,
+      # so a new release carries the pages as well as the wrapper.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Build the web app into the APK
+        run: |
+          npm ci --prefix app
+          npm --prefix app run build
+          rm -rf android/app/src/main/assets/www
+          mkdir -p android/app/src/main/assets
+          cp -r app/public android/app/src/main/assets/www
+          ls android/app/src/main/assets/www
+
       - name: Build release APK
         working-directory: android
         run: gradle assembleRelease --no-daemon
