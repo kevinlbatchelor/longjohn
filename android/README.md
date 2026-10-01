@@ -95,6 +95,31 @@ one, keeping the address, because every build is signed with the same key. The n
 one, keeping the address, because every build is signed with the same key.
 No uninstall.
 
+### Getting it onto a Google TV Kids profile
+
+A Kids profile is its own Android user on the TV, and Google TV keeps only
+Play-approved apps in it: anything else is uninstalled from that user within
+seconds and shows "App isn't available. This is managed by Google TV" on the
+main profile while the kids one is active. The "Manage apps" screen only
+lists Play apps with a content rating, so a sideloaded app can never be
+ticked there, and there is no root on these sticks to get round it.
+
+The list is keyed by package name only, so the way in is to let LongJohn wear
+the name of a free Play app the profile already approves. The workflow builds
+that variant from a `kids-<N>` tag (the app id is `KIDS_APP_ID` in the
+workflow, a web browser nobody misses):
+
+```
+git tag kids-8 && git push origin kids-8      # same code as v8, other package name
+adb uninstall miada.tv.webbrowser             # the Play app whose name we borrow
+adb install -r --user all LongJohn-8-kids.apk
+```
+
+Then restart the launcher (or switch profiles) and the kids home screen shows
+LongJohn in its Apps row. Keep the real `v<N>` build for the other TVs; the two
+can even sit side by side on one TV since they are different packages. The
+Play Store may try to "update" the borrowed name and fail; that is harmless.
+
 ## Using it
 
 - It opens straight into LongJohn at `192.168.1.12`. To point it elsewhere,

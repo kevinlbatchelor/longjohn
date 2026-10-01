@@ -8,7 +8,12 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.longjohn.tv"
+        /* The package name. Normally com.longjohn.tv, but a build can be given
+           another with `-PappId=...`: a Google TV Kids profile only keeps apps
+           whose package name is on its Play-approved list and uninstalls the
+           rest, so a build carrying an already-approved name is the only way
+           in. See .github/workflows/build-android-apk.yml. */
+        applicationId = (project.findProperty("appId") as String?)?.takeIf { it.isNotBlank() } ?: "com.longjohn.tv"
         // 26 is Android 8: every Google TV and any phone from 2017 on, and the
         // first release with adaptive icons, which is all the icon this app has.
         minSdk = 26

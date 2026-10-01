@@ -5,12 +5,26 @@
 #
 # The Actions tab also has a "Run workflow" button for a one-off build; that
 # one only leaves the APK as a run artifact.
+#
+# A `kids-<N>` tag builds the same app under a different package name for a
+# Google TV Kids profile. A Kids profile keeps only apps whose package name is
+# on its Play-approved list and uninstalls everything else, so LongJohn gets
+# in by carrying the name of a free, already-approved Play app (that app is
+# uninstalled from the TV first). The name is KIDS_APP_ID below.
 name: Build Android APK
 
 on:
   push:
-    tags: ['v*']
+    tags: ['v*', 'kids-*']
   workflow_dispatch:
+    inputs:
+      app_id:
+        description: 'Package name to build under (blank = com.longjohn.tv)'
+        required: false
+        default: ''
+
+env:
+  KIDS_APP_ID: miada.tv.webbrowser
 
 permissions:
   contents: write
@@ -50,17 +64,28 @@ jobs:
           cp -r app/public android/app/src/main/assets/www
           ls android/app/src/main/assets/www
 
+      # Which package name this build gets: the kids one for a kids-* tag,
+      # whatever the "Run workflow" button was given, else the real one.
+      - name: Pick the package name
+        run: |
+          APP_ID="${{ github.event.inputs.app_id }}"
+          case "${{ github.ref_name }}" in kids-*) APP_ID="$KIDS_APP_ID";; esac
+          echo "APP_ID=$APP_ID" >> "$GITHUB_ENV"
+          echo "Building as package: ${APP_ID:-com.longjohn.tv}"
+
       - name: Build release APK
         working-directory: android
-        run: gradle assembleRelease --no-daemon
+        run: gradle assembleRelease --no-daemon ${APP_ID:+-PappId=$APP_ID}
 
       # The version in the file name is package.json's, the same one Gradle
       # stamped into the app, so the tag, the file and Settings all agree.
+      # A build under another package name says so: LongJohn-8-kids.apk.
       - name: Name the APK after the version
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          cp android/app/build/outputs/apk/release/app-release.apk "LongJohn-${VERSION}.apk"
-          echo "APK=LongJohn-${VERSION}.apk" >> "$GITHUB_ENV"
+          SUFFIX=""; [ -n "$APP_ID" ] && SUFFIX="-kids"
+          cp android/app/build/outputs/apk/release/app-release.apk "LongJohn-${VERSION}${SUFFIX}.apk"
+          echo "APK=LongJohn-${VERSION}${SUFFIX}.apk" >> "$GITHUB_ENV"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -74,3 +99,4 @@ jobs:
           files: ${{ env.APK }}
           body: |
             LongJohn ${{ github.ref_name }}. Sideload the APK on a Google TV; see android/README.md.
+            ${{ env.APP_ID && format('Built under package name {0} for a Google TV Kids profile.', env.APP_ID) || '' }}
