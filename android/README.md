@@ -125,11 +125,9 @@ Play Store may try to "update" the borrowed name and fail; that is harmless.
 - It opens straight into LongJohn at `192.168.1.12`. To point it elsewhere,
   press **Menu** on the remote for Settings; the Settings button on the
   "could not reach" screen does the same when the server is down.
-- **The arrows move a pointer** and **OK clicks** where it is. Hold an arrow
-  to move faster; push past an edge and the page scrolls. The pointer fades
-  after a few seconds and comes back on the next press.
-- **Hold OK** to switch the pointer off and steer by focus instead, the way
-  the stock TV browsers do. Hold again to switch it back.
+- **The arrows move between links and buttons** and **OK** presses the one
+  that is lit, the way the stock TV browsers do. Books, Admin and the edit
+  and delete controls are not shown in the app; it is for watching.
 - **Back** goes back a page, and exits the app from the front page.
 - The player's fullscreen button gives real fullscreen here, which most TV
   browser apps cannot do.

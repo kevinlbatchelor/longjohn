@@ -5,3 +5,8 @@
 const fromApp = typeof window !== 'undefined' ? window.LONGJOHN_BASE : '';
 
 export const BASE = fromApp || process.env.BASE_HOST;
+
+/* True inside the TV app. The WebView names itself in its user agent, so
+   this is never a flag a browser could stumble into. The app is for watching
+   only: books, admin and the edit (delete) controls stay out of it. */
+export const TV_APP = typeof navigator !== 'undefined' && /LongJohnTV/.test(navigator.userAgent);

@@ -15,7 +15,7 @@
 | **Audiobooks** | One folder per book; zip download; search, author and category filters   |
 | **eBooks**     | Kindle files (.mobi/.azw/.azw3/.prc), a Kindle-friendly download, and a plain page old Kindles can use |
 | **Metadata**   | Movie data from **OMDb**; book data, shelves and covers from **Audible**  |
-| **TV app**     | A Google TV / Android app that opens straight into LongJohn, with a D-pad pointer. See `android/README.md` |
+| **TV app**     | A Google TV / Android app that opens straight into LongJohn, driven by the remote's arrows. See `android/README.md` |
 | **Indexing**   | Scans your library and stores results in PostgreSQL                       |
 
 ---
@@ -460,7 +460,7 @@ This starts a static file server on port 80 serving the React app from `app/publ
 ## The Google TV App
 
 `android/` holds a small app that opens LongJohn full screen on a Google TV
-or onn stick, with the remote driving a pointer and the player's fullscreen
+or onn stick, with the remote's arrows moving between links and the player's fullscreen
 button working properly. You never build it yourself: set the version
 number in `package.json`, run `npm run release` at the repo root, and it
 rebuilds the frontend, tags and pushes, and GitHub builds the APK, with the

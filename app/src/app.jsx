@@ -7,6 +7,7 @@ import { cssVars, hackerTheme } from './styles.jsx';
 import MoviePlayer from './moviePlayer.jsx';
 import Admin from './admin';
 import TV, { ShowEpisodes } from './tv';
+import { TV_APP } from './baseHost';
 
 const NotFound = () => <h2>404 – Not found</h2>;
 
@@ -19,13 +20,25 @@ const routes = {
     '/tv': TV
 };
 
+const TV_ROUTES = new Set(['/', '/movies', '/tv']);
+
+// The menu. The TV app is for watching, so it gets the two video pages only.
+const MENU = [
+    ['#/tv', 'TV'],
+    ['#/audiobooks', 'AudioBooks'],
+    ['#/ebooks', 'eBooks'],
+    ['#/movies', 'Movies'],
+    ['#/admin', 'Admin']
+].filter(([href]) => !TV_APP || TV_ROUTES.has(href.slice(1)));
+
 /* Returns the element, not a component. Handing back a fresh arrow function per
    render gave React a new component type each time, so every re-render tore the
    whole page down and built it again - a full refetch for the lists and a
    discarded buffer for the player. The keys keep the one remount that is
    wanted: a new episode starts a fresh player. */
 function renderRoute(path) {
-    const Exact = routes[path];
+    // The TV app has no books and no admin; a stray hash lands on the movies.
+    const Exact = routes[TV_APP && !TV_ROUTES.has(path) && routes[path] ? '/movies' : path];
     if (Exact) return <Exact/>;
 
     const showMatch = path.match(/^\/show\/(.+)$/);
@@ -70,11 +83,12 @@ export default function App() {
                     '#root': { backgroundColor: cssVars.gray, minHeight: '100vh' }
                 }}/>
                 <nav style={{ marginBottom: 16, textAlign: 'center' }}>
-                    <a href={`#/tv`}>TV</a> | {' '}
-                    <a href={`#/audiobooks`}>AudioBooks</a> | {' '}
-                    <a href={`#/ebooks`}>eBooks</a> | {' '}
-                    <a href={`#/movies`}>Movies</a> | {' '}
-                    <a href={`#/admin`}>Admin</a>
+                    {MENU.map(([href, label], i) => (
+                        <React.Fragment key={href}>
+                            {i > 0 && ' | '}
+                            <a href={href}>{label}</a>
+                        </React.Fragment>
+                    ))}
                 </nav>
                 {renderRoute(path)}
             </ThemeProvider>

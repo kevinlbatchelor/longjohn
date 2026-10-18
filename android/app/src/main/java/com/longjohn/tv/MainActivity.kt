@@ -4,14 +4,8 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.os.SystemClock
-import android.view.InputDevice
 import android.view.KeyEvent
-import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import android.view.WindowManager
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
@@ -24,7 +18,6 @@ import androidx.webkit.WebViewAssetLoader
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
@@ -38,9 +31,9 @@ import androidx.core.view.WindowInsetsControllerCompat
  * callback is handled here, and a page that will not load offers the way to
  * Settings rather than a blank screen.
  *
- * The D-pad drives a pointer rather than jumping focus between links: the
- * arrows move it, OK clicks where it is, pushing past an edge scrolls the
- * page, and a long press on OK switches to plain focus navigation and back.
+ * The D-pad is left to the WebView, which walks focus between the links and
+ * buttons on the page the way the stock TV browsers do. (A pointer steered
+ * by the arrows was tried and dropped: arrow-select is quicker from the sofa.)
  */
 class MainActivity : AppCompatActivity() {
 
@@ -48,7 +41,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fullscreenHolder: FrameLayout
     private lateinit var errorPanel: View
     private lateinit var errorText: TextView
-    private lateinit var cursor: CursorView
 
     private var customView: View? = null
     private var customViewCallback: WebChromeClient.CustomViewCallback? = null
@@ -57,13 +49,8 @@ class MainActivity : AppCompatActivity() {
     private var loadedFrom = ""
     private var askedForAddress = false
 
-    private var pointerMode = true
-    private val LONG_PRESS_MS = 600L
-
     /** The bundled web app's front page, served by the asset loader below. */
     private val PAGES = "http://appassets.androidplatform.net/assets/www/index.html"
-    private val handler = Handler(Looper.getMainLooper())
-    private val hidePointer = Runnable { cursor.shown = false }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,7 +60,6 @@ class MainActivity : AppCompatActivity() {
         fullscreenHolder = findViewById(R.id.fullscreenHolder)
         errorPanel = findViewById(R.id.errorPanel)
         errorText = findViewById(R.id.errorText)
-        cursor = findViewById(R.id.cursor)
         findViewById<Button>(R.id.settingsButton).setOnClickListener { openSettings() }
         findViewById<Button>(R.id.retryButton).setOnClickListener { load(force = true) }
 
@@ -107,102 +93,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        handler.removeCallbacksAndMessages(null)
         webView.destroy()
         super.onDestroy()
     }
 
     // The remote ---------------------------------------------------------------
 
-    private fun pointerActive() = pointerMode && errorPanel.visibility != View.VISIBLE
-
     /**
-     * Every key comes through here before the page sees it. Left to itself,
-     * the WebView eats the D-pad to move its own focus, so the pointer would
-     * never hear a thing. MENU opens Settings; the arrows steer the pointer;
-     * a short OK clicks where it is and a long one toggles pointer mode.
+     * MENU opens Settings; every other key goes to the WebView, which moves
+     * its focus with the arrows and clicks with OK. Taken here rather than in
+     * onKeyDown because the WebView consumes the keys it understands first.
      */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (handleRemote(event)) return true
-        return super.dispatchKeyEvent(event)
-    }
-
-    private var okPressedAt = 0L
-
-    private fun handleRemote(event: KeyEvent): Boolean {
-        val down = event.action == KeyEvent.ACTION_DOWN
-        val up = event.action == KeyEvent.ACTION_UP
-
         if (event.keyCode == KeyEvent.KEYCODE_MENU) {
-            if (down) openSettings()
+            if (event.action == KeyEvent.ACTION_DOWN) openSettings()
             return true
         }
-        if (!pointerActive()) return false
-
-        val step = stepFor(event.repeatCount)
-        when (event.keyCode) {
-            KeyEvent.KEYCODE_DPAD_LEFT -> if (down) nudge(-step, 0f)
-            KeyEvent.KEYCODE_DPAD_RIGHT -> if (down) nudge(step, 0f)
-            KeyEvent.KEYCODE_DPAD_UP -> if (down) nudge(0f, -step)
-            KeyEvent.KEYCODE_DPAD_DOWN -> if (down) nudge(0f, step)
-            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
-                if (down && event.repeatCount == 0) okPressedAt = SystemClock.uptimeMillis()
-                if (up) {
-                    if (SystemClock.uptimeMillis() - okPressedAt >= LONG_PRESS_MS) togglePointer()
-                    else {
-                        showPointer()
-                        tap(cursor.cx, cursor.cy)
-                    }
-                }
-            }
-            else -> return false
-        }
-        return true
-    }
-
-    /** Holding OK switches between the pointer and plain focus navigation. */
-    private fun togglePointer() {
-        pointerMode = !pointerMode
-        if (pointerMode) showPointer() else cursor.shown = false
-        Toast.makeText(this, if (pointerMode) R.string.pointer_on else R.string.pointer_off, Toast.LENGTH_SHORT).show()
-    }
-
-    /** Faster the longer an arrow is held: a tap is precise, a hold crosses the screen. */
-    private fun stepFor(repeatCount: Int): Float {
-        val density = resources.displayMetrics.density
-        return 12f * density * minOf(5, 1 + repeatCount / 3)
-    }
-
-    /** Moves the pointer; at an edge, scrolls the page in that direction instead. */
-    private fun nudge(dx: Float, dy: Float) {
-        showPointer()
-        if (!cursor.moveBy(dx, dy) && customView == null) {
-            webView.scrollBy(dx.toInt(), dy.toInt())
-        }
-    }
-
-    private fun showPointer() {
-        cursor.shown = true
-        handler.removeCallbacks(hidePointer)
-        handler.postDelayed(hidePointer, 4000)
-    }
-
-    /**
-     * A finger-tap at a point, delivered to the whole content view so it lands
-     * on whatever is there - the page, or the fullscreen video. The pointer
-     * layer is not clickable, so the event passes through it.
-     */
-    private fun tap(x: Float, y: Float) {
-        val root = findViewById<ViewGroup>(android.R.id.content)
-        val t = SystemClock.uptimeMillis()
-        val down = MotionEvent.obtain(t, t, MotionEvent.ACTION_DOWN, x, y, 0)
-        val up = MotionEvent.obtain(t, t + 60, MotionEvent.ACTION_UP, x, y, 0)
-        down.source = InputDevice.SOURCE_TOUCHSCREEN
-        up.source = InputDevice.SOURCE_TOUCHSCREEN
-        root.dispatchTouchEvent(down)
-        root.dispatchTouchEvent(up)
-        down.recycle()
-        up.recycle()
+        return super.dispatchKeyEvent(event)
     }
 
     // The page -----------------------------------------------------------------
@@ -313,7 +220,6 @@ class MainActivity : AppCompatActivity() {
         errorText.text = getString(R.string.could_not_reach, Prefs.serverUrl(this), message)
         webView.visibility = View.GONE
         errorPanel.visibility = View.VISIBLE
-        cursor.shown = false
         findViewById<Button>(R.id.retryButton).requestFocus()
     }
 

@@ -12,7 +12,7 @@ import { cssVars } from './styles.jsx';
 import MovieInfo from './movieInfo.jsx';
 import CoverPicker from './coverPicker.jsx';
 
-import { BASE } from './baseHost';
+import { BASE, TV_APP } from './baseHost';
 const API_ROOT = BASE + ':3000/api/v1/movie';
 const COVER_ROOT = BASE + ':3000/api/v1/cover';
 const CATEGORY_LIST = BASE + ':3000/api/v1/categories';
@@ -381,14 +381,16 @@ export default function Movies() {
                     {parentalUnlocked ? <LockOpenIcon /> : <LockIcon />}
                 </IconButton>
 
-                <IconButton
-                    onClick={() => setEditMode(v => !v)}
-                    sx={{ ml: 1 }}
-                    color={editMode ? 'error' : 'default'}
-                    title={editMode ? 'Exit edit mode' : 'Edit (delete movies)'}
-                >
-                    {editMode ? <EditOffIcon/> : <EditIcon/>}
-                </IconButton>
+                {!TV_APP && (
+                    <IconButton
+                        onClick={() => setEditMode(v => !v)}
+                        sx={{ ml: 1 }}
+                        color={editMode ? 'error' : 'default'}
+                        title={editMode ? 'Exit edit mode' : 'Edit (delete movies)'}
+                    >
+                        {editMode ? <EditOffIcon/> : <EditIcon/>}
+                    </IconButton>
+                )}
             </Box>
 
             {/* Delete confirmation dialog */}

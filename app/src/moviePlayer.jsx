@@ -124,11 +124,12 @@ const nativeControlStyles = {
 };
 
 const overlayStyle = { position: 'absolute', display: 'flex', gap: 6, zIndex: 1, lineHeight: 'normal' };
-/* The overlays behave like the native controls: shown while someone is
-   doing something - moving the mouse, tapping, pressing a key - and gone a
-   few seconds after they stop. Hidden means invisible and untouchable, so
-   a tap on a hidden button reveals the row rather than firing it, and a
-   button reached by keyboard focus reveals it too. */
+/* In fullscreen the overlays behave like the native controls: shown while
+   someone is doing something - moving the mouse, tapping, pressing a key -
+   and gone a few seconds after they stop. Hidden means invisible and
+   untouchable, so a tap on a hidden button reveals the row rather than
+   firing it, and a button reached by keyboard focus reveals it too. Out of
+   fullscreen the row is part of the page and never hides. */
 const OVERLAY_IDLE_MS = 3000;
 const lowerRightStyle = { ...overlayStyle, right: 40, bottom: 34, transition: 'opacity 200ms' };
 const lowerRightHiddenStyle = { ...lowerRightStyle, opacity: 0, pointerEvents: 'none' };
@@ -308,6 +309,9 @@ export default function MoviePlayer({ id, name }) {
     };
 
     const isFull = fullscreen || pinned;
+
+    // The overlay row: idle-hidden only in fullscreen, always there otherwise.
+    const overlaysShown = active || !isFull;
 
     // The level to fade down from, and back up to if the fade is called off.
     const baseVolumeRef = useRef(1);
@@ -507,7 +511,7 @@ export default function MoviePlayer({ id, name }) {
                     <track label="English" kind="subtitles" srcLang="en" src={subs} default/>
                 </video>
 
-                <div style={active ? lowerRightStyle : lowerRightHiddenStyle} onFocus={wake}>
+                <div style={overlaysShown ? lowerRightStyle : lowerRightHiddenStyle} onFocus={wake}>
                     {skipVisible && (
                         <Button
                             sx={overlayButtonSx}

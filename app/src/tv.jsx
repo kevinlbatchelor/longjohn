@@ -12,6 +12,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ImageIcon from '@mui/icons-material/Image';
 import { cssVars } from './styles.jsx';
 import CoverPicker from './coverPicker.jsx';
+import { TV_APP } from './baseHost';
 import {
     COVER_ROOT, deleteEpisode, deleteShow, episodeLabel, fetchShow, fetchShowSummaries,
     forgetEpisode, forgetShow, searchShowCovers, setShowCover
@@ -247,22 +248,26 @@ export function ShowEpisodes({ name }) {
                 <Typography variant="subtitle1" sx={titleSx}>
                     {show.name}
                 </Typography>
-                <IconButton
-                    size="small"
-                    onClick={() => setPickingCover(true)}
-                    title={`Change cover for ${show.name}`}
-                    sx={heroCoverButtonSx}
-                >
-                    <ImageIcon fontSize="small"/>
-                </IconButton>
-                <IconButton
-                    size="small"
-                    onClick={() => setEditMode((v) => !v)}
-                    color={editMode ? 'error' : 'default'}
-                    title={editMode ? 'Exit edit mode' : 'Edit (delete episodes)'}
-                >
-                    {editMode ? <EditOffIcon fontSize="small"/> : <EditIcon fontSize="small"/>}
-                </IconButton>
+                {!TV_APP && (
+                    <IconButton
+                        size="small"
+                        onClick={() => setPickingCover(true)}
+                        title={`Change cover for ${show.name}`}
+                        sx={heroCoverButtonSx}
+                    >
+                        <ImageIcon fontSize="small"/>
+                    </IconButton>
+                )}
+                {!TV_APP && (
+                    <IconButton
+                        size="small"
+                        onClick={() => setEditMode((v) => !v)}
+                        color={editMode ? 'error' : 'default'}
+                        title={editMode ? 'Exit edit mode' : 'Edit (delete episodes)'}
+                    >
+                        {editMode ? <EditOffIcon fontSize="small"/> : <EditIcon fontSize="small"/>}
+                    </IconButton>
+                )}
             </Box>
 
             <Box sx={heroWrapSx}>
@@ -428,14 +433,16 @@ export default function TV() {
     return (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
             <Box sx={showGridHeaderSx}>
-                <IconButton
-                    size="small"
-                    onClick={() => setEditMode((v) => !v)}
-                    color={editMode ? 'error' : 'default'}
-                    title={editMode ? 'Exit edit mode' : 'Edit (delete shows)'}
-                >
-                    {editMode ? <EditOffIcon fontSize="small"/> : <EditIcon fontSize="small"/>}
-                </IconButton>
+                {!TV_APP && (
+                    <IconButton
+                        size="small"
+                        onClick={() => setEditMode((v) => !v)}
+                        color={editMode ? 'error' : 'default'}
+                        title={editMode ? 'Exit edit mode' : 'Edit (delete shows)'}
+                    >
+                        {editMode ? <EditOffIcon fontSize="small"/> : <EditIcon fontSize="small"/>}
+                    </IconButton>
+                )}
             </Box>
 
             <Box sx={showGridSx}>
