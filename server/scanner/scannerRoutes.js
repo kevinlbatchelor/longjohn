@@ -47,7 +47,7 @@ router.get(route('ebooks'), async function (req, res) {
         res.json(list || []);
     } catch (e) {
         // e.message, not e: an Error serialises to {} and tells the page nothing.
-        res.status(500).json({ error: e.message || String(e) });
+        res.status(e.status || 500).json({ error: e.message || String(e) });
     }
 });
 

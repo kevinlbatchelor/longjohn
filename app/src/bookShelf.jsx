@@ -4,6 +4,7 @@ import {
     Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, IconButton,
     InputLabel, NativeSelect, TextField, Typography
 } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
 import EditIcon from '@mui/icons-material/Edit';
 import EditOffIcon from '@mui/icons-material/EditOff';
@@ -25,6 +26,9 @@ import { cssVars } from './styles.jsx';
  *   Icon           what a book with no cover shows
  *   emptyHint      what to say when the shelf is bare
  *   kind           'book' - wording in the cover picker
+ *   deleteWarning  optional; given, edit mode gets a delete per book that
+ *                  sends DELETE apiRoot/:key, and this is the line the
+ *                  confirm dialog shows under the title
  *
  * The list route answers one entry per book:
  * { name, authors, categories, series, added, ... } with authors and
@@ -149,8 +153,11 @@ const coverButtonSx = {
     color: cssVars.green,
     '&:hover': { backgroundColor: 'rgba(0,0,0,0.85)' }
 };
-// The other corner: nothing on this grid is destructive, so both are green.
-const tagButtonSx = { ...coverButtonSx, left: 'auto', right: 4 };
+// Beside it, still green: neither of these can lose anything.
+const tagButtonSx = { ...coverButtonSx, left: 40 };
+/* The far corner, red, for the one button that can: a delete is never next
+   to the cover and tag buttons, as on the TV grid. */
+const deleteButtonSx = { ...coverButtonSx, left: 'auto', right: 4, color: '#f44' };
 const tagFieldSx = { mt: 1, minWidth: 320 };
 const tagHintSx = { color: 'text.secondary', mt: 1, display: 'block' };
 
@@ -162,7 +169,7 @@ const subtitleOf = (book) => {
     return '';
 };
 
-const BookCard = React.memo(function BookCard({ book, shelf, editMode, onChangeCover, onEditTags, coverV }) {
+const BookCard = React.memo(function BookCard({ book, shelf, editMode, onChangeCover, onEditTags, onDelete, coverV }) {
     const [ imgError, setImgError ] = useState(false);
     const { Icon } = shelf;
 
@@ -192,6 +199,16 @@ const BookCard = React.memo(function BookCard({ book, shelf, editMode, onChangeC
                     sx={tagButtonSx}
                 >
                     <LocalOfferIcon fontSize="small"/>
+                </IconButton>
+            )}
+            {editMode && shelf.deleteWarning && (
+                <IconButton
+                    size="small"
+                    onClick={() => onDelete(book)}
+                    title={`Delete ${book.name}`}
+                    sx={deleteButtonSx}
+                >
+                    <DeleteIcon fontSize="small"/>
                 </IconButton>
             )}
             {imgError ? (
@@ -295,6 +312,9 @@ export default function BookShelf({ shelf }) {
     const [ coverTarget, setCoverTarget ] = useState(null);
     const [ coverVersions, setCoverVersions ] = useState({}); // book key -> bust value
     const [ tagTarget, setTagTarget ] = useState(null); // the book whose categories are being edited
+    const [ deleteTarget, setDeleteTarget ] = useState(null); // the book the confirm dialog is asking about
+    const [ deleting, setDeleting ] = useState(false);
+    const [ deleteError, setDeleteError ] = useState(null);
 
     useEffect(() => {
         let live = true;
@@ -343,6 +363,10 @@ export default function BookShelf({ shelf }) {
        card along with it. */
     const openCoverPicker = useCallback((book) => setCoverTarget(book), []);
     const openTagEditor = useCallback((book) => setTagTarget(book), []);
+    const askDelete = useCallback((book) => {
+        setDeleteError(null);
+        setDeleteTarget(book);
+    }, []);
 
     const handleCoverSaved = useCallback((key) => {
         // Same URL, new file - the card needs a reason to fetch it again.
@@ -355,6 +379,24 @@ export default function BookShelf({ shelf }) {
         const key = shelf.keyOf(book);
         setBooks((list) => list.map((b) => (shelf.keyOf(b) === key ? { ...b, categories: saved } : b)));
     }, [shelf]);
+
+    const confirmDelete = () => {
+        if (!deleteTarget) return;
+        const key = shelf.keyOf(deleteTarget);
+        setDeleting(true);
+        setDeleteError(null);
+
+        fetchJson(`${shelf.apiRoot}/${encodeURIComponent(key)}`, { method: 'DELETE' })
+            .then(() => {
+                setBooks((list) => list.filter((b) => shelf.keyOf(b) !== key));
+                setDeleting(false);
+                setDeleteTarget(null);
+            })
+            .catch((err) => {
+                setDeleteError(err.message);
+                setDeleting(false);
+            });
+    };
 
     if (loading) return <Centered><CircularProgress sx={spinnerSx}/></Centered>;
     if (error) return <Centered><Alert severity="error">Load error – {error}</Alert></Centered>;
@@ -399,7 +441,7 @@ export default function BookShelf({ shelf }) {
                     size="small"
                     onClick={() => setEditMode((v) => !v)}
                     color={editMode ? 'error' : 'default'}
-                    title={editMode ? 'Exit edit mode' : 'Edit (covers and categories)'}
+                    title={editMode ? 'Exit edit mode' : `Edit (covers${shelf.deleteWarning ? ', categories and delete' : ' and categories'})`}
                 >
                     {editMode ? <EditOffIcon fontSize="small"/> : <EditIcon fontSize="small"/>}
                 </IconButton>
@@ -425,10 +467,29 @@ export default function BookShelf({ shelf }) {
                         editMode={editMode}
                         onChangeCover={openCoverPicker}
                         onEditTags={openTagEditor}
+                        onDelete={askDelete}
                         coverV={coverVersions[shelf.keyOf(book)]}
                     />
                 ))}
             </Box>
+
+            <Dialog open={!!deleteTarget} onClose={() => !deleting && setDeleteTarget(null)}>
+                <DialogTitle>Delete book?</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Permanently delete "{deleteTarget ? deleteTarget.name : ''}"? {shelf.deleteWarning}
+                    </Typography>
+                    {deleteError && (
+                        <Alert severity="error" sx={{ mt: 2 }}>Delete failed – {deleteError}</Alert>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button disabled={deleting} onClick={() => setDeleteTarget(null)}>Cancel</Button>
+                    <Button disabled={deleting} color="error" onClick={confirmDelete}>
+                        {deleting ? 'Deleting…' : 'Delete'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {tagTarget && (
                 <CategoryEditor

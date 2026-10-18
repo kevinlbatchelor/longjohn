@@ -3,6 +3,7 @@ const route = router.v1Path('eBooks');
 const EBook = require('./eBook');
 const path = require('path');
 const dl = require('../util/downloadCoverArt');
+const { unlinkQuietly } = require('../movie/removeMovie');
 
 // The shelf list on a row, comma separated like a movie's genre.
 const splitGenre = (genre) => String(genre || '').split(',').map((s) => s.trim()).filter(Boolean);
@@ -167,6 +168,25 @@ router.delete(route(':id/cover'), async function (req, res) {
         res.json({ ok: true });
     } catch (e) {
         console.error('LONG-JOHN clear-ebook-cover ERROR:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+/* Deleting a book: the file goes, its cover goes, and the row is dropped for
+   real rather than soft-deleted, as with a movie - a paranoid row would stop
+   the scanner from picking the file up again if it is ever put back. */
+router.delete(route(':id'), async function (req, res) {
+    try {
+        const row = await EBook.findByPk(req.params.id, { paranoid: false });
+        if (!row) return res.status(404).json({ error: 'eBook not found' });
+
+        if (row.path) await unlinkQuietly(row.path, 'ebook file');
+        await dl.removeCover(coverKey(row.id));
+        await row.destroy({ force: true });
+
+        res.json({ ok: true, id: row.id });
+    } catch (e) {
+        console.error('LONG-JOHN delete-ebook ERROR:', e);
         res.status(500).json({ error: e.message });
     }
 });

@@ -15,6 +15,7 @@ const shelf = {
     kind: 'book',
     Icon: AutoStoriesIcon,
     emptyHint: 'No eBooks yet – run Find eBooks from Admin.',
+    deleteWarning: 'The file is removed from disk as well. This cannot be undone.',
     keyOf: (book) => String(book.id),
     coverIdOf: (book) => `${book.id}-ebook`,
     downloadHref: (book) => `${API_ROOT}/${book.id}/download/${encodeURIComponent(fileNameOf(book))}`

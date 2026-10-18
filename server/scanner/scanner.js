@@ -259,7 +259,21 @@ scanner.scanForAudio = function (scanPaths) {
 const EBOOK_FILE = /\.(mobi|azw3?|prc)$/i;
 const notAnEbook = (file, stats) => !stats.isDirectory() && !EBOOK_FILE.test(file);
 
+/* One eBook scan at a time. A scan that calls Audible for every new book
+   runs for minutes, long enough for the browser to give up on the request
+   while the server carries on; a second scan started then would index the
+   same files again. The database index on path would now refuse the second
+   row, but refusing the second scan is the clearer answer. */
+let ebookScanRunning = false;
+
 scanner.scanForEbooks = function (scanPaths) {
+    if (ebookScanRunning) {
+        const busy = new Error('An eBook scan is already running - wait for it to finish');
+        busy.status = 409;
+        return Promise.reject(busy);
+    }
+    ebookScanRunning = true;
+
     // What the file says, then Audible's record for it and a cover if there is none.
     const describe = async (filePath, name, file, id) => {
         const query = file && file.title ? [file.title, ...(file.authors || [])].join(' - ') : name;
@@ -296,7 +310,8 @@ scanner.scanForEbooks = function (scanPaths) {
     return Promise.map(scanPaths.filter(present), async (outerPath) => {
         return readDirectory(outerPath, [notAnEbook]).then(async (paths) => {
             return Promise.reduce(paths, async (acc, filePath) => {
-                const found = await eBook.findOne({ where: { path: filePath }, raw: true });
+                // paranoid: false - a soft-deleted row still owns its path.
+                const found = await eBook.findOne({ where: { path: filePath }, raw: true, paranoid: false });
                 if (found) return acc;
 
                 let file = null;
@@ -327,6 +342,8 @@ scanner.scanForEbooks = function (scanPaths) {
         // rather than answering with nothing.
         console.error('LONG-JOHN ebook scan ERROR:', e);
         throw e;
+    }).finally(() => {
+        ebookScanRunning = false;
     });
 };
 

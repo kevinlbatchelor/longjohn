@@ -82,11 +82,13 @@ export default function Admin() {
                 <Paper sx={{ p: 3, backgroundColor: '#000' }}>
                     <Typography variant="h6" gutterBottom>Tools</Typography>
 
+                    {/* Disabled while a scan runs: a second scan on top of the
+                        first indexed every new file twice. */}
                     <Stack spacing={2}>
-                        <Button variant="contained" onClick={() => runScan(API.movies)}>Find Movies</Button>
-                        <Button variant="contained" onClick={() => runScan(API.audio)}>Find Audio</Button>
-                        <Button variant="contained" onClick={() => runScan(API.tv)}>Find&nbsp;TV</Button>
-                        <Button variant="contained" onClick={() => runScan(API.ebooks)}>Find&nbsp;eBooks</Button>
+                        <Button variant="contained" disabled={loading} onClick={() => runScan(API.movies)}>Find Movies</Button>
+                        <Button variant="contained" disabled={loading} onClick={() => runScan(API.audio)}>Find Audio</Button>
+                        <Button variant="contained" disabled={loading} onClick={() => runScan(API.tv)}>Find&nbsp;TV</Button>
+                        <Button variant="contained" disabled={loading} onClick={() => runScan(API.ebooks)}>Find&nbsp;eBooks</Button>
                     </Stack>
                 </Paper>
 
