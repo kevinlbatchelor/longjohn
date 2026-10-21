@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Box, Button, Card, CardContent, CardMedia, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, Grid, IconButton, MenuItem, NativeSelect, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, CardMedia, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, Grid, IconButton, NativeSelect, TextField, Typography } from '@mui/material';
 import LocalMovies from '@mui/icons-material/LocalMovies';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
@@ -355,12 +355,12 @@ export default function Movies() {
                     inputRef={searchRef} // Assign ref here
                     defaultValue={search} // To preserve initial value from query params
                     sx={{ width: '45%', mr: 2 }}
-                />;
+                />
 
                 <FormControl variant="standard" label="Category" sx={{ width: '45%', marginTop: '15px' }}>
                     <NativeSelect value={category} onChange={handleCategoryChange} label="Category">
                         {/* default blank option */}
-                        <MenuItem value=""><em>All</em></MenuItem>
+                        <option value="">All</option>
 
                         {categories.map(cat => (
                             <option key={cat.name} value={cat.name}>{cat.name}</option>
