@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Audiobooks from './audiobooks';
 import EBooks from './ebooks';
 import Movies from './movies';
@@ -70,6 +70,19 @@ export default function App() {
         return () => window.removeEventListener('hashchange', handler);
     }, []);
 
+    /* In the TV app the D-pad starts on the menu: arriving on TV or Movies
+       puts focus on that page's own menu link, rather than wherever the
+       WebView last left it. */
+    const navRef = useRef(null);
+
+    useEffect(() => {
+        if (!TV_APP || !TV_ROUTES.has(path) || !navRef.current) return;
+
+        const href = path === '/' ? '#/movies' : `#${path}`;
+        const link = navRef.current.querySelector(`a[href="${href}"]`);
+        if (link) link.focus();
+    }, [path]);
+
     return (
         <>
             <ThemeProvider theme={hackerTheme}>
@@ -82,7 +95,7 @@ export default function App() {
                     body: { backgroundColor: cssVars.gray },
                     '#root': { backgroundColor: cssVars.gray, minHeight: '100vh' }
                 }}/>
-                <nav style={{ marginBottom: 16, textAlign: 'center' }}>
+                <nav ref={navRef} style={{ marginBottom: 16, textAlign: 'center' }}>
                     {MENU.map(([href, label], i) => (
                         <React.Fragment key={href}>
                             {i > 0 && ' | '}

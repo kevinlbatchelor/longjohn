@@ -1,7 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, GlobalStyles, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import FastForwardIcon from '@mui/icons-material/FastForward';
+import FastRewindIcon from '@mui/icons-material/FastRewind';
+import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import SkipNextIcon from '@mui/icons-material/SkipNext';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -17,6 +20,10 @@ const SUBS_ROOT = BASE + ':3000/api/v1/subs';
 // Every sleep mode ends in the same ramp: the volume goes to silence across
 // this many seconds before the moment it is due. Fixed, not configurable.
 const SLEEP_FADE_SECONDS = 300;
+
+// How far the rewind button goes back. Fixed, not the skip setting: a skip is
+// sized for an intro, a rewind for the line that was missed.
+const REWIND_SECONDS = 10;
 
 /* The ramp is a curve, not a straight line. A linear fade over five minutes is
    still at four fifths of the volume a minute in, which is nothing anyone
@@ -131,7 +138,7 @@ const overlayStyle = { position: 'absolute', display: 'flex', gap: 6, zIndex: 1,
    firing it, and a button reached by keyboard focus reveals it too. Out of
    fullscreen the row is part of the page and never hides. */
 const OVERLAY_IDLE_MS = 3000;
-const lowerRightStyle = { ...overlayStyle, right: 40, bottom: 34, transition: 'opacity 200ms' };
+const lowerRightStyle = { ...overlayStyle, right: 40, bottom: 59, transition: 'opacity 200ms' };
 const lowerRightHiddenStyle = { ...lowerRightStyle, opacity: 0, pointerEvents: 'none' };
 
 const overlayButtonSx = {
@@ -179,6 +186,10 @@ export default function MoviePlayer({ id, name }) {
     const [sleep, setSleep] = useState(() => (isEpisode ? readStoredSleep() : null));
 
     const [fullscreen, setFullscreen] = useState(false);
+
+    // Follows the video's own play and pause events, so the button shows the
+    // right icon whichever control did the pausing.
+    const [paused, setPaused] = useState(true);
 
     // True while the viewer is active; the overlays follow it.
     const [active, setActive] = useState(true);
@@ -358,6 +369,22 @@ export default function MoviePlayer({ id, name }) {
         if (capped > video.currentTime) video.currentTime = capped;
     };
 
+    const rewind = () => {
+        const video = videoRef.current;
+        if (video) video.currentTime = Math.max(0, video.currentTime - REWIND_SECONDS);
+    };
+
+    const togglePlay = () => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        if (video.paused) {
+            Promise.resolve(video.play()).catch(() => {});
+        } else {
+            video.pause();
+        }
+    };
+
     // Hands the volume straight back if a fade was under way, so a change of
     // mode in the middle of one is not left half muted.
     const restoreVolume = (video) => {
@@ -503,6 +530,8 @@ export default function MoviePlayer({ id, name }) {
                     crossOrigin="anonymous"
                     style={isFull ? videoFullscreenStyle : videoStyle}
                     onEnded={handleEnded}
+                    onPlay={() => setPaused(false)}
+                    onPause={() => setPaused(true)}
                     onTimeUpdate={handleTimeUpdate}
                     onVolumeChange={handleVolumeChange}
                     onDurationChange={handleDurationChange}
@@ -512,6 +541,22 @@ export default function MoviePlayer({ id, name }) {
                 </video>
 
                 <div style={overlaysShown ? lowerRightStyle : lowerRightHiddenStyle} onFocus={wake}>
+                    <Button
+                        sx={overlayButtonSx}
+                        onClick={rewind}
+                        title={`Back ${REWIND_SECONDS}s`}
+                        aria-label={`Rewind ${REWIND_SECONDS} seconds`}
+                    >
+                        <FastRewindIcon/>
+                    </Button>
+                    <Button
+                        sx={overlayButtonSx}
+                        onClick={togglePlay}
+                        title={paused ? 'Play' : 'Pause'}
+                        aria-label={paused ? 'Play' : 'Pause'}
+                    >
+                        {paused ? <PlayArrowIcon/> : <PauseIcon/>}
+                    </Button>
                     {skipVisible && (
                         <Button
                             sx={overlayButtonSx}
@@ -529,7 +574,7 @@ export default function MoviePlayer({ id, name }) {
                             title={`Play next: ${next.episode}`}
                             aria-label="Play next episode"
                         >
-                            <PlayArrowIcon/>
+                            <SkipNextIcon/>
                         </Button>
                     )}
                     <Button
